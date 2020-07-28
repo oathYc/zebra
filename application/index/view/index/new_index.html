@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>laykefu客服</title>
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="keywords" content="laykefu客服">
+    <meta name="description" content="laykefu客服">
+    <link rel="shortcut icon" href="favicon.ico">
+<!--    <link href="http://laykefu.guoshanchina.com/static/customer/css/laykefu.css" rel="stylesheet" type="text/css" />-->
+    <link href="/static/customer/css/new_laykefu.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<!-- 右侧悬浮 -->       
+<!--<div class="laykefu-min " id="show-laykefu">咨询客服</div>-->
+<!-- 右侧悬浮 -->
+
+<!--<script src="https://cdn.staticfile.org/jquery/2.1.4/jquery.min.js"></script>-->
+<!--<script src="http://laykefu.guoshanchina.com/static/customer/js/laykefu.js"></script>-->
+<script src="/static/customer/js/new_laykefu.js"></script>
+<script src="/static/customer/js/jquery.min.js"></script>
+<script type="text/javascript">
+  laykefu.init({
+    group: 1,//客服分组
+    socket: '127.0.0.1:7272',//聊天服务器地址
+    face_path:'/static/customer/images/face',//表情包路径
+    upload_url:'/index/upload/uploadImg',//图片上传路径
+  });
+
+</script>
+</body>
+</html>

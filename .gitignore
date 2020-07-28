@@ -1,0 +1,7 @@
+.git
+.idea/*
+.env
+*.log
+runtime/*
+logs/*
+public/uploads/*
