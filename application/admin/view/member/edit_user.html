@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>编辑客服</title>
+    <title>用户详情</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
     <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
@@ -17,62 +17,53 @@
         <div class="col-sm-8">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>编辑客服</h5>
+                    <h5>用户详情</h5>
                 </div>
                 <div class="ibox-content">
                     <form class="form-horizontal m-t layui-form" id="commentForm" method="post" action="{:url('users/edituser')}">
                         <input type="hidden" value="{$info['id']}" name="id"/>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">客服名称：</label>
+                            <label class="col-sm-3 control-label">用户名称：</label>
                             <div class="input-group col-sm-4">
-                                <input id="username" type="text" class="form-control" name="user_name" required="" aria-required="true" value="{$info['user_name']}">
+                                <input id="username" type="text" class="form-control" name="username" required="" aria-required="true" value="{$info['username']}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">登录密码：</label>
+                            <label class="col-sm-3 control-label">用户昵称：</label>
                             <div class="input-group col-sm-4">
-                                <input id="password" type="text" class="form-control" name="user_pwd" placeholder="重新输入则为修改">
+                                <input id="nickname" type="text" class="form-control" name="nickname" placeholder="" value="{$info['nickname']}">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">选择分组：</label>
-                            <input type="hidden" id="group_id" name="group_id" value="{$info['group_id']}"/>
-                            <div class="input-group col-sm-4 layui-form">
-                                <select lay-verify="required" lay-filter="group">
-                                    <option value="">请选择分组</option>
-                                    {if !empty($groups)}
-                                    {foreach name="groups" item="vo"}
-                                    <option value="{$vo['id']}" {if $vo['id'] eq $info['group_id']}selected{/if}>{$vo['name']}</option>
-                                    {/foreach}
-                                    {/if}
-                                </select>
+                            <label class="col-sm-3 control-label">用户电话：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="phone" placeholder="" value="{$info['phone']}">
                             </div>
                         </div>
-                        <div class="form-group layui-form-item">
-                            <label class="col-sm-3 control-label">是否启用：</label>
-                            <div class="input-group col-sm-6">
-                                {if !empty($status)}
-                                {foreach name="status" item="vo" key="key"}
-                                <input type="radio" name="status" value="{$key}" title="{$vo}" {if $key eq $info['status']}checked{/if}>
-                                {/foreach}
-                                {/if}
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">个人认证：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="workerStatus" placeholder="" value="{$info['workerStatus']}">
                             </div>
                         </div>
-                        <div class="form-group layui-form-item form-inline" style="height: 60px;">
-                            <input type="hidden" name="user_avatar" id="user_avatar"/>
-                            <label class="col-sm-3 control-label">客服头像：</label>
-                            <div class="input-group col-sm-2">
-                                <button type="button" class="layui-btn layui-btn-small" id="up-avatar">
-                                    <i class="layui-icon"></i>上传图片</button>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">企业认证：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="bossStatus" placeholder="" value="{$info['bossStatus']}">
                             </div>
-                            <div class="input-group col-sm-3" id="avatar">
-                                <img src="{$info['user_avatar']}" width="40px" height="40px"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">司机认证：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="driverStatus" placeholder="" value="{$info['driverStatus']}">
                             </div>
                         </div>
 
+
+
                         <div class="form-group">
                             <div class="col-sm-4 col-sm-offset-6">
-                                <button class="btn btn-primary" type="submit">提交</button>
+                                <a  class="btn btn-primary" href="javascript:history.go(-1);">返回</a>
                             </div>
                         </div>
                     </form>

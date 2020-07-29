@@ -13,7 +13,7 @@ use think\Env;
 // +----------------------------------------------------------------------
 
 return [
-    'tokenKey'      => 'cqzqddEsESK!5pa2O@NXTrS6HNujApVBI6IfqZKd8oF0p$fpVgEt6c@!OyrYku1C2KpS9O$lXG9^v#yrlJxenEJcctTJ5u@',
+    'tokenKey'      => 'cqzqddEsESK!5pa2O@NXTrS6HNujApVBI6IfqZKd8oF0p$fpVgEt6c@!OyrYku1C2KpS9O$lXG9^v#yrlJxenEJcctTJ5u@HDFSDFHsdsafhifHFEKLkJSDLWDLbSSSAKCJBSKlHCLSFHLSlBCLS',
     /*接口appId key*/
     'appIdKey'      => '~!@#$%^*()_+=-0987654321][.,</>abcdefghijklmnopqrstuvwxyz',
     /*appId*/

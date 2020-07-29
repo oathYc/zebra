@@ -3,39 +3,31 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>历史会话</title>
+    <title>用户登录记录</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
     <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
     <link href="__CSS__/plugins/bootstrap-table/bootstrap-table.min.css" rel="stylesheet">
     <link href="__CSS__/animate.min.css" rel="stylesheet">
     <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
-    <link href="__JS__/layui/css/layui.css" rel="stylesheet">
 </head>
 <body class="gray-bg">
 <div class="wrapper wrapper-content animated fadeInRight">
     <!-- Panel Other -->
     <div class="ibox float-e-margins">
         <div class="ibox-title">
-            <h5>历史会话</h5>
+            <h5>用户登录记录</h5>
         </div>
         <div class="ibox-content">
             <!--搜索框开始-->
             <form id='commentForm' role="form" method="post" class="form-inline pull-right">
                 <div class="content clearfix m-b">
                     <div class="form-group">
-                        <label>聊天日期：</label>
-                        <input type="text" class="form-control" id="start" placeholder="开始日期"> --
-                        <input type="text" class="form-control" id="end" placeholder="结束日期">
-                    </div>
-                    &nbsp;&nbsp;
-                    <div class="form-group">
-                        <label>客服名称：</label>
-                        <input type="text" class="form-control" id="username" name="user_name">
+                        <label>用户uid：</label>
+                        <input type="text" class="form-control" id="uid" name="uid">
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary" type="button" style="margin-top:5px" id="search">
-                            <strong>搜 索</strong>
+                        <button class="btn btn-primary" type="button" style="margin-top:5px" id="search"><strong>搜 索</strong>
                         </button>
                     </div>
                 </div>
@@ -45,10 +37,12 @@
                 <div class="example">
                     <table id="cusTable">
                         <thead>
-                        <th data-field="from_name">发送者</th>
-                        <th data-field="to_name">接受者</th>
-                        <th data-field="content">会话内容</th>
-                        <th data-field="time_line">会话时间</th>
+                        <th data-field="id">用户ID</th>
+                        <th data-field="nickname">用户昵称</th>
+                        <th data-field="phone">用户电话</th>
+                        <th data-field="type">登录类型</th>
+                        <th data-field="createTime">登录时间</th>
+                        <th data-field="operate">操作</th>
                         </thead>
                     </table>
                 </div>
@@ -65,7 +59,6 @@
 <script src="__JS__/plugins/bootstrap-table/bootstrap-table-mobile.min.js"></script>
 <script src="__JS__/plugins/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
 <script src="__JS__/plugins/layer/layer.min.js"></script>
-<script src="__JS__/layui/layui.js"></script>
 <script type="text/javascript">
     function initTable() {
         //先销毁表格
@@ -73,10 +66,10 @@
         //初始化表格,动态从服务器加载数据
         $("#cusTable").bootstrapTable({
             method: "get",  //使用get请求到服务器获取数据
-            url: "{:url('system/wordsLog')}", //获取数据的地址
+            url: "{:url('member/loginRecord')}", //获取数据的地址
             striped: true,  //表格显示条纹
             pagination: true, //启动分页
-            pageSize: 15,  //每页显示的记录数
+            pageSize: 10,  //每页显示的记录数
             pageNumber:1, //当前第几页
             pageList: [5, 10, 15, 20, 25],  //记录数可选列表
             sidePagination: "server", //表示服务端请求
@@ -89,9 +82,7 @@
                 var param = {
                     pageNumber: params.pageNumber,
                     pageSize: params.pageSize,
-                    searchText:$('#username').val(),
-                    start:$('#start').val(),
-                    end: $('#end').val()
+                    uid:$('#uid').val()
                 };
                 return param;
             },
@@ -108,46 +99,32 @@
     }
 
     $(document).ready(function () {
-        // 调用函数，初始化表格
+        //调用函数，初始化表格
         initTable();
 
-        // 当点击查询按钮的时候执行
-        $("#search").bind("click", function(){
-            var start = $('#start').val();
-            var end = $('#end').val();
-
-            if('' == start){
-                layer.tips("输入开始时间", '#start');
-                return false;
-            }
-
-            if('' == end){
-                layer.tips("输入结束时间", '#end');
-                return false;
-            }
-
-            if(start > end){
-                layer.msg('开始时间不能大于结束时间');
-                return false;
-            }
-
-            initTable();
-        });
+        //当点击查询按钮的时候执行
+        $("#search").bind("click", initTable);
     });
 
-    layui.use('laydate', function(){
-        var laydate = layui.laydate;
-        laydate.render({
-            elem: '#start'
-            ,type: 'date'
-        });
+    function userDel(id){
+        layer.confirm('确认删除此用户?', {icon: 3, title:'提示'}, function(index){
+            //do something
+            $.getJSON("{:url('member/delUser')}", {'id' : id}, function(res){
+                if(1 == res.code){
+                    layer.alert(res.msg, {title: '友情提示', icon: 1, closeBtn: 0}, function(){
+                        initTable();
+                    });
+                }else if(111 == res.code){
+                    window.location.reload();
+                }else{
+                    layer.alert(res.msg, {title: '友情提示', icon: 2});
+                }
+            });
 
-        laydate.render({
-            elem: '#end'
-            ,type: 'date'
-        });
-    });
+            layer.close(index);
+        })
 
+    }
 </script>
 </body>
 </html>
