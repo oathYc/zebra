@@ -64,7 +64,7 @@ class Api extends Controller
         if($headimg=='')$headimg ='/mr.jpg';
         Share::checkEmptyParams(['openid'=>$openid,'nickname'=>$name]);
         $user = db('member')->where('openid',$openid)->find();
-        if(!$user){//修改
+        if(!$user){//新增
             $params = [
                 'phone'=>$phone,
                 'password'=>md5($password),
@@ -78,11 +78,9 @@ class Api extends Controller
                 'avatar'=>$headimg,
             ];
             $res = db('member')->insert($params);
-        }else{//新增
+        }else{//修改
             $params = [
                 'phone'=>$phone,
-                'password'=>md5($password),
-                'real_pass'=>$password,
                 'nickname'=>$name,
                 'unionid'=>$unionid,
                 'createTime'=>time(),
@@ -154,5 +152,138 @@ class Api extends Controller
             Share::jsonData(0,'','文件不存在');
         }
     }
+    /**
+     * 用户信息修改
+     */
+    public function messageEdit(){
+        $uid = $this->uid;
+        $params['nickname'] = input('nickname');
+        $params['sex'] = input('sex');
+        $params['real_name'] = input('real_name');
+        $params['card'] = input('card');
+        $params['avatar'] = input('avatar');
+        $params['updateTime'] = time();
+        $res = db('member')->where('id',$uid)->update($params);
+        if($res){
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','修改失败');
+        }
+    }
+    /**
+     * 创建房间
+     * 用户创建
+     */
+    public function roomCreate(){
+        $uid = $this->uid;
+        $params['type'] = input('type',1);//1-保底房间 2-普通房间
+        $params['pattern'] = input('pattern',1);//项目模式  1-每日奖励失败金  2-平分模式
+        $number = input('number',0);//默认不限制 0-不限制  限制的话必须大于2
+//        $params['sign'] = input('sign',1);//1-一键签到 2-发圈签到
+        $params['name'] = input('name');
+        $params['desc'] = input('desc');//房间描述
+        $params['money'] = input('money');//活动金额
+        $params['beginTime'] = input('beginTime','');//开始时间
+        $params['day'] = input('day',1);//天数 周期
+        $signBegin = input('signBegin');//签到开始时间
+        $signEnd = input('signEnd');//签到结束时间
+        $signNum = input('signNum',1);//签到次数 最多两次
+        $signNum = $signNum>1?2:1;
+        $params['signNum'] = $signNum;
+        $signBeginMinute = Share::getMinute($signBegin);//获取对应的分钟数
+        $signEndMinute = Share::getMinute($signEnd);
+        if($signEndMinute < $signBeginMinute){
+            Share::jsonData(0,'','首次签到结束时间不能小于首次签到开始时间');
+        }
+        $params['signBegin'] = $signBeginMinute;
+        $params['signEnd'] = $signEndMinute;
+        if($signNum > 1){//获取去第二次签到时间
+            $secondBegin = input('secondBegin');
+            $secondEnd = input('secondEnd');
+            $secondBeginMinute = Share::getMinute($secondBegin);
+            $secondEndMinute = Share::getMinute($secondEnd);
+            if($secondEndMinute < $secondBeginMinute){
+                Share::jsonData(0,'','二次签到开始不能小于二次签到结束时间！');
+            }
+            if($secondBeginMinute < $signEndMinute){
+                Share::jsonData(0,'','二次签到开始时间必须大于首次签到结束时间！');
+            }
+            $params['secondBegin'] = $secondBeginMinute;
+            $params['secondEnd'] = $secondEndMinute;
+            $params['secondBeginStr'] = $secondBegin;
+            $params['secondEndStr'] = $secondEnd;
+        }
+        if($number && $number < 2){
+            Share::jsonData(0,'','报名人数必须大于1');
+        }
+        $params['number'] = $number;
+        Share::checkEmptyParams($params);
+        $params['beginTimeStr'] = $signBegin;
+        $params['endTimeStr'] = $signEnd;
+        $params['sign'] = 1;//1-一键签到 2-发圈签到
+        //判断该房间名是否已存在（报名中和活动中）  禁止房间门一样
+        $had = db('room_create')->where(['name'=>$params['name'],'status'=>['in',[0,1]]])->find();
+        if($had){
+            Share::jsonData(0,'','当前房间名已存在，请重试');
+        }
+        if($params['type'] == 1 && $params['money'] < Share::getlowest()){
+            Share::jsonData(0,'','保底房间的最低金额不能小于'.Share::getlowest());
+        }
+        if($params['type'] == 2 && $params['money'] < Share::getCommon()){
+            Share::jsonData(0,'','普通房间的最低金额不能小于'.Share::getCommon());
+        }
+        $now = strtotime(date('Y-m-d H:i:s'));//当前分钟的时间戳
+        $today = strtotime(date('Y-m-d'));//当天的时间戳
+        $beginTime  = strtotime($params['beginTime']);//活动开始时间
+        if($beginTime < $today){
+            Share::jsonData(0,'','活动开始日期不能小于今天');
+        }
+        $signBeginTime = $beginTime + $params['signBegin']*60;//第一天的活动签到开始时间
+        if($signBeginTime < $now){
+            Share::jsonData(0,'','首次签到开始时间必须大于当前时间！');
+        }
+        $params['createTime'] = time();
+        $params['uid'] = $uid;
+        $params['status'] = 0;//状态 0-报名中   1-活动中 2-活动结束
+        //创建房间费用扣除
+        Share::reduceRoomMoney($uid,$params['money']);
+        $res = db('room_create')->insert($params);
+        if($res){
+            $roomId = db('room_create')->getLastInsID();
+            //添加自己的报名信息
+            Share::addRoomChallenge($uid,$roomId);
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','创建失败，请重试！');
+        }
+    }
+    /**
+     * 房挑挑战
+     * 用户报名
+     */
+    public function roomJoin(){
+        $uid = $this->uid;
+        $roomId = input('roomId',0);//房间id
+        Share::checkEmptyParams(['roomId'=>$roomId]);
+        $room = db('room')->where('id',$roomId)->find();
+        if(!$room){
+            Share::jsonData(0,'','没有该房间信息！');
+        }
+        if($room['status'] != 0){//报名中
+            Share::jsonData(0,'','该房间挑战不是报名中，不能报名！');
+        }
+        //判断房间挑战的开始时间
+        Share::checkRoomBegin($room);
+        if($room['number'] > 1){//有人数限制
+            //获取已报名人数
+            $roomJoin = Share::getRoomJoinNumber($roomId,1);//1-房间挑战
+            if($roomJoin >= $room['number']){
+                //修改房间状态
+                Share::updateRoomStatus($roomId,1);// 0-报名中   1-活动中 2-活动结束
+                Share::jsonData(0,'','当前报名人数已满，不能报名！');
+            }
+        }
+    }
+
 
 }
