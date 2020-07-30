@@ -171,6 +171,7 @@ class Api extends Controller
         }
     }
     /**
+     * 房间挑战
      * 创建房间
      * 用户创建
      */
@@ -183,7 +184,7 @@ class Api extends Controller
         $params['name'] = input('name');
         $params['desc'] = input('desc');//房间描述
         $params['money'] = input('money');//活动金额
-        $params['beginTime'] = input('beginTime','');//开始时间
+        $params['beginTimeDate'] = input('beginTimeDate','');//开始时间
         $params['day'] = input('day',1);//天数 周期
         $signBegin = input('signBegin');//签到开始时间
         $signEnd = input('signEnd');//签到结束时间
@@ -221,7 +222,7 @@ class Api extends Controller
         $params['beginTimeStr'] = $signBegin;
         $params['endTimeStr'] = $signEnd;
         $params['sign'] = 1;//1-一键签到 2-发圈签到
-        //判断该房间名是否已存在（报名中和活动中）  禁止房间门一样
+        //判断该房间名是否已存在（报名中和活动中）  禁止房间名一样
         $had = db('room_create')->where(['name'=>$params['name'],'status'=>['in',[0,1]]])->find();
         if($had){
             Share::jsonData(0,'','当前房间名已存在，请重试');
@@ -234,7 +235,7 @@ class Api extends Controller
         }
         $now = strtotime(date('Y-m-d H:i:s'));//当前分钟的时间戳
         $today = strtotime(date('Y-m-d'));//当天的时间戳
-        $beginTime  = strtotime($params['beginTime']);//活动开始时间
+        $beginTime  = strtotime($params['beginTimeDate']);//活动开始时间
         if($beginTime < $today){
             Share::jsonData(0,'','活动开始日期不能小于今天');
         }
@@ -242,6 +243,7 @@ class Api extends Controller
         if($signBeginTime < $now){
             Share::jsonData(0,'','首次签到开始时间必须大于当前时间！');
         }
+        $params['beginTime'] = $signBeginTime;//首次签到开始时间  时间戳
         $params['createTime'] = time();
         $params['uid'] = $uid;
         $params['status'] = 0;//状态 0-报名中   1-活动中 2-活动结束
@@ -258,7 +260,7 @@ class Api extends Controller
         }
     }
     /**
-     * 房挑挑战
+     * 房间挑战
      * 用户报名
      */
     public function roomJoin(){
@@ -269,11 +271,10 @@ class Api extends Controller
         if(!$room){
             Share::jsonData(0,'','没有该房间信息！');
         }
+        Share::checkRoomStatus($room);//检查房间活动状态
         if($room['status'] != 0){//报名中
             Share::jsonData(0,'','该房间挑战不是报名中，不能报名！');
         }
-        //判断房间挑战的开始时间
-        Share::checkRoomBegin($room);
         if($room['number'] > 1){//有人数限制
             //获取已报名人数
             $roomJoin = Share::getRoomJoinNumber($roomId,1);//1-房间挑战
@@ -283,6 +284,48 @@ class Api extends Controller
                 Share::jsonData(0,'','当前报名人数已满，不能报名！');
             }
         }
+        //记录挑战报名信息
+        $params = [
+            'uid'=>$uid,
+            'roomId'=>$roomId,
+            'createTime'=>time(),
+            'type'=>1,
+            'status'=>1
+        ];
+        $res = db('room_join')->insert($params);
+        if($res){
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','报名失败，请售后重试！');
+        }
+    }
+    /**
+     * 房间挑战
+     * 用户打卡签到
+     */
+    public function roomSign(){
+        $uid = $this->uid;
+        $roomId = input('roomId');
+        Share::checkEmptyParams(['roomId'=>$roomId]);
+        $room = db('room_create')->where('id',$roomId)->find();
+        if(!$room){
+            Share::jsonData(0,'','没有该房间！');
+        }
+        Share::checkRoomStatus($room);
+        if($room['status'] == 0){
+            Share::jsonData(0,'','当前挑战还没有开始，不可进行签到！');
+        }
+        if($room['status'] == 2){
+            Share::jsonData(0,'','当前挑战已经结束了！');
+        }
+        //判断自己是否已报名
+        $hadJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
+        if(!$hadJoin){
+            Share::jsonData(0,'','你还没有报名参加该房间挑战活动，不可进行签到！');
+        }
+        //签到判断
+        Share::roomSign($uid,$room);
+        Share::jsonData(1);
     }
 
 

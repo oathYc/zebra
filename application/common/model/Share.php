@@ -228,8 +228,17 @@ class Share extends \think\Model
             $currStatus = $room['status'];
             if($status > $currStatus){//修改状态应该大于当前房间状态
                 db('room_create')->where(['id'=>$roomId])->update(['status'=>$status]);
+                //退还参赛者的本金
+                self::returnUserApplyMoney($roomId);
             }
         }
+    }
+    /**
+     * 房间跳转结束
+     * 退还坚持者的本金
+     */
+    public static function returnUserApplyMoney($roomId){
+
     }
     /**
      * 房间报名
@@ -258,10 +267,183 @@ class Share extends \think\Model
                 Share::jsonData(0,'','挑战已经结束啦！');
             }
         }elseif($todayTime == $beginDayTime){//当天开始 判断是否在首次打卡开始时间之前
-            $firstBeginTime = $todayTime + 60*$firstBegin;//首次打卡开始时间的时间戳
-            if($firstBeginTime <= $currTime){
-                Share::jsonData(0,'','挑战已经开始了，不能再报名了！');
+//            $firstBeginTime = $todayTime + 60*$firstBegin;//首次打卡开始时间的时间戳
+            if($room['status'] != 1){//设置挑战开始  已经开始就不能再报名
+                db('room_create')->where('id',$room['id'])->update(['status'=>1]);
+            }
+//            if($firstBeginTime <= $currTime){
+//                Share::jsonData(0,'','挑战已经开始了，不能再报名了！');
+//            }
+        }
+    }
+    /**
+     * 检查房间挑战状态
+     * status  0-报名中   1-活动中 2-活动结束
+     */
+    public static function checkRoomStatus(&$room){
+        $now = time();
+        $beginTime = $room['beginTime'];//活动首次签到时间
+        $roomEndTime = strtotime($room['beginTimeDate']) + 86400*$room['days'] -1;//活动结束时间
+        if($beginTime >= $now){//已经开始挑战
+            $status = 1;//活动中
+        }elseif($now >= $roomEndTime){//活动已经结束
+            $status  = 2;
+        }else{
+            $status = 0;
+        }
+        if($room['status'] != $status){
+            $room['status'] = $status;
+            self::updateRoomStatus($room['id'],$status);
+        }
+    }
+
+    /**
+     * 房间挑战
+     * 用户签到
+     */
+    public static function roomSign($uid,$room){
+        $signNum = $room['signNum'];//签到次数
+        $date = date('Y-m-d');
+        $signTime = date('Y-m-d H:i:s');
+        $todayTime = strtotime($date);
+        $nowTime = time();//当前时间
+        //获取用户的当天打卡记录
+        $sign = self::getMemberSignMsg($uid,$date,1);//1-房间挑战
+        //签到参数
+        $params = [];
+        //判断是否在第一次打卡时间段内
+        $firstTimeBegin = $todayTime + 60*$room['signBegin'];//开始签到时间
+        $firstTimeEnd = $todayTime + 60*$room['signEnd'] + 59;//结束签到时间
+        if($signNum == 1){//只设置一次签到
+            if($nowTime < $firstTimeBegin || $nowTime > $firstTimeEnd){
+                Share::jsonData(0,'','还没到签到时间，不能进行签到！');
+            }else{//判断是否已经签到  首次签到
+                if($sign['firstSign'] == 1 && $sign['firstSignTime']){
+                    self::jsonData(0,'','您已签到，请勿重复签到');
+                }else{//进行签到
+                    //判断当前用户的参与状态
+                    self::checkUserJoinStatus($uid,$room);
+                    $params['firstSign'] = 1;
+                    $params['firstSignTime'] = $signTime;
+                }
+            }
+        }else{
+            //获取二次签到时间
+            $secondBeginTime = $todayTime + 60*$room['secondBegin'];//二次开始签到时间
+            $secondEndTime = $todayTime + 60*$room['secondEnd'] + 59;//二次结束签到时间
+            if($nowTime < $firstTimeBegin){
+                Share::jsonData(0,'','还没到签到时间，不能进行签到！');
+            }elseif( $nowTime > $firstTimeEnd){//判断第二次签到时间
+                if($nowTime < $secondBeginTime || $nowTime > $secondEndTime){
+                    Share::jsonData(0,'','还没到签到时间，不能进行签到！');
+                }else{//判断二次是否已签到
+                    if($sign['secondSign'] == 1 && $sign['secondSignTime']){
+                        self::jsonData(0,'','您已签到，请勿重复签到');
+                    }else{
+                        //判断当前用户的参与状态
+                        self::checkUserJoinStatus($uid,$room);
+                        $params['secondSign'] = 1;
+                        $params['secondSignTime'] = $signTime;
+                    }
+                }
+            }else{//判断是否已签到  第一次签到
+                if($sign['firstSign'] == 1 && $sign['firstSignTime']){
+                    self::jsonData(0,'','您已签到，请勿重复签到');
+                }else{//进行签到
+                    //判断当前用户的参与状态
+                    self::checkUserJoinStatus($uid,$room);
+                    $params['firstSign'] = 1;
+                    $params['firstSignTime'] = $signTime;
+                }
             }
         }
+        if($params){
+            $res = db('sign')->where(['uid'=>$sign['uid'],'type'=>$sign['type'],'roomId'=>$sign['roomId'],'date'=>$sign['date']])->update($params);
+            if($res){
+                self::jsonData(1);
+            }else{
+                self::jsonData(0,'','签到失败，请重试！');
+            }
+        }
+
+    }
+    /**
+     * 检查当前用户参与挑战的状态
+     *
+     */
+    public static function checkUserJoinStatus($uid,$room){
+        $roomId = $room['id'];
+        $join = db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id'],'type'=>1])->find();
+        if(!$join){
+            Share::jsonData(0,'','您还没有报名该活动！');
+        }
+        if($join['status'] != 1){//不是参与中状态
+            Share::jsonData(0,'','您已经挑战失败了，不能再继续签到了！');
+        }else{//判断当前用户今天之前是否有断签的记录
+            $begin = $room['beginTimeDate'];
+            $beginTime = strtotime($begin);
+            $days = $room['days'];//挑战周期
+            $endDate = strtotime($begin) + 86400*($days-1);//结束日期
+            $endDate = date('Y-m-d',$endDate);
+            $today = date('Y-m-d');
+            $signNum = $room['signNum'];//签到次数
+            if($today > $endDate){//超过结束日期
+                if($room['status'] != 2){
+                    self::updateRoomStatus($room['id'],2);
+                }
+                Share::jsonData(0,'','当前挑战已经结束了');
+            }
+            $error = 0;
+            for($i=0;$i<$days;$i++){
+                $signDate = date('Y-m-d',($beginTime + $i*86400));
+                if($signDate < $today){//签到时间小于今天
+                    $sign = db('sign')->where(['date'=>$signDate,'uid'=>$uid,'roomId'=>$room['id'],'type'=>1])->find();
+                    if($sign['firstSign'] == 1){//已签到
+                        if($signNum != 1){//二次签到模式
+                            if($sign['secondSign'] != 1){//未签到
+                                db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                                $error = 1;
+                                break;
+                            }
+                        }
+                    }else{//第一次没有签到
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                        $error = 1;
+                        break;
+                    }
+                }
+            }
+            if($error == 1){
+                Share::jsonData(0,'','您已挑战失败，签到无效！');
+            }
+        }
+    }
+
+    /**
+     * 获取用户某天的签到记录
+     * 不存在则实例化
+     * type 1-房间挑战
+     */
+    public static function getMemberSignMsg($uid,$roomId,$date='',$type=1){
+        $date = $date?$date:date('Y-m-d');
+        $where = [
+            'type'=>1,
+            'uid'=>$uid,
+            'date'=>$uid,
+            'roomId'=>$roomId,
+        ];
+        $sign = db('sign')->where($where)->find();
+        if(!$sign){//初始化  插入当天的打卡记录初始数据
+            $params = [
+                'uid'=>$uid,
+                'roomId'=>$roomId,
+                'date'=>$date,
+                'type'=>$type,
+                'createTime'=>time(),
+            ];
+            db('sign')->insert($params);
+            $sign = db('sign')->where($where)->find();
+        }
+        return $sign;
     }
 }
