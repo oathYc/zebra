@@ -171,6 +171,14 @@ class Api extends Controller
         }
     }
     /**
+     * 用户信息获取
+     */
+    public function myMessage(){
+        $uid = $this->uid;
+        $user = db('member')->where('id',$uid)->find();
+        Share::jsonData(1,$user);
+    }
+    /**
      * 房间挑战
      * 创建房间
      * 用户创建
@@ -284,6 +292,8 @@ class Api extends Controller
                 Share::jsonData(0,'','当前报名人数已满，不能报名！');
             }
         }
+        //扣除报名费用
+        Share::reduceRoomMoney($uid,$room['money']);
         //记录挑战报名信息
         $params = [
             'uid'=>$uid,
@@ -327,6 +337,122 @@ class Api extends Controller
         Share::roomSign($uid,$room);
         Share::jsonData(1);
     }
+    /**
+     * 房间挑战
+     * 挑战列表
+     * 用户获取
+     */
+    public function roomList(){
+        $uid = $this->uid;
+        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
+        $type = input('type',0);//0-所有 1-保底 2-普通
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $where = [
+            'status'=>0,//报名中
+        ];
+        if($pattern){
+            $where['pattern'] = $pattern;
+        }
+        if($type){
+            $where['type'] = $type;
+        }
+        $offset = ($page-1)*$pageSize;
+        $total = db('room_create')->where($where)->count();
+        $data = db('room_create')->where($where)->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['uid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
 
+    /**
+     * 房间挑战
+     * 房间列表
+     * 创建人获取
+     */
+    public function myRoom(){
+        $uid = $this->uid;
+        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
+        $type = input('type',0);//0-所有 1-保底 2-普通
+        $status = input('status',99);//99-全部  0-报名中   1-活动中 2-活动结束
+        $where = [
+            'uid'=>$uid,
+        ];
+        if($status != 99){
+            $where['status'] = $status;
+        }
+        if($pattern){
+            $where['pattern'] = $pattern;
+        }
+        if($type){
+            $where['type'] = $type;
+        }
+        $data = db('room_create')->where($where)->select();
+        Share::jsonData(1,$data);
+    }
+
+    /**
+     * 房间挑战
+     * 我的参与
+     * 用户获取
+     */
+    public function myJoin(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $status = input('status',0);//0-全部 1-参与中 2-已失败 3-已完成
+        $where = [
+            'uid'=>$uid,
+        ];
+        if($status){
+            $where['status'] = $status;
+        }
+        $offset = $pageSize*($page-1);
+        $total = db('room_join')->where($where)->count();
+        $data = db('room_join')->where($where)->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $room = db('room_create')->where('id',$v['roomId'])->find();
+            //创建人信息
+            $user = db('member')->where('id',$room['uid'])->find();
+            $room['roomerNickname'] = $user['nickname'];
+            $room['roomerAvatar'] = $user['avatar'];
+            $data[$k]['room'] = $room;
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+
+    /**
+     * 打卡
+     * 打卡活动获取
+     * 用户获取
+     */
+    public function clockInList(){
+        $uid = $this->uid;
+        $data = db('clock_in')->field(['id','name','image','desc'])->where('status',1)->order('sort','desc')->select();
+        foreach($data as $k => $v){
+            //报名人数
+            $currJoinNum = db('clock_in_join')->where(['clockInId'=>$v['id'],'status'=>1])->count();
+            $data[$k]['currJoinNum'] = $currJoinNum?$currJoinNum:0;
+            //是否报名
+            $isJoin = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$v['id'],'status'=>1])->find();//是否当前参与中
+            if($isJoin){
+                $data[$k]['currJoin'] = 1;
+            }else{
+                $data[$k]['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
+            }
+        }
+        Share::jsonData(1,$data);
+    }
 
 }
