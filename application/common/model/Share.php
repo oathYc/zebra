@@ -63,7 +63,7 @@ class Share extends \think\Model
         return $data;
     }
 
-    /*
+    /**
      * 时间转换分钟
      */
     public static function getMinute($date){
