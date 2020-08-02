@@ -439,7 +439,7 @@ class Api extends Controller
      */
     public function clockInList(){
         $uid = $this->uid;
-        $data = db('clock_in')->field(['id','name','image','desc'])->where('status',1)->order('sort','desc')->select();
+        $data = db('clock_in')->where('status',1)->order('sort','desc')->select();
         foreach($data as $k => $v){
             //报名人数
             $currJoinNum = db('clock_in_join')->where(['clockInId'=>$v['id'],'status'=>1])->count();
@@ -453,6 +453,129 @@ class Api extends Controller
             }
         }
         Share::jsonData(1,$data);
+    }
+    /**
+     * 打卡活动
+     * 活动详情
+     */
+    public function clockDetail(){
+        $id = input('clockInId');
+        $uid = $this->uid;
+        Share::checkEmptyParams(['id'=>$id]);
+        $clock = db('clock_in')->where('id',$id)->find();
+        if(!$clock){
+            Share::jsonData(0,'','该活动不存在');
+        }
+        //报名人数
+        $currJoinNum = db('clock_in_join')->where(['clockInId'=>$clock['id'],'status'=>1])->count();
+        $clock['currJoinNum'] = $currJoinNum?$currJoinNum:0;
+        //是否报名
+        $isJoin = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'status'=>1])->find();//是否当前参与中
+        if($isJoin){
+            $clock['currJoin'] = 1;
+        }else{
+            $clock['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
+        }
+        Share::jsonData(1,$clock);
+    }
+    /**
+     * 打卡活动
+     * 活动报名
+     */
+    public function clockInJoin(){
+        $uid = $this->uid;
+        $clockId = input('clockInId');//活动id
+        $joinMoney = input('joinMoney');//报名金额
+        $clock = db('clock_in')->where('id',$clockId)->find();
+        if(!$clock){
+            Share::jsonData(0,'','该活动不存在');
+        }
+        if($clock['status'] != 1){
+            Share::jsonData(0,'','当前打卡活动已关闭！');
+        }
+        if($joinMoney > $clock['maxMoney']){
+            Share::jsonData(0,'','当前活动最大报名金额为'.$clock['maxMoney']);
+        }
+        //判断当前是否已经报名
+        $hadSign = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->find();
+        if($hadSign){
+            //判断当前打卡天数及状态
+            Share::checkClockInStatus($uid,$hadSign,$clock);
+            Share::jsonData(0,'','你已经报名参加该打卡活动！');
+        }
+        $params = [
+            'uid'=>$uid,
+            'clockInId'=>$clockId,
+            'status'=>0,
+            'beginTime'=>date('Y-m-d'),
+            'createTime'=>time(),
+            'clockNum'=>0,
+            'joinMoney'=>$joinMoney,
+        ];
+        $res = db('clock_in_join')->insert($params);
+        if($res){
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','报名失败，请重试!');
+        }
+    }
+    /**
+     * 打卡活动
+     * 每日打卡
+     */
+    public function clockInSign(){
+        $uid = $this->uid;
+        $clockId = input('clockInId');
+        Share::checkEmptyParams(['clockInId'=>$clockId]);
+        $clock = db('clock_in')->where('id',$clockId)->find();
+        if(!$clock){
+            Share::jsonData(0,'','该活动不存在');
+        }
+        //判断当前是否已经报名
+        $hadSign = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->find();
+        if(!$hadSign){
+            Share::jsonData(0,'','你还没有报名参加该打卡活动！');
+        }
+        //判断当前打卡天数及状态
+        Share::checkClockInStatus($uid,$hadSign,$clock);
+        //打卡时间
+        $beginTime = strtotime($clock['beginTime']);
+        $endTime = strtotime($clock['endTime']);
+        //当前时间
+        $currTime =strtotime(date("H:m:s"));
+        if($currTime < $beginTime || $currTime > $endTime){
+            Share::jsonData(0,'','当前不在活动打卡时间范围内！');
+        }
+        $today = date('Y-m-d');
+        $params = [
+            'uid'=>$uid,
+            'clockInId'=>$clockId,
+            'joinId'=>$hadSign['id'],//当前报名参加的id
+            'clockInTime'=>date('Y-m-d H:i:s'),
+            'date'=>$today,
+            'createTime'=>time(),
+        ];
+        $res = db('clock_in_sign')->insert($params);
+        if($res){
+            //记录打卡次数
+            $hadNum = $hadSign['clockNum'] + 1;
+            $update = ['clockNum'=>$hadNum];
+            if($hadNum >=  $clock['days']){//打卡完成
+                $update['status'] = 2;
+            }
+            db('clock_in_join')->where('id',$hadSign['id'])->update($update);
+            //发放奖励
+            Share::clockInReward($uid,$clock);
+            //退还报名费
+            if($hadNum >= $clock['days']){
+                Share::returnClockInMoney($uid,$hadSign['joinMoney']);
+            }
+
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','打卡失败，请重试！');
+        }
+
     }
 
 }
