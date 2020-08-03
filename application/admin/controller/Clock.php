@@ -184,4 +184,40 @@ class Clock extends Base
             return '';
         }
     }
+    //打卡签到
+    public function clockSign(){
+        if (request()->isAjax()) {
+
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+
+            $where = [];
+
+            $result = db('clock_in_sign')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
+            foreach ($result as $key => $vo) {
+                //获取打卡活动信息
+                $clockId = $vo['clockInId'];
+                $clock = db('clock_in')->where("id",$clockId)->find();
+                if($clock){
+                    $result[$key]['clockName'] = $clock['name'];
+                }else{
+                    $result[$key]['clockName'] = '已被删除';
+                }
+                //报名信息
+                $clockJoin = db('clock_in_join')->where('id',$vo['joinId'])->find();
+                $result[$key]['joinTime'] = $clockJoin['beginTime'];
+
+                //获取报名者信息
+                $user = db('member')->where('id',$vo['uid'])->find();
+                $result[$key]['nickname'] = $user['nickname'];
+            }
+            $return['total'] = db('clock_in_join')->count();  //总数据
+            $return['rows'] = $result;
+            return json($return);
+
+        }
+        return $this->fetch();
+    }
 }

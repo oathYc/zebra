@@ -186,7 +186,7 @@ class Api extends Controller
     public function roomCreate(){
         $uid = $this->uid;
         $params['type'] = input('type',1);//1-保底房间 2-普通房间
-        $params['pattern'] = input('pattern',1);//项目模式  1-每日奖励失败金  2-平分模式
+//        $params['pattern'] = input('pattern',1);//项目模式  1-每日奖励失败金  2-平分模式
         $number = input('number',0);//默认不限制 0-不限制  限制的话必须大于2
 //        $params['sign'] = input('sign',1);//1-一键签到 2-发圈签到
         $params['name'] = input('name');
@@ -235,11 +235,24 @@ class Api extends Controller
         if($had){
             Share::jsonData(0,'','当前房间名已存在，请重试');
         }
-        if($params['type'] == 1 && $params['money'] < Share::getlowest()){
-            Share::jsonData(0,'','保底房间的最低金额不能小于'.Share::getlowest());
-        }
-        if($params['type'] == 2 && $params['money'] < Share::getCommon()){
-            Share::jsonData(0,'','普通房间的最低金额不能小于'.Share::getCommon());
+        if($params['type'] == 1 ){//保底房间
+            $minMoney = Share::getlowest(1);//1-最低金额 2-最高金额
+            $maxMoney = Share::getLowest(2);
+            if($params['money'] < $minMoney){
+                Share::jsonData(0,'','保底房间的最低金额不能小于'.$minMoney);
+            }
+            if($params['money'] > $maxMoney){
+                Share::jsonData(0,'','保底房间的最高金额不能大于'.$maxMoney);
+            }
+        }else{//普通房间
+            $minMoney = Share::getCommon(1);
+            $maxMoney = Share::getCommon(2);
+            if($params['money'] < $minMoney){
+                Share::jsonData(0,'','普通房间的最低金额不能小于'.$minMoney);
+            }
+            if($params['money'] > $maxMoney){
+                Share::jsonData(0,'','普通房间的最高金额不能大于'.$maxMoney);
+            }
         }
         $now = strtotime(date('Y-m-d H:i:s'));//当前分钟的时间戳
         $today = strtotime(date('Y-m-d'));//当天的时间戳
@@ -283,6 +296,11 @@ class Api extends Controller
         if($room['status'] != 0){//报名中
             Share::jsonData(0,'','该房间挑战不是报名中，不能报名！');
         }
+        //判断自己是否已经报名
+        $hadJoin = db('room_join')->where(['id'=>$roomId,'uid'=>$uid])->find();
+        if($hadJoin){
+            Share::jsonData(0,'','你已经报过过该房间挑战，请勿重复参加！');
+        }
         if($room['number'] > 1){//有人数限制
             //获取已报名人数
             $roomJoin = Share::getRoomJoinNumber($roomId,1);//1-房间挑战
@@ -299,8 +317,8 @@ class Api extends Controller
             'uid'=>$uid,
             'roomId'=>$roomId,
             'createTime'=>time(),
-            'type'=>1,
-            'status'=>1
+            'type'=>1,//1-房间挑战
+            'status'=>1,//1-参与中 2-已失败 3-已完成
         ];
         $res = db('room_join')->insert($params);
         if($res){
@@ -501,7 +519,10 @@ class Api extends Controller
         if($hadSign){
             //判断当前打卡天数及状态
             Share::checkClockInStatus($uid,$hadSign,$clock);
-            Share::jsonData(0,'','你已经报名参加该打卡活动！');
+            $hadSign = db('clock_in_join')->where('id',$hadSign['id'])->find();
+            if($hadSign['status'] == 1){
+                Share::jsonData(0,'','你已经报名参加该打卡活动！');
+            }
         }
         $params = [
             'uid'=>$uid,
@@ -565,12 +586,11 @@ class Api extends Controller
             }
             db('clock_in_join')->where('id',$hadSign['id'])->update($update);
             //发放奖励
-            Share::clockInReward($uid,$clock);
+            Share::clockInReward($uid,$hadSign['joinMoney'],$clock);
             //退还报名费
             if($hadNum >= $clock['days']){
                 Share::returnClockInMoney($uid,$hadSign['joinMoney']);
             }
-
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','打卡失败，请重试！');

@@ -9,8 +9,10 @@ namespace app\common\model;
  */
 class Share extends \think\Model
 {
-    const COMMON = 20;
-    const LOWEST = 10;
+    const COMMONMIN = 20;
+    const COMMONMAX = 100000;
+    const LOWESTMIN = 10;
+    const LOWESTMAX = 100000;
     /**
      * @param int $code
      * @param array $data
@@ -79,15 +81,27 @@ class Share extends \think\Model
     }
     /**
      * 获取普通房间最低金额
+     * type 1-最低 2-最高
      */
-    public static function getCommon(){
-        return self::COMMON;
+    public static function getCommon($type =1){
+        $minSet = db('room_type')->where('type',2)->find();//1-保底房间 2-普通房间
+        if($type ==1){
+            return isset($minSet['minMoney'])?$minSet['minMoney']:self::COMMONMIN;
+        }else{
+            return isset($minSet['maxMoney'])?$minSet['maxMoney']:self::COMMONMAX;
+        }
     }
     /**
      * 获取保底房间最低金额
+     * type 1-最低 2-最高
      */
-    public static function getLowest(){
-        return self::LOWEST;
+    public static function getLowest($type =1){
+        $minSet = db('room_type')->where('type',1)->find();//1-保底房间 2-普通房间
+        if($type ==1){
+            return isset($minSet['minMoney'])?$minSet['minMoney']:self::LOWESTMIN;
+        }else{
+            return isset($minSet['maxMoney'])?$minSet['maxMoney']:self::LOWESTMAX;
+        }
     }
     /**
      * 用户金额记录日志
@@ -476,6 +490,53 @@ class Share extends \think\Model
                     }
                 }
             }
+        }
+    }
+    /**
+     * 打卡活动
+     * 发放奖励
+     */
+    public static function clockInReward($uid,$joinMoney,$clock){
+        if($clock['rewardType'] == 1){//固定金额
+            $money = $clock['reward'];
+        }else{//百分比
+            $money = $joinMoney * $clock['reward'];
+        }
+        //金额规范  分
+        $money = self::getDecimalMoney($money);
+        $user = db('member')->where('id',$uid)->find();
+        $addMoney = $user['money'] + $money;
+        $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+        if($res){
+            self::userMoneyRecord($uid,$money,'打卡活动每日奖励',1);
+        }
+    }
+    /**
+     * 金额获取
+     * 两位小数
+     * 单位分
+     */
+    public static function getDecimalMoney($money){
+        if($money){
+            return floor(100*$money)/100;
+        }else{
+            return 0;
+        }
+    }
+
+    /**
+     * 打卡活动
+     * 挑战成功
+     * 退还本金
+     */
+    public static function returnClockInMoney($uid,$money){
+        $user = db('member')->where('id',$uid)->find();
+        $addMoney = $user['money'] + $money;
+        $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+        if($res){
+            self::userMoneyRecord($uid,$money,'打卡活动本金退还',1);
+        }else{
+            Share::jsonData(0,'','本金退还失败');
         }
     }
 }
