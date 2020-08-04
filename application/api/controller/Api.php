@@ -61,7 +61,7 @@ class Api extends Controller
         $password = "123456"; // 密码
         $headimg = strip_tags(input('headimgurl'));
 //			$headimg = $str['headimgurl'];
-        if($headimg=='')$headimg ='/mr.jpg';
+        if($headimg=='')$headimg ='/uploads/avatar/mr.jpg';
         Share::checkEmptyParams(['openid'=>$openid,'nickname'=>$name]);
         $user = db('member')->where('openid',$openid)->find();
         if(!$user){//新增
@@ -180,6 +180,18 @@ class Api extends Controller
     }
     /**
      * 房间挑战
+     * 房间类型信息
+     * 普通 保底
+     */
+    public function roomType(){
+        $roomType = db('room_type')->select();
+        foreach($roomType as $k => $v){
+            $roomType[$k]['typeStr'] = Share::getRoomTypeStr($v['type']);
+        }
+        Share::jsonData(1,$roomType);
+    }
+    /**
+     * 房间挑战
      * 创建房间
      * 用户创建
      */
@@ -192,7 +204,7 @@ class Api extends Controller
         $params['name'] = input('name');
         $params['desc'] = input('desc');//房间描述
         $params['money'] = input('money');//活动金额
-        $params['beginTimeDate'] = input('beginTimeDate','');//开始时间
+        $params['beginDate'] = input('beginDate','');//开始时间
         $params['day'] = input('day',1);//天数 周期
         $signBegin = input('signBegin');//签到开始时间
         $signEnd = input('signEnd');//签到结束时间
@@ -225,8 +237,8 @@ class Api extends Controller
         if($number && $number < 2){
             Share::jsonData(0,'','报名人数必须大于1');
         }
-        $params['number'] = $number;
         Share::checkEmptyParams($params);
+        $params['number'] = $number;
         $params['beginTimeStr'] = $signBegin;
         $params['endTimeStr'] = $signEnd;
         $params['sign'] = 1;//1-一键签到 2-发圈签到
@@ -256,7 +268,7 @@ class Api extends Controller
         }
         $now = strtotime(date('Y-m-d H:i:s'));//当前分钟的时间戳
         $today = strtotime(date('Y-m-d'));//当天的时间戳
-        $beginTime  = strtotime($params['beginTimeDate']);//活动开始时间
+        $beginTime  = strtotime($params['beginDate']);//活动开始时间
         if($beginTime < $today){
             Share::jsonData(0,'','活动开始日期不能小于今天');
         }
@@ -282,13 +294,76 @@ class Api extends Controller
     }
     /**
      * 房间挑战
+     * 挑战列表
+     * 用户获取
+     */
+    public function roomList(){
+        $uid = $this->uid;
+//        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
+        $type = input('type',0);//0-所有 1-保底 2-普通
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $where = [
+            'status'=>0,//报名中
+        ];
+//        if($pattern){
+//            $where['pattern'] = $pattern;
+//        }
+        if($type){
+            $where['type'] = $type;
+        }
+        $offset = ($page-1)*$pageSize;
+        $total = db('room_create')->where($where)->count();
+        $data = db('room_create')->where($where)->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['uid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 房间挑战
+     * 房间挑战详情
+     */
+    public function roomDetail(){
+        $uid = $this->uid;
+        $roomId = input('roomId',0);
+        Share::checkEmptyParams(['roomId'=>$roomId]);
+        $room = db('room_create')->where('id',$roomId)->find();
+        if(!$room){
+            Share::jsonData(0,'','该挑战房间不存在！');
+        }
+        $room['room_type'] = db('room_type')->where('type',$room['type'])->find();
+        //当前报名金额
+        $joinCount = db('room_join')->where('roomId',$roomId)->count();
+        $joinCount = $joinCount?$joinCount:0;
+        $joinMoney = $joinCount * $room['money'];
+        $room['joinMoney'] = $joinMoney;
+        //是否已经报名
+        $isJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
+        if($isJoin){
+            $room['joinData'] = $isJoin;
+            $room['isJoin'] = 1;
+        }else{
+            $room['isJoin'] = 0;
+            $room['joinData'] = [];
+        }
+        Share::jsonData(1,$room);
+    }
+    /**
+     * 房间挑战
      * 用户报名
      */
     public function roomJoin(){
         $uid = $this->uid;
         $roomId = input('roomId',0);//房间id
         Share::checkEmptyParams(['roomId'=>$roomId]);
-        $room = db('room')->where('id',$roomId)->find();
+        $room = db('room_create')->where('id',$roomId)->find();
         if(!$room){
             Share::jsonData(0,'','没有该房间信息！');
         }
@@ -297,7 +372,7 @@ class Api extends Controller
             Share::jsonData(0,'','该房间挑战不是报名中，不能报名！');
         }
         //判断自己是否已经报名
-        $hadJoin = db('room_join')->where(['id'=>$roomId,'uid'=>$uid])->find();
+        $hadJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid,'type'=>1])->find();
         if($hadJoin){
             Share::jsonData(0,'','你已经报过过该房间挑战，请勿重复参加！');
         }
@@ -355,49 +430,16 @@ class Api extends Controller
         Share::roomSign($uid,$room);
         Share::jsonData(1);
     }
-    /**
-     * 房间挑战
-     * 挑战列表
-     * 用户获取
-     */
-    public function roomList(){
-        $uid = $this->uid;
-        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
-        $type = input('type',0);//0-所有 1-保底 2-普通
-        $page = input('page',1);
-        $pageSize = input('pageSize',10);
-        $where = [
-            'status'=>0,//报名中
-        ];
-        if($pattern){
-            $where['pattern'] = $pattern;
-        }
-        if($type){
-            $where['type'] = $type;
-        }
-        $offset = ($page-1)*$pageSize;
-        $total = db('room_create')->where($where)->count();
-        $data = db('room_create')->where($where)->limit($offset,$pageSize)->select();
-        foreach($data as $k => $v){
-            $user = db('member')->where('id',$v['uid'])->find();
-            $data[$k]['nickname'] = $user['nickname'];
-            $data[$k]['avatar'] = $user['avatar'];
-        }
-        $return = [
-            'total'=>$total,
-            'data'=>$data,
-        ];
-        Share::jsonData(1,$return);
-    }
 
     /**
      * 房间挑战
      * 房间列表
      * 创建人获取
+     * 我的发布
      */
     public function myRoom(){
         $uid = $this->uid;
-        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
+//        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
         $type = input('type',0);//0-所有 1-保底 2-普通
         $status = input('status',99);//99-全部  0-报名中   1-活动中 2-活动结束
         $where = [
@@ -406,13 +448,19 @@ class Api extends Controller
         if($status != 99){
             $where['status'] = $status;
         }
-        if($pattern){
-            $where['pattern'] = $pattern;
-        }
+//        if($pattern){
+//            $where['pattern'] = $pattern;
+//        }
         if($type){
             $where['type'] = $type;
         }
         $data = db('room_create')->where($where)->select();
+        foreach($data as $k=> $v){
+            //报名金额
+            $number = db('room_join')->where(['roomId'=>$v['id'],'type'=>1])->count();
+            $data[$k]['joinMoney'] = $v['money']*$number;
+            $data[$k]['joinNumber'] = $number;
+        }
         Share::jsonData(1,$data);
     }
 
@@ -421,7 +469,7 @@ class Api extends Controller
      * 我的参与
      * 用户获取
      */
-    public function myJoin(){
+    public function myRoomJoin(){
         $uid = $this->uid;
         $page = input('page',1);
         $pageSize = input('pageSize',10);
@@ -442,6 +490,28 @@ class Api extends Controller
             $room['roomerNickname'] = $user['nickname'];
             $room['roomerAvatar'] = $user['avatar'];
             $data[$k]['room'] = $room;
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 房间挑战
+     * 我的打卡
+     */
+    public function myRoomSign(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $offset = $pageSize*($page-1);
+        $total = db('sign')->where(['uid'=>$uid])->count();
+        $data = db('sign')->where('uid',$uid)->order('id','desc')->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $room = db('room_create')->where('id',$v['roomId'])->find();
+            $data[$k]['roomName'] = $room['name'];
+            $data[$k]['signNum'] = $room['signNum'];
         }
         $return = [
             'total'=>$total,
@@ -494,6 +564,9 @@ class Api extends Controller
         }else{
             $clock['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
         }
+        //参与金额
+        $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
+        $clock['joinMoney'] = $joinMoney?$joinMoney:0;
         Share::jsonData(1,$clock);
     }
     /**
@@ -596,6 +669,51 @@ class Api extends Controller
             Share::jsonData(0,'','打卡失败，请重试！');
         }
 
+    }
+    /**
+     * 打卡活动
+     * 打卡记录
+     */
+    public function clockRecord(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $offset = ($page-1)*$pageSize;
+        $total = db('clock_in_sign')->where('uid',$uid)->count();
+        $data = db('clock_in_sign')->where('uid',$uid)->order('createTime','desc')->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $clock = db('clock_in')->where('id',$v['clockInId'])->find();
+            $data[$k] = isset($clock['name'])?$clock['name']:'已删除';
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 关于我们
+     * 1-关于我们 2-帮助中心 3-免责申明
+     */
+    public function aboutUs(){
+        $content = db('system')->where('type',1)->find();
+        Share::jsonData(1,$content);
+    }
+    /**
+     * 帮助中心
+     * 1-关于我们 2-帮助中心 3-免责申明
+     */
+    public function help(){
+        $content = db('system')->where('type',2)->find();
+        Share::jsonData(1,$content);
+    }
+    /**
+     * 免责申明
+     * 1-关于我们 2-帮助中心 3-免责申明
+     */
+    public function disclaimer(){
+        $content = db('system')->where('type',3)->find();
+        Share::jsonData(1,$content);
     }
 
 }

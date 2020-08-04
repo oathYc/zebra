@@ -45,7 +45,7 @@ class Share extends \think\Model
     }
 
     public static function addHost($host,$data){
-//        $data =  "/uploads/avatar/20200714/0ed01490e1d19088495af62593bf609c.jpg";
+//        $data =  "/uploads/avatar/20200804/mr.jpg";
         if(is_array($data)){
             foreach($data as $k => $val){
                 $val = self::addHost($host,$val);
@@ -53,11 +53,11 @@ class Share extends \think\Model
             }
         }else{
             if($data){
-                if(strpos($data,"uploads/product/2020") == 1){//商品
+                if(strpos($data,"uploads/product/20") == 1){//商品
                     $data = $host.$data;
-                }elseif(strpos($data,"uploads/avatar/2020") == 1){//头像
+                }elseif(strpos($data,"uploads/avatar/20") == 1){//头像
                     $data = $host.$data;
-                }elseif(strpos($data,"uploads/file/2020") == 1){//文件
+                }elseif(strpos($data,"uploads/file/20") == 1){//文件
                     $data = $host.$data;
                 }
             }
@@ -134,7 +134,7 @@ class Share extends \think\Model
         $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
         if($res){
             //记录余额使用记录
-            self::userMoneyRecord($uid,$money,'创建房间支付挑战费用',2);
+            self::userMoneyRecord($uid,$money,'参与房间挑战支付挑战费用',2);
         }else{
             self::jsonData(0,'','扣除费用失败，请重试');
         }
@@ -229,7 +229,7 @@ class Share extends \think\Model
      * type 1-房间挑战
      */
     public static function getRoomJoinNumber($roomId,$type=1){
-        $number = db('create_join')->where(['roomId'=>$roomId,'type'=>$type])->count();
+        $number = db('room_join')->where(['roomId'=>$roomId,'type'=>$type])->count();
         return $number?$number:0;
     }
     /**
@@ -297,10 +297,10 @@ class Share extends \think\Model
     public static function checkRoomStatus(&$room){
         $now = time();
         $beginTime = $room['beginTime'];//活动首次签到时间
-        $roomEndTime = strtotime($room['beginTimeDate']) + 86400*$room['days'] -1;//活动结束时间
-        if($beginTime >= $now){//已经开始挑战
-            $status = 1;//活动中
-        }elseif($now >= $roomEndTime){//活动已经结束
+        $roomEndTime = strtotime($room['beginDate']) + 86400*$room['day'] -1;//活动结束时间
+        if( ($beginTime < $now ) && ($now < $roomEndTime)){//开始挑战 且未结束
+            $status = 1;//活动报名中
+        }elseif($now > $roomEndTime){//活动已经结束
             $status  = 2;
         }else{
             $status = 0;
@@ -322,7 +322,7 @@ class Share extends \think\Model
         $todayTime = strtotime($date);
         $nowTime = time();//当前时间
         //获取用户的当天打卡记录
-        $sign = self::getMemberSignMsg($uid,$date,1);//1-房间挑战
+        $sign = self::getMemberSignMsg($uid,$room['id'],$date,1);//1-房间挑战
         //签到参数
         $params = [];
         //判断是否在第一次打卡时间段内
@@ -354,6 +354,12 @@ class Share extends \think\Model
                     if($sign['secondSign'] == 1 && $sign['secondSignTime']){
                         self::jsonData(0,'','您已签到，请勿重复签到');
                     }else{
+                        //判断第一次签到是否成功
+                        if($sign['firstSign'] != 1){
+                            //修改参与状态
+                            db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id'],'type'=>1])->update(['status'=>2]);//挑战失败
+                            self::jsonData(0,'','你已挑战失败，签到无效！（今日首次签到失败）');
+                        }
                         //判断当前用户的参与状态
                         self::checkUserJoinStatus($uid,$room);
                         $params['secondSign'] = 1;
@@ -372,7 +378,7 @@ class Share extends \think\Model
             }
         }
         if($params){
-            $res = db('sign')->where(['uid'=>$sign['uid'],'type'=>$sign['type'],'roomId'=>$sign['roomId'],'date'=>$sign['date']])->update($params);
+            $res = db('sign')->where('id',$sign['id'])->update($params);
             if($res){
                 self::jsonData(1);
             }else{
@@ -394,9 +400,9 @@ class Share extends \think\Model
         if($join['status'] != 1){//不是参与中状态
             Share::jsonData(0,'','您已经挑战失败了，不能再继续签到了！');
         }else{//判断当前用户今天之前是否有断签的记录
-            $begin = $room['beginTimeDate'];
+            $begin = $room['beginDate'];
             $beginTime = strtotime($begin);
-            $days = $room['days'];//挑战周期
+            $days = $room['day'];//挑战周期
             $endDate = strtotime($begin) + 86400*($days-1);//结束日期
             $endDate = date('Y-m-d',$endDate);
             $today = date('Y-m-d');
@@ -443,7 +449,7 @@ class Share extends \think\Model
         $where = [
             'type'=>1,
             'uid'=>$uid,
-            'date'=>$uid,
+            'date'=>$date,
             'roomId'=>$roomId,
         ];
         $sign = db('sign')->where($where)->find();
@@ -538,5 +544,144 @@ class Share extends \think\Model
         }else{
             Share::jsonData(0,'','本金退还失败');
         }
+    }
+    /**
+     * 获取房间类型描述
+     */
+    public static function getRoomTypeStr($type){
+        $arr = [
+            1=>'保底房间',
+            2=>'普通房间',
+        ];
+        if(isset($arr[$type])){
+            return $arr[$type];
+        }else{
+            return '';
+        }
+    }
+    /**
+     * 房间挑战
+     * 奖励发放  当天失败金的金额发送
+     * 完成退还报名费
+     * finish 0-未完成 1-已完成
+     * day  房间挑战天数
+     */
+    public static function roomEveryDayReward($roomId,$finish = 0){
+        //获取活动中和已完成的报名信息 1-参与中 2-已失败 3-已完成
+        $join = db('room_join')->where(['status'=>1,'roomId'=>$roomId,'type'=>1])->select();
+        //房间信息
+        $room = db('room_create')->where('id',$roomId)->find();
+        if(!$room){
+            return false;
+        }
+        $day = $room['day'];//房间挑战天数
+        $finishUser = [];//完成挑战用户
+        $todaySign = [];//今日签到用户
+        $signNum = $room['signNum'];//房间签到数
+        $today = date('Y-m-d');//今日时间
+        $failNum = 0;//失败者数量  昨天打卡 今日未打卡的才算
+        $failUser = [];//失败者uid
+        $yesterday  =  date('Y-m-d',(strtotime($today) - 86400));//昨天时间
+        foreach($join as $k => $v){
+            //今日是否已打卡
+            $isSign = db('sign')->where(['uid'=>$v['uid'],'date'=>$today,'roomId'=>$roomId,'type'=>1])->find();
+            if(!$isSign){//今日未打卡
+                //修改参与状态  失败
+                db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                //判断昨天是否打卡
+                $yesterSign = db('sign')->where(['uid'=>$v['uid'],'date'=>$yesterday,'roomId'=>$roomId,'type'=>1])->find();
+                if($yesterSign){//昨日已打卡
+                    $failNum += 1;
+                    $failUser[] = $v['uid'];
+                }else{
+                    continue;//结束当前循环
+                }
+            }elseif($signNum == 1 && $isSign['firstSign'] ==1){//一次签到
+                $todaySign[] =$v['uid'];//今日完成打卡的用户
+                if($finish == 1){//活动结束 判断是否都完成挑战
+                    $hadSign = db('sign')->where(['uid'=>$v['uid'],'roomId'=>$roomId,'type'=>1])->group('date')->count();
+                    if($hadSign == $day){//打卡天数完成
+                        $finishUser[] = $v['uid'];
+                        //修改参与状态  完成
+                        db('room_join')->where('id',$v['id'])->update(['status'=>3]);
+                    }else{
+                        //修改参与状态  失败
+                        db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                    }
+                }
+            }elseif($signNum == 2 && $isSign['firstSign'] == 1 && $isSign['secondSign'] == 1){
+                //二次签到
+                $todaySign[] = $v['uid'];
+                if($finish == 1){//活动结束 判断是否都完成挑战
+                    $hadSign = db('sign')->where(['uid'=>$v['uid'],'roomId'=>$roomId,'type'=>1])->group('date')->count();
+                    if($hadSign == $day){//打卡天数完成
+                        $finishUser[] = $v['uid'];
+                        //修改参与状态  完成
+                        db('room_join')->where('id',$v['id'])->update(['status'=>3]);
+                    }else{
+                        //修改参与状态  失败
+                        db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                    }
+                }
+            }else{//今日没有完成打卡
+                //修改参与状态  失败
+                db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                //判断昨天是否打卡
+                $yesterSign = db('sign')->where(['uid'=>$v['uid'],'date'=>$yesterday,'roomId'=>$roomId,'type'=>1])->find();
+                if($yesterSign){//昨日已打卡
+                    $failNum += 1;
+                    $failUser[] = $v['uid'];
+                }else{
+                    continue;//结束当前循环
+                }
+            }
+        }
+        //计算失败金
+        $failMoney = $failNum * $room['money'];
+        $rewardMoney = 0;//失败金
+        $userRewardMoney = 0;//每人的奖励金额
+        if($todaySign){//发放奖励金
+            $userRewardMoney = 0;//每个人的奖励金额
+            $percent = db('room_type')->where('type',$room['type'])->find()['percent'];//发放比例  百分比
+            if($failMoney && $percent){
+                $rewardMoney = ($failMoney*($percent/100));//奖励金额
+                $userRewardMoney = $rewardMoney/count($todaySign);//每个人所得到的金额
+                $userRewardMoney = self::getDecimalMoney($userRewardMoney);
+            }
+            if($userRewardMoney){
+                foreach($todaySign as $p => $r){//发放奖励金额
+                    $user = db('member')->where('id',$r)->find();
+                    $addMoney = $user['money'] + $userRewardMoney;
+                    $res = db('member')->where('id',$r)->update(['money'=>$addMoney]);
+                    if($res){
+                        self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放',1);
+                    }
+                }
+            }
+        }
+        if($finishUser){//退还报名费
+            foreach($finishUser as $e => $w){
+                $user = db('member')->where('id',$w)->find();
+                $addMoney = $user['money'] + $room['money'];
+                $res = db('member')->where('id',$w)->update(['money'=>$addMoney]);
+                if($res){
+                    self::userMoneyRecord($w,$room['money'],'房间挑战报名费退还',1);
+                }
+            }
+        }
+        //房间挑战数据记录
+        $params = [
+            'roomId'=>$roomId,
+            'date'=>$today,
+            'signSuccess'=>count($todaySign),
+            'signFail'=>$failNum,
+            'failMoney'=>$rewardMoney,
+            'createTime'=>time(),
+            'rewardMoney'=>$userRewardMoney,
+            'finish'=>$finish,
+            'finishNum'=>count($finishUser),
+            'roomBegin'=>$room['beginDate'],
+        ];
+        db('room_record')->insert($params);
     }
 }
