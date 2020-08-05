@@ -1,123 +1,123 @@
 
-接口域名  http://cg.aoranjianzhong.com/api/api/
-接口方式  post
-接口返回  code 0=失败 1=成功 100=未登录 101=登录失效   -1=token没传 -2=token错误 -3=token不是该用户的  999=token过期
-         data   返回数据
-         message    对应的信心描述
-接口要求  token验证  除了[wxlogin] 几个接口外
-         其余接口都需要传递 accessToken（getToken接口返回的accessToken值） 参数进行token验证
-         放在header请求头里面传递
+�ӿ�����  http://cg.aoranjianzhong.com/api/api/
+�ӿڷ�ʽ  post
+�ӿڷ���  code 0=ʧ�� 1=�ɹ� 100=δ��¼ 101=��¼ʧЧ   -1=tokenû�� -2=token���� -3=token���Ǹ��û���  999=token����
+         data   ��������
+         message    ��Ӧ����������
+�ӿ�Ҫ��  token��֤  ����[wxlogin] �����ӿ���
+         ����ӿڶ���Ҫ���� accessToken��getToken�ӿڷ��ص�accessTokenֵ�� ��������token��֤
+         ����header����ͷ���洫��
 
 
-接口名称    微信授权登录
-接口路径    wxLogin
-接口参数    nickname            昵称
+�ӿ�����    ΢����Ȩ��¼
+�ӿ�·��    wxLogin
+�ӿڲ���    nickname            �ǳ�
             openid              opneid
             unionid
-            headimgurl          头像
-返回参数     成功后自动登录 返回用户信息
+            headimgurl          ͷ��
+���ز���     �ɹ����Զ���¼ �����û���Ϣ
 
-接口名称    获取token
-接口路径    getToken
-接口参数
-返回参数
+�ӿ�����    ��ȡtoken
+�ӿ�·��    getToken
+�ӿڲ���
+���ز���
 
 
-接口名称    图片上传
-接口路径    uploadImg
-接口参数    file            文件对象
-           type           上传对象 1-头像 2-商品图片
-返回参数    src             图片地址 相对
+�ӿ�����    ͼƬ�ϴ�
+�ӿ�·��    uploadImg
+�ӿڲ���    file            �ļ�����
+           type           �ϴ����� 1-ͷ�� 2-��ƷͼƬ
+���ز���    src             ͼƬ��ַ ���
 
-接口名称    文件上传
-接口路径    uploadFile
-接口参数    file            文件对象
-           type           上传对象 1-头像 2-商品图片
-返回参数    src             文件地址 相对
+�ӿ�����    �ļ��ϴ�
+�ӿ�·��    uploadFile
+�ӿڲ���    file            �ļ�����
+           type           �ϴ����� 1-ͷ�� 2-��ƷͼƬ
+���ز���    src             �ļ���ַ ���
 
-接口名称    个人信息获取
-接口路径    myMessage
-接口参数
-返回参数
+�ӿ�����    ������Ϣ��ȡ
+�ӿ�·��    myMessage
+�ӿڲ���
+���ز���
 
-接口名称    个人信息修改
-接口路径    messageEdit
-接口参数    nickname            昵称
-            sex                 性别
-            real_name           真实姓名
-            card                身份证号
-            avatar              头像地址
-返回参数
+�ӿ�����    ������Ϣ�޸�
+�ӿ�·��    messageEdit
+�ӿڲ���    nickname            �ǳ�
+            sex                 �Ա�
+            real_name           ��ʵ����
+            card                ����֤��
+            avatar              ͷ���ַ
+���ز���
 
-接口名称    房间挑战-房间类型
-接口路径    roomType
-接口参数
-返回参数    type                1-保底 2-普通
-            minMoney            最低金额 单位元
-            maxMoney            最高金额
-            rule                规则说明
-            percent             失败金百分比奖励
+�ӿ�����    ������ս-��������
+�ӿ�·��    roomType
+�ӿڲ���
+���ز���    type                1-���� 2-��ͨ
+            minMoney            ��ͽ�� ��λԪ
+            maxMoney            ��߽��
+            rule                ����˵��
+            percent             ʧ�ܽ�ٷֱȽ���
 
-接口名称    房间挑战-创建房间
-接口路径    roomCreate
-接口参数    type                1-保底 2-普通
-            number              人数限制  0-不限制 默认是0
-            name                房间名称
-            desc                房间描述
-            money               报名金额
-            beginDate           开始时间  2020-09-02
-            day                 活动周期 单位天
-            signBegin           首次签到开始时间 12:00
-            signEnd              首次签到结束是阿金 13:00
-            signNum             签到次数  1或者2 默认1
-            secondBegin         二次签到开始时间  signNum为2必传  15:00
-            secondEnd           二次签到结束时间  signNum为2时必传 16:00
-返回参数
+�ӿ�����    ������ս-��������
+�ӿ�·��    roomCreate
+�ӿڲ���    type                1-���� 2-��ͨ
+            number              ��������  0-������ Ĭ����0
+            name                ��������
+            desc                ��������
+            money               �������
+            beginDate           ��ʼʱ��  2020-09-02
+            day                 ����� ��λ��
+            signBegin           �״�ǩ����ʼʱ�� 12:00
+            signEnd              �״�ǩ�������ǰ��� 13:00
+            signNum             ǩ������  1����2 Ĭ��1
+            secondBegin         ����ǩ����ʼʱ��  signNumΪ2�ش�  15:00
+            secondEnd           ����ǩ������ʱ��  signNumΪ2ʱ�ش� 16:00
+���ز���
 
-接口名称    房间挑战-挑战列表
-接口路径    roomList
-接口参数    type            默认0 0-所有 1-保底 2-普通
-            page            页数 默认1
-            pageSize        每页数量 默认10
-返回参数
+�ӿ�����    ������ս-��ս�б�
+�ӿ�·��    roomList
+�ӿڲ���    type            Ĭ��0 0-���� 1-���� 2-��ͨ
+            page            ҳ�� Ĭ��1
+            pageSize        ÿҳ���� Ĭ��10
+���ز���
 
-接口名称    房间挑战-房间详情
-接口路径    roomDetail
-接口参数    roomId              房间id
-返回参数    status              状态 0-报名中   1-活动中 2-活动结束
-            isJoin              0-当前未报名 1-已报名
-            joinMoney           报名金额
+�ӿ�����    ������ս-��������
+�ӿ�·��    roomDetail
+�ӿڲ���    roomId              ����id
+���ز���    status              ״̬ 0-������   1-��� 2-�����
+            isJoin              0-��ǰδ���� 1-�ѱ���
+            joinMoney           �������
 
-接口名称    房间挑战-报名参加
-接口路径    roomJoin
-接口参数    roomId              房间id
-返回参数
+�ӿ�����    ������ս-�����μ�
+�ӿ�·��    roomJoin
+�ӿڲ���    roomId              ����id
+���ز���
 
-接口名称    房间挑战-打卡
-接口路径    roomSign
-接口参数    roomId              房间id
-返回参数
+�ӿ�����    ������ս-��
+�ӿ�·��    roomSign
+�ӿڲ���    roomId              ����id
+���ز���
 
-接口名称    房间挑战-我创建的房间
-接口路径    myRoom
-接口参数    type              默认0 0-所有 1-保底 2-普通
-            status             默认99  99-全部  0-报名中   1-活动中 2-活动结束
-返回参数    joinNumber              报名人数
-            joinMoney               报名金额
+�ӿ�����    ������ս-�Ҵ����ķ���
+�ӿ�·��    myRoom
+�ӿڲ���    type              Ĭ��0 0-���� 1-���� 2-��ͨ
+            status             Ĭ��99  99-ȫ��  0-������   1-��� 2-�����
+���ز���    joinNumber              ��������
+            joinMoney               �������
 
-接口名称    房间挑战-我的参与
-接口路径    myRoomJoin
-接口参数    status                  0-全部 1-参与中 2-已失败 3-已完成 默认0
-            page                    页数 默认1
-            pageSize                每页数量 默认10
-返回参数
+�ӿ�����    ������ս-�ҵĲ���
+�ӿ�·��    myRoomJoin
+�ӿڲ���    status                  0-ȫ�� 1-������ 2-��ʧ�� 3-����� Ĭ��0
+            page                    ҳ�� Ĭ��1
+            pageSize                ÿҳ���� Ĭ��10
+���ز���
 
-接口名称    房间挑战-我的打卡记录
-接口路径    myRoomSign
-接口参数    page                    页数 默认1
-            pageSize                每页数量 默认10
-返回参数    signNum                 挑战打卡次数  1-一次 2-两次 根据显示打卡时间
-            roomName                房间挑战名称
+�ӿ�����    ������ս-�ҵĴ򿨼�¼
+�ӿ�·��    myRoomSign
+�ӿڲ���    page                    ҳ�� Ĭ��1
+            pageSize                ÿҳ���� Ĭ��10
+���ز���    signNum                 ��ս�򿨴���  1-һ�� 2-���� ������ʾ��ʱ��
+            roomName                ������ս����
 
 
 
