@@ -23,5 +23,5 @@ return [
     /*一天留言的次数*/
     'msg_frequency' => '3',
     //域名
-    'hostUrl'=>'',
+    'hostUrl'=>'http://cg.aoranjianzhong.com',
 ];

@@ -1,5 +1,5 @@
 
-接口域名  http://zf.hualin688.com/api/api/
+接口域名  http://cg.aoranjianzhong.com/api/api/
 接口方式  post
 接口返回  code 0=失败 1=成功 100=未登录 101=登录失效   -1=token没传 -2=token错误 -3=token不是该用户的  999=token过期
          data   返回数据
