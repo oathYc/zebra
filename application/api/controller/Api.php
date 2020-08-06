@@ -57,6 +57,7 @@ class Api extends Controller
         $name = strip_tags(input('nickname'));//昵称
         $openid = strip_tags(input('openid')); //openid
         $unionid = strip_tags(input('unionid'));
+        $inviterCode = strip_tags(input('inviterCode'));//邀请人的邀请码
         $phone = ""; // 手机号码
         $password = "123456"; // 密码
         $headimg = strip_tags(input('headimgurl'));
@@ -65,6 +66,7 @@ class Api extends Controller
         Share::checkEmptyParams(['openid'=>$openid,'nickname'=>$name]);
         $user = db('member')->where('openid',$openid)->find();
         if(!$user){//新增
+            $inviteCode = Share::getInviteCode();
             $params = [
                 'phone'=>$phone,
                 'password'=>md5($password),
@@ -76,7 +78,11 @@ class Api extends Controller
                 'openid'=>$openid,
                 'unionid'=>$unionid,
                 'avatar'=>$headimg,
+                'inviteCode'=>$inviteCode
             ];
+            if($inviterCode){
+                $params['inviterCode'] = $inviterCode;
+            }
             $res = db('member')->insert($params);
         }else{//修改
             $params = [
@@ -717,6 +723,95 @@ class Api extends Controller
     public function disclaimer(){
         $content = db('system')->where('type',3)->find();
         Share::jsonData(1,$content);
+    }
+    /**
+     * 邀请人
+     * 单独绑定
+     * 已有邀请人不可修改
+     */
+    public function addInviter(){
+        $uid = $this->uid;
+        $inviterCode = input('inviterCode','');
+        Share::checkEmptyParams(['inviterCode'=>$inviterCode]);
+        $inviterUser = db('member')->where('inviteCode',$inviterCode)->find();
+        if(!$inviterUser){
+            Share::jsonData(0,'','没有该邀请人，请输入正确的邀请码！');
+        }
+        $user = db('member')->where('id',$uid)->find();
+        if($user['inviteCode'] == $inviterUser){
+            Share::jsonData(0,'','你不能邀请自己！');
+        }
+        if($user['inviterCode']){
+            Share::jsonData(0,'','你已绑定邀请人，不能修改');
+        }
+        $res = db('member')->where('id',$uid)->update(['inviterCode'=>$inviterCode]);
+        if($res){
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','添加失败，请重试！');
+        }
+    }
+    /**
+     * 邀请人
+     *我的邀请
+     */
+    public function myInvite(){
+        $uid = $this->uid;
+        $myCode = db('member')->where('id',$uid)->find()['inviteCode'];
+        $myInvite = db('member')->where('inviterCode',$myCode)->select();
+        $return = [];
+        foreach($myInvite as $k => $v){
+            $return[] = [
+                'id'=>$v['id'],
+                'nickname'=>$v['nickname'],
+                'avatar'=>$v['avatar'],
+                'inviteTime'=>date('Y-m-d H:i',$v['createTime']),
+            ];
+        }
+        Share::jsonData(1,$return);
+    }
+
+    /**
+     * 排行榜
+     * 打卡排行榜
+     * 前十
+     */
+    public function clockInRanking(){
+        $data = db('money_get')->where(['type'=>1])->limit(0,10)->order('moneyGet','desc')->select();
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['uid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+        }
+        Share::jsonData(1,$data);
+    }
+    /**
+     * 排行榜
+     * 房间挑战排行榜
+     * 前十
+     */
+    public function roomRanking(){
+        $data = db('money_get')->where(['type'=>2])->limit(0,10)->order('moneyGet','desc')->select();
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['uid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+        }
+        Share::jsonData(1,$data);
+    }
+    /**
+     * 排行榜
+     * 闯关排行榜
+     * 前十
+     */
+    public function breakRanking(){
+        $data = db('money_get')->where(['type'=>3])->limit(0,10)->order('moneyGet','desc')->select();
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['uid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+        }
+        Share::jsonData(1,$data);
     }
 
 }

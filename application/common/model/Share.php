@@ -107,15 +107,40 @@ class Share extends \think\Model
      * 用户金额记录日志
      * type  1-新增 2-减少
      */
-    public static function userMoneyRecord($uid,$money,$remark,$type){
+    public static function userMoneyRecord($uid,$money,$remark,$type,$moneyType){
         $params = [
             'uid'=>$uid,
             'money'=>$money,
             'remark'=>$remark,
             'type'=>$type,
             'createTime'=>time(),
+            'moneyType'=>$moneyType,
         ];
         db('user_money_record')->insert($params);
+    }
+    /**
+     * 用户收益记录
+     * 收益统计
+     */
+    public static function userMoneyGet($uid,$money,$type){
+        $where = [
+            'uid'=>$uid,
+            'type'=>$type,
+        ];
+        $user = db('money_get')->where($where)->find();
+        if($user){//修改
+            $moneyGet = $money + $user['moneyGet'];
+            db('money_get')->where('id',$user['id'])->update(['moneyGet'=>$moneyGet]);
+        }else{//新增
+            $params = [
+                'uid'=>$uid,
+                'moneyGet'=>$money,
+                'type'=>$type,
+                'createTime'=>time(),
+                'updateTime'=>date('Y-m-d H:i:s'),
+            ];
+            db('money_get')->insert($params);
+        }
     }
     /**
      * 用户创建房间
@@ -134,7 +159,7 @@ class Share extends \think\Model
         $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
         if($res){
             //记录余额使用记录
-            self::userMoneyRecord($uid,$money,'参与房间挑战支付挑战费用',2);
+            self::userMoneyRecord($uid,$money,'参与房间挑战支付挑战费用',2,2);
         }else{
             self::jsonData(0,'','扣除费用失败，请重试');
         }
@@ -514,7 +539,8 @@ class Share extends \think\Model
         $addMoney = $user['money'] + $money;
         $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
         if($res){
-            self::userMoneyRecord($uid,$money,'打卡活动每日奖励',1);
+            self::userMoneyRecord($uid,$money,'打卡活动每日奖励',1,1);
+            self::userMoneyGet($uid,$money,1);
         }
     }
     /**
@@ -540,7 +566,7 @@ class Share extends \think\Model
         $addMoney = $user['money'] + $money;
         $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
         if($res){
-            self::userMoneyRecord($uid,$money,'打卡活动本金退还',1);
+            self::userMoneyRecord($uid,$money,'打卡活动本金退还',1,1);
         }else{
             Share::jsonData(0,'','本金退还失败');
         }
@@ -654,7 +680,8 @@ class Share extends \think\Model
                     $addMoney = $user['money'] + $userRewardMoney;
                     $res = db('member')->where('id',$r)->update(['money'=>$addMoney]);
                     if($res){
-                        self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放',1);
+                        self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放',1,2);
+                        self::userMoneyGet($r,$userRewardMoney,2);//收益记录
                     }
                 }
             }
@@ -665,7 +692,7 @@ class Share extends \think\Model
                 $addMoney = $user['money'] + $room['money'];
                 $res = db('member')->where('id',$w)->update(['money'=>$addMoney]);
                 if($res){
-                    self::userMoneyRecord($w,$room['money'],'房间挑战报名费退还',1);
+                    self::userMoneyRecord($w,$room['money'],'房间挑战报名费退还',1,2);
                 }
             }
         }
@@ -683,5 +710,24 @@ class Share extends \think\Model
             'roomBegin'=>$room['beginDate'],
         ];
         db('room_record')->insert($params);
+    }
+    /**
+     * 邀请码设置
+     */
+    public static function getInviteCode(){
+        //初次生成邀请码
+        $array = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','0');
+        $total = count($array);
+        for($i = 0; $i<8;$i++){
+            $rand = rand(0,$total);
+            $code[] = $array[$rand];
+        }
+        $code = implode('',$code);
+        $had = db('member')->where("inviteCode = '{$code}'")->find();
+        if(!$had){
+            return $code;
+        }else{//已有用户有改邀请码 重新生成
+            self::getInviteCode();
+        }
     }
 }

@@ -15,6 +15,7 @@
             openid              opneid
             unionid
             headimgurl          头像
+            inviterCode         邀请人的邀请码
 返回参数     成功后自动登录 返回用户信息
 
 接口名称    获取token
@@ -172,6 +173,32 @@
 
 接口名称    免责申明
 接口路径    disclaimer
+接口参数
+返回参数
+
+接口名称    添加邀请人
+接口路径    addInviter
+接口参数    inviterCode             邀请人的邀请码
+返回参数
+
+
+接口名称    我的邀请
+接口路径    myInvite
+接口参数
+返回参数
+
+接口名称    排行榜-打卡排行
+接口路径    clockInRanking
+接口参数
+返回参数
+
+接口名称    排行榜-房间挑战排行
+接口路径    roomRanking
+接口参数
+返回参数
+
+接口名称    排行榜-闯关排行
+接口路径    breakRanking
 接口参数
 返回参数
 
