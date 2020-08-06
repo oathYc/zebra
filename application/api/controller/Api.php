@@ -587,6 +587,9 @@ class Api extends Controller
         if($joinMoney > $clock['maxMoney']){
             Share::jsonData(0,'','当前活动最大报名金额为'.$clock['maxMoney']);
         }
+        if($joinMoney < 1){
+            Share::jsonData(0,'','报名金额不能小于1元');
+        }
         //判断当前是否已经报名
         $hadSign = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->find();
         if($hadSign){
@@ -600,7 +603,7 @@ class Api extends Controller
         $params = [
             'uid'=>$uid,
             'clockInId'=>$clockId,
-            'status'=>0,
+            'status'=>1,
             'beginTime'=>date('Y-m-d'),
             'createTime'=>time(),
             'clockNum'=>0,
@@ -633,10 +636,10 @@ class Api extends Controller
         //判断当前打卡天数及状态
         Share::checkClockInStatus($uid,$hadSign,$clock);
         //打卡时间
-        $beginTime = strtotime($clock['beginTime']);
-        $endTime = strtotime($clock['endTime']);
+        $beginTime = $clock['beginTime'];
+        $endTime = $clock['endTime'];
         //当前时间
-        $currTime =strtotime(date("H:m:s"));
+        $currTime =Share::getMinute(date("H:m"));
         if($currTime < $beginTime || $currTime > $endTime){
             Share::jsonData(0,'','当前不在活动打卡时间范围内！');
         }
@@ -683,7 +686,7 @@ class Api extends Controller
         $data = db('clock_in_sign')->where('uid',$uid)->order('createTime','desc')->limit($offset,$pageSize)->select();
         foreach($data as $k => $v){
             $clock = db('clock_in')->where('id',$v['clockInId'])->find();
-            $data[$k] = isset($clock['name'])?$clock['name']:'已删除';
+            $data[$k]['clockName'] = isset($clock['name'])?$clock['name']:'已删除';
         }
         $return = [
             'total'=>$total,
@@ -703,7 +706,7 @@ class Api extends Controller
      * 帮助中心
      * 1-关于我们 2-帮助中心 3-免责申明
      */
-    public function help(){
+    public function helpMsg(){
         $content = db('system')->where('type',2)->find();
         Share::jsonData(1,$content);
     }

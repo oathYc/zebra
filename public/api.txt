@@ -119,11 +119,61 @@
 返回参数    signNum                 挑战打卡次数  1-一次 2-两次 根据显示打卡时间
             roomName                房间挑战名称
 
+接口名称    打卡活动-打卡列表
+接口路径    clockInList
+接口参数
+返回参数    currJoinNum                 报名人数
+            currJoin                    是否报名 1-已报名 0-未报名
+            status                      1-启用 0-关闭
+            image                       封面图
+            background                  背景图
+            rule                        挑战规则
+            maxMoney                    金额上限
+            days                        挑战天数
+            rewardType                  奖励类型 1-固定金额 2-百分比
+            reward                      奖励值 对应rewardType
+
+接口名称    打卡活动-打卡列表
+接口路径    clockDetail
+接口参数    clockInId                   打卡活动id
+返回参数    currJoinNum                 报名人数
+            currJoin                    是否报名 1-已报名 0-未报名
+            status                      1-启用 0-关闭
+            joinMoney                   报名金额
 
 
+接口名称    打卡活动-打卡报名
+接口路径    clockInJoin
+接口参数    clockInId                   打卡活动id
+            joinMoney                   报名金额
+返回参数
 
+接口名称    打卡活动-打卡签到
+接口路径    clockInSign
+接口参数    clockInId                   打卡活动id
+返回参数
 
+接口名称    打卡活动-打卡签到记录
+接口路径    clockRecord
+接口参数    clockInId                   打卡活动id
+            page                    页数 默认1
+            pageSize                每页数量 默认10
+返回参数
 
+接口名称    关于我们
+接口路径    aboutUs
+接口参数
+返回参数
+
+接口名称    帮助中心
+接口路径    helpMsg
+接口参数
+返回参数
+
+接口名称    免责申明
+接口路径    disclaimer
+接口参数
+返回参数
 
 
 
