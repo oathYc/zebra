@@ -3,13 +3,26 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>打卡活动详情</title>
+    <title>添加闯关活动</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
     <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
     <link href="__CSS__/animate.min.css" rel="stylesheet">
     <link href="__JS__/layui/css/layui.css" rel="stylesheet">
     <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+    <style>
+        .layui-laydate-content>.layui-laydate-list {
+            padding-bottom: 0px;
+            overflow: hidden;
+        }
+        .layui-laydate-content>.layui-laydate-list>li{
+            width:50%
+        }
+
+        .merge-box .scrollbox .merge-list {
+            padding-bottom: 5px;
+        }
+    </style>
 </head>
 <body class="gray-bg">
 <div class="wrapper wrapper-content animated fadeInRight">
@@ -17,92 +30,102 @@
         <div class="col-sm-8">
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
-                    <h5>打卡活动详情</h5>
+                    <h5>添加闯关活动</h5>
                 </div>
                 <div class="ibox-content">
-                    <form class="form-horizontal m-t layui-form" id="commentForm" method="" >
+                    <form class="form-horizontal m-t layui-form" id="commentForm" method="post" action="{:url('pass/addPass')}">
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">打卡名称：</label>
+                            <label class="col-sm-3 control-label">闯关名称：</label>
                             <div class="input-group col-sm-4">
-                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true" value="{$info['name']}">
+                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">打卡描述：</label>
+                            <label class="col-sm-3 control-label">闯关描述：</label>
                             <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="desc" required="true" id="desc" >{$info['desc']}</textarea>
+                                <textarea class="form-control" name="desc" required="true" id="desc"></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">打卡天数：</label>
+                            <label class="col-sm-3 control-label">闯关时长：</label>
                             <div class="input-group col-sm-4">
-                                <input id="days" type="text" class="form-control" name="days" required="true" aria-required="true" value="{$info['days']}">
+                                <input id="hour" type="text" class="form-control" name="hour"   onkeyup = "value=value.replace(/[^.\d]/g,'')" placeholder="默认2.5个小时">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">金额上限：</label>
+                            <label class="col-sm-3 control-label">报名金额：</label>
                             <div class="input-group col-sm-4">
-                                <input id="maxMoney" type="text" class="form-control" name="maxMoney" required="true" aria-required="true" value="{$info['maxMoney']}">
+                                <input id="money" type="text" class="form-control" name="money" required="true" aria-required="true" onkeyup = "value=value.replace(/[^.\d]/g,'')">
+                            </div>
+                        </div>
+                        <div class="form-group layui-form-item">
+                            <label class="col-sm-3 control-label">活动状态：</label>
+                            <div class="input-group col-sm-6">
+                                <input type="radio" name="status" value="0" title="关闭" />
+                                <input type="radio" name="status" checked value="1" title="启用" />
                             </div>
                         </div>
                         <div class="form-group layui-form-item">
                             <label class="col-sm-3 control-label">奖励类型：</label>
-                            <div class="input-group col-sm-6">
-                                <input {if 1 eq $info['rewardType']} checked {/if} type="radio" name="rewardType" value="1" title="固定金额" />
-                                <input type="radio" name="rewardType" value="2" title="百分比" {if 2 eq $info['rewardType']} checked {/if}  />
+                            <div class="input-group">
+                                <input type="radio" name="rewardType" value="1" title="失败金额百分比" />
+                                <input type="radio" name="rewardType" value="2" title="固定奖励金额" />
+                                <input type="radio" name="rewardType" value="3" title="报名费用百分比" />
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">奖励值：</label>
                             <div class="input-group col-sm-4">
-                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" value="{$info['reward']}">
+                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="对应奖励类型的值" onkeyup = "value=value.replace(/[^.\d]/g,'')">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">签到时间：</label>
+                            <label class="col-sm-3 control-label">报名时间：</label>
                             <div class="input-group ">
-                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off" value="{$info['beginTimeStr']}">
+                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off">
                                 <span style="position: relative;margin-left: -119px;" >到</span>
-                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off" value="{$info['endTimeStr']}">
+                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off">
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">活动状态：</label>
+                            <label class="col-sm-3 control-label">期数：</label>
                             <div class="input-group col-sm-4">
-                                <input id="statusStr" type="text" class="form-control" name="sort" required="" value="{$info['statusStr']}">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">排序：</label>
-                            <div class="input-group col-sm-4">
-                                <input id="sort" type="text" class="form-control" name="sort" required="" value="{$info['sort']}">
+                                <input  id="sort" type="text" lay-verify="number" class="form-control" name="number" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="期数不可重复">
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
                             <input type="hidden" name="image" id="cate_image"/>
-                            <label class="col-sm-3 control-label">房间图片：</label>
+                            <label class="col-sm-3 control-label">闯关图片：</label>
+                            <div class="input-group col-sm-2">
+                                <button type="button" class="layui-btn layui-btn-small" id="up-image">
+                                    <i class="layui-icon"></i>上传图片</button>
+                            </div>
                             <div class="input-group col-sm-3" id="img">
-                                {$info['image']}
+
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
                             <input type="hidden" name="background" id="cate_image1"/>
                             <label class="col-sm-3 control-label">背景图片：</label>
+                            <div class="input-group col-sm-2">
+                                <button type="button" class="layui-btn layui-btn-small" id="up-image1">
+                                    <i class="layui-icon"></i>上传图片</button>
+                            </div>
                             <div class="input-group col-sm-3" id="img1">
-                                {$info['background']}
+
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">奖励规则：</label>
+                            <label class="col-sm-3 control-label">闯关规则：</label>
                             <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="rule" >{$info['rule']}"</textarea>
+                                <textarea class="form-control" name="rule"></textarea>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="col-sm-4 col-sm-offset-6">
-                                <a class="btn-primary btn" href="Javascript:history.go(-1)">返回</a>
+                                <button class="btn btn-primary" type="submit">提交</button>
                             </div>
                         </div>
                     </form>

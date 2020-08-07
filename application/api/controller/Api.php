@@ -804,7 +804,7 @@ class Api extends Controller
      * 闯关排行榜
      * 前十
      */
-    public function breakRanking(){
+    public function passRanking(){
         $data = db('money_get')->where(['type'=>3])->limit(0,10)->order('moneyGet','desc')->select();
         foreach($data as $k => $v){
             $user = db('member')->where('id',$v['uid'])->find();
