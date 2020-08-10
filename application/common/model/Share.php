@@ -106,6 +106,7 @@ class Share extends \think\Model
     /**
      * 用户金额记录日志
      * type  1-新增 2-减少
+     * $moneyType 0-充值 1-打卡 2-房间挑战 3-闯关
      */
     public static function userMoneyRecord($uid,$money,$remark,$type,$moneyType){
         $params = [
@@ -121,6 +122,7 @@ class Share extends \think\Model
     /**
      * 用户收益记录
      * 收益统计
+     * 1-打卡 2-房间挑战 3-闯关
      */
     public static function userMoneyGet($uid,$money,$type){
         $where = [
@@ -728,6 +730,69 @@ class Share extends \think\Model
             return $code;
         }else{//已有用户有改邀请码 重新生成
             self::getInviteCode();
+        }
+    }
+    /**
+     *检查用户的闯关参与状态
+     * 已过闯关时间
+     */
+    public static function checkPassStatus($uid,$passId,$joinId){
+        $pass = db('pass')->where('id',$passId)->find();
+        $join = db('pass_join')->where('id',$joinId)->find();
+        $total = db('pass_sign')->where(['uid'=>$uid,'joinId'=>$joinId,'passId'=>$passId,'status'=>1])->count();
+        if($pass['challenge'] == $total){//挑战成功
+            db('pass_join')->where('id',$joinId)->update(['status'=>1]);
+            if($join['isReward'] != 1){//发放奖励
+                self::sendPassReward($uid,$pass);
+                db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);
+            }
+        }else{
+            db('pass_join')->where('id',$joinId)->update(['status'=>2]);
+        }
+    }
+    /**
+     * 发放闯关奖励
+     */
+    public static function sendPassReward($uid,$pass){
+        $today = date('Y-m-d');
+        $beginTime = $today.' 00:00:00';
+        $endTime = $today.' 23:59:59';
+        $reward  = $pass['reward'];
+        $rewardType = $pass['rewardType'];
+        if( $rewardType == 1){//奖励类型 1-瓜分 2-固定金额  3-报名百分比
+            $count = db('pass_join')->where(['passId'=>$pass['id'],'status'=>2,'joinTime'=>['>=',$beginTime,'joinTime'=>['<=',$endTime]]])->count();
+            $money = $count*$pass['money']*$reward;
+            //成功打卡人数
+            $success = db('pass_join')->where(['passId'=>$pass['id'],'status'=>1,'joinTime'=>['>=',$beginTime,'joinTime'=>['<=',$endTime]]])->count();
+            if($money && $success){
+                $money = $money/$success;
+            }else{
+                $money = 0;
+            }
+        }elseif($rewardType == 2){
+            $money = $reward;
+        }elseif($rewardType == 3){
+            $money = $pass['money'] * $reward;
+        }else{
+            $money = 0;
+        }
+        $money = self::getDecimalMoney($money);
+        //发奖励
+        $user = db('member')->where('id',$uid)->find();
+        $addMoney = $user['money'] + $money;
+        if($money){
+            $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+            if($res){
+                self::userMoneyRecord($uid,$money,'闯关奖励发送',1,3);
+                //收益记录
+                self::userMoneyGet($uid,$money,3);
+                //退还本金
+                $returnMoney = $addMoney + $pass['money'];
+                $re = db('member')->where('id',$uid)->update(['money'=>$returnMoney]);
+                self::userMoneyRecord($uid,$pass['money'],'闯关本金退还',1,3);
+            }else{
+                Share::jsonData(0,'操作失败');
+            }
         }
     }
 }

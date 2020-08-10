@@ -814,4 +814,37 @@ class Api extends Controller
         Share::jsonData(1,$data);
     }
 
+    /**
+     * 闯关活动
+     * 闯关活动列表
+     */
+    public function  passList(){
+        $uid = $this->uid;
+        $data = db('pass')->where('status',1)->order('number','desc')->select();
+        foreach($data as $k => $v){
+            //报名人数
+            $hadJoin = db('pass_join')->where(['passId'=>$v['id']])->group('uid')->count();
+            $data[$k]['number'] = $hadJoin?$hadJoin:0;
+            //报名金额
+            $joinMoney = db('pass_join')->where('passId',$v['id'])->sum('joinMoney');
+            $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
+            //是否报名
+            $join = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$v['id']])->find();
+            if(!$join){
+                $isJoin = 0;//0-当前未参加  1-已参加
+            }else{//判断是否已过结束时间
+                $now = date('Y-m-d H:i:s');
+                if($now > $join['endTime']){
+                    //判断打卡状态
+                    Share::checkPassStatus($uid,$v['id'],$join['id']);
+                    $isJoin = 0;
+                }else{
+                    $isJoin = 1;
+                }
+            }
+            $data[$k]['isJoin'] = $isJoin;
+        }
+        Share::jsonData(1,$data);
+    }
+
 }
