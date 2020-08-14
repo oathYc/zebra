@@ -846,5 +846,40 @@ class Api extends Controller
         }
         Share::jsonData(1,$data);
     }
+    /**
+     * 闯关活动
+     * 闯关详情
+     */
+    public function passDetail(){
 
+    }
+
+    /**
+     * 闯关活动
+     * 闯关报名
+     */
+    public function passJoin(){
+
+    }
+    /**
+     * 闯关活动
+     * 签到
+     */
+    public function passSign(){
+
+    }
+    /**
+     * 闯关活动
+     * 我的报名
+     */
+    public function myPass(){
+
+    }
+    /**
+     * 闯关活动
+     * 我的签到
+     */
+    public function myPassSign(){
+
+    }
 }
