@@ -11,7 +11,7 @@
  Target Server Version : 50726
  File Encoding         : 65001
 
- Date: 06/08/2020 19:23:14
+ Date: 14/08/2020 14:57:02
 */
 
 SET NAMES utf8mb4;
@@ -34,7 +34,7 @@ CREATE TABLE `ws_admins`  (
 -- ----------------------------
 -- Records of ws_admins
 -- ----------------------------
-INSERT INTO `ws_admins` VALUES (1, 'admin', '2cd1a1f1f0483ab855328b21ad14e172', '127.0.0.1', 1596701684, 1);
+INSERT INTO `ws_admins` VALUES (1, 'admin', '2cd1a1f1f0483ab855328b21ad14e172', '127.0.0.1', 1596876023, 1);
 INSERT INTO `ws_admins` VALUES (2, 'oathYc', 'ea8d570ec4d38e7993c48f9af2e69122', '127.0.0.1', 1596015964, 1);
 
 -- ----------------------------
@@ -141,8 +141,8 @@ CREATE TABLE `ws_member`  (
 -- ----------------------------
 -- Records of ws_member
 -- ----------------------------
-INSERT INTO `ws_member` VALUES (29, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc', 1596712416, 19.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, NULL, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjkdddd', 'asdfghjk');
-INSERT INTO `ws_member` VALUES (31, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc1', 1596712416, 19.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, NULL, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjk', 'asdfghjkdddd');
+INSERT INTO `ws_member` VALUES (29, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc', 1596721890, 19.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, NULL, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjkdddd', 'asdfghjk');
+INSERT INTO `ws_member` VALUES (31, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc1', 1596721890, 19.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, NULL, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjk', 'asdfghjkdddd');
 
 -- ----------------------------
 -- Table structure for ws_money_get
@@ -157,6 +157,91 @@ CREATE TABLE `ws_money_get`  (
   `updateTime` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '收益统计表' ROW_FORMAT = Fixed;
+
+-- ----------------------------
+-- Table structure for ws_pass
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_pass`;
+CREATE TABLE `ws_pass`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '描述',
+  `hour` decimal(10, 1) NULL DEFAULT 2.5 COMMENT '挑战时长',
+  `beginTimeStr` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '报名的开始时间 ',
+  `endTimeStr` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '报名的结束时间',
+  `beginTime` int(11) NULL DEFAULT NULL COMMENT '报名开始时间 分钟数',
+  `endTime` int(11) NULL DEFAULT NULL COMMENT '报名结束时间  分钟数',
+  `number` int(11) NULL DEFAULT NULL COMMENT '期数',
+  `money` decimal(10, 2) NULL DEFAULT NULL COMMENT '报名金额',
+  `rewardType` tinyint(1) NULL DEFAULT NULL COMMENT '奖励类型 1-失败金额瓜分百分比 2-固定金额  3-报名百分比',
+  `reward` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '对应rewardType',
+  `challenge` int(2) NULL DEFAULT 10 COMMENT '挑战轮数 默认10',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  `status` tinyint(1) NULL DEFAULT 1 COMMENT '状态 0-下架 1-活动中',
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '闯关图片',
+  `background` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '背景图片',
+  `rule` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '闯关规则',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关活动' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ws_pass
+-- ----------------------------
+INSERT INTO `ws_pass` VALUES (1, '发布', '菜市场', 2.5, '00:00', '05:00', 0, 300, 1, 12.00, 1, '11', 10, 1596786586, 1, '/uploads/category/20200807/06ff6b5750980d868064b0764ef7251b.jpg', '/uploads/category/20200807/5849e79ee5d0014527206ebbfbfe9a77.jpg', '大V存储');
+
+-- ----------------------------
+-- Table structure for ws_pass_join
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_pass_join`;
+CREATE TABLE `ws_pass_join`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL,
+  `passId` int(11) NULL DEFAULT NULL,
+  `joinTime` datetime(0) NULL DEFAULT NULL COMMENT '报名时间',
+  `joinMoney` decimal(10, 2) NULL DEFAULT NULL COMMENT '报名金额',
+  `status` tinyint(1) NULL DEFAULT NULL COMMENT '参加状态  0-参与中 1-已完成 2-未完成',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  `endTime` datetime(0) NULL DEFAULT NULL COMMENT '结束时间',
+  `isReward` tinyint(1) NULL DEFAULT 0 COMMENT '是否发送奖励 0-未发生 1-已发送',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户闯关报名' ROW_FORMAT = Fixed;
+
+-- ----------------------------
+-- Table structure for ws_pass_sign
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_pass_sign`;
+CREATE TABLE `ws_pass_sign`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL,
+  `passId` int(11) NULL DEFAULT NULL COMMENT '活动id',
+  `joinId` int(11) NULL DEFAULT NULL COMMENT '报名的id',
+  `status` tinyint(1) NULL DEFAULT NULL COMMENT '打卡状态  0-未打卡 1-已打卡',
+  `number` int(2) NULL DEFAULT NULL COMMENT '第几轮打卡',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  `signTime` datetime(0) NULL DEFAULT NULL COMMENT '打卡时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户闯关签到记录' ROW_FORMAT = Fixed;
+
+-- ----------------------------
+-- Table structure for ws_pass_time
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_pass_time`;
+CREATE TABLE `ws_pass_time`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `passId` int(11) NULL DEFAULT NULL COMMENT '活动id',
+  `one` int(2) NULL DEFAULT 5 COMMENT '第一轮签到分钟数  默认五分钟',
+  `two` int(2) NULL DEFAULT NULL COMMENT '第二轮',
+  `three` int(2) NULL DEFAULT NULL COMMENT '第三轮',
+  `four` int(2) NULL DEFAULT NULL COMMENT '第四轮',
+  `five` int(2) NULL DEFAULT NULL COMMENT '第五轮',
+  `six` int(2) NULL DEFAULT NULL COMMENT '第六轮',
+  `seven` int(2) NULL DEFAULT NULL COMMENT '第七轮',
+  `night` int(2) NULL DEFAULT NULL COMMENT '第九轮',
+  `eight` int(2) NULL DEFAULT NULL COMMENT '第八轮',
+  `ten` int(2) NULL DEFAULT NULL COMMENT '第十轮',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关活动打卡时间' ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Table structure for ws_room_create
