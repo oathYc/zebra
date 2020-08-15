@@ -74,6 +74,9 @@ class Pass extends Base
             }
             $passId = db('pass')->getLastInsID();
             //记录闯关签到时间
+            foreach($signTime as $k => $v){
+                $signTime[$k] = $v?$v:3;//默认三分钟
+            }
             $signTime['passId'] = $passId;
             $signTime['createTime'] = time();
             db('pass_time')->insert($signTime);
@@ -136,6 +139,7 @@ class Pass extends Base
             $info['background'] = '';
         }
         $info['statusStr'] = $info['status'] == 1?'启用':'关闭';
+        $info['signTime'] = db('pass_time')->where(['passId'=>$info['id']])->find();
         $this->assign('info',$info);
         return $this->fetch();
     }
