@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>打卡活动签到</title>
+    <title>闯关排行榜</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
     <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
@@ -16,7 +16,7 @@
     <!-- Panel Other -->
     <div class="ibox float-e-margins">
         <div class="ibox-title">
-            <h5>打卡活动签到</h5>
+            <h5>闯关排行榜</h5>
         </div>
         <div class="ibox-content">
             <!--搜索框开始-->
@@ -25,14 +25,10 @@
                 <div class="example">
                     <table id="cusTable">
                         <thead>
-                        <th data-field="clockInId">活动ID</th>
-                        <th data-field="clockName">活动名称</th>
                         <th data-field="uid">用户uid</th>
                         <th data-field="nickname">用户昵称</th>
-                        <th data-field="joinId">报名ID</th>
-                        <th data-field="joinTime">报名时间</th>
-                        <th data-field="date">打卡日期</th>
-                        <th data-field="clockInTime">打卡时间</th>
+                        <th data-field="moneyGet">收益金额(元)</th>
+                        <th data-field="updateTime">更新时间</th>
                         <th data-field="operate">操作</th>
                         </thead>
                     </table>
@@ -57,7 +53,7 @@
         //初始化表格,动态从服务器加载数据
         $("#cusTable").bootstrapTable({
             method: "get",  //使用get请求到服务器获取数据
-            url: "{:url('clock/clockJoin')}", //获取数据的地址
+            url: "{:url('pass/ranking')}", //获取数据的地址
             striped: true,  //表格显示条纹
             pagination: true, //启动分页
             pageSize: 10,  //每页显示的记录数

@@ -59,6 +59,8 @@ class Share extends \think\Model
                     $data = $host.$data;
                 }elseif(strpos($data,"uploads/file/20") == 1){//文件
                     $data = $host.$data;
+                }elseif(strpos($data,"uploads/category/20") == 1){//后台上传
+                    $data = $host.$data;
                 }
             }
         }
@@ -786,13 +788,124 @@ class Share extends \think\Model
                 self::userMoneyRecord($uid,$money,'闯关奖励发送',1,3);
                 //收益记录
                 self::userMoneyGet($uid,$money,3);
-                //退还本金
-                $returnMoney = $addMoney + $pass['money'];
-                $re = db('member')->where('id',$uid)->update(['money'=>$returnMoney]);
-                self::userMoneyRecord($uid,$pass['money'],'闯关本金退还',1,3);
             }else{
                 Share::jsonData(0,'操作失败');
             }
         }
+        //退还本金
+        $returnMoney = $addMoney + $pass['money'];
+        $re = db('member')->where('id',$uid)->update(['money'=>$returnMoney]);
+        self::userMoneyRecord($uid,$pass['money'],'闯关本金退还',1,3);
+    }
+    /**
+     * 闯关报名
+     * 检查报名时间
+     */
+    public static function checkPassJoinTime($pass){
+        $currTime = date("H:i");
+        $currMinute = self::getMinute($currTime);
+        if($currMinute < $pass['beginTime'] || $currMinute > $pass['endTime']){
+            Share::jsonData(0,'','该闯关活动只能在'.$pass['beginTimeStr'].'-'.$pass['endTimeStr'].'时间段内报名！');
+        }
+    }
+    /**
+     * 闯关报名
+     * 扣除用户报名费用
+     */
+    public static function reducePassJoinMoney($uid,$money){
+        $user = db('member')->where('id',$uid)->find();
+        if($user['money'] < $money){
+            self::jsonData(0,'','用户余额不足，请先充值！');
+        }
+        $reduce = $user['money'] - $money;
+        $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
+        if($res){
+            //记录余额消费记录
+            self::userMoneyRecord($uid,$money,'闯关报名费扣除',2,3);
+        }else{
+            self::jsonData(0,'','扣除闯关报名费失败，请稍后重试！');
+        }
+    }
+    /**
+     * 闯关报名
+     * 报名签到生成
+     */
+    public static function createUserPassSign($uid,$pass,$join){
+        //挑战时长
+        $hour = $pass['hour'];
+        $minute = $hour*60;
+        //签到次数
+        $number = $pass['challenge'];
+        //计算每轮签到的时间间隔
+        $blankMinute = floor($minute/$number);
+        //开始时间
+        $beginTime = strtotime($join['joinTime']);
+        //获取该闯关的每轮签到时间
+        $signMinutes = db('pass_time')->where('passId',$pass['id'])->find();
+        //计算获取每一轮的打卡时间
+        $sign = [];
+        $time = time();
+        for($i=1;$i<=$number;$i++){
+            $randMinute = rand(1,$blankMinute);
+            $signBegin = $beginTime + 60*($blankMinute*($i-1)) + 60*$randMinute;
+            $keyVal = self::getKeyVal($i);
+            $currSignMinute = $signMinutes[$keyVal];//单轮签到的时间长度
+            $signEnd = $signBegin + 60*$currSignMinute -1;
+            $signBeginTime = date('Y-m-d H:i:s',$signBegin);
+            $signEndTime = date('Y-m-d H:i:s',$signEnd);
+            $sign[] = [
+                'uid'=>$uid,
+                'passId'=>$pass['id'],
+                'joinId'=>$join['id'],
+                'status'=>0,//0-未打卡 1-已打卡
+                'number'=>$i,//第几轮打卡
+                'createTime'=>$time,
+                'signTimeBegin'=>$signBeginTime,
+                'signTimeEnd'=>$signEndTime,
+            ];
+        }
+        db('pass_sign')->insertAll($sign);
+    }
+    /**
+     * 键值转换
+     */
+    public static function getKeyVal($key){
+        $arr = [
+            1=>'one',
+            2=>'two',
+            3=>'three',
+            4=>'four',
+            5=>'five',
+            6=>'six',
+            7=>'seven',
+            8=>'eight',
+            9=>'night',
+            10=>'ten',
+        ];
+        if(isset($arr[$key])){
+            return $arr[$key];
+        }else{
+            return $arr[1];
+        }
+    }
+    /**
+     * 获取用户签到次数
+     */
+    public static function getUserSignNum($uid){
+        //打卡
+        $clockNum = db('clock_in_sign')->where(['uid'=>$uid])->count();
+        //房间挑战
+        $roomNum = db('sign')->where(['uid'=>$uid,'firstSign'=>1])->count();
+        //闯关
+        $passNum = db('pass_sign')->where(['uid'=>$uid,'status'=>1])->count();
+        $signNum = $clockNum + $roomNum + $passNum;
+        return $signNum?intval($signNum):0;
+    }
+    /**
+     * 获取用户累计收益金额
+     */
+    public static function getUserMoneyGet($uid){
+        $moneyGet = db('money_get')->where(['uid'=>$uid])->sum('moneyGet');
+        return $moneyGet?$moneyGet:0;
     }
 }

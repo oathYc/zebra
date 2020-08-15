@@ -122,8 +122,9 @@ class Room extends Base
                 $result[$key]['secondSign'] = $vo['secondBeginStr'].'-'.$vo['secondEndStr'];
                 //获取奖励比例
                 $result[$key]['percent'] = db('room_type')->where('type',$vo['type'])->find()['percent'];
+                $result[$key]['statusStr'] = self::getStatusStr($vo['status']);
                 // 生成操作按钮
-                $result[$key]['operate'] = $this->makeBtn($vo['id']);
+//                $result[$key]['operate'] = $this->makeBtn($vo['id']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
             }
 
@@ -139,6 +140,21 @@ class Room extends Base
         ];
         $this->assign(['type'=>$type]);
         return $this->fetch();
+    }
+    /**
+     * 获取房间挑战状态值
+     */
+    public static function getStatusStr($status){
+        $arr = [
+            0=>'报名中',
+            1=>'挑战中',
+            2=>'已结束'
+        ];
+        if(isset($arr[$status])){
+            return $arr[$status];
+        }else{
+            return '';
+        }
     }
     /**
      *房间类型
@@ -208,7 +224,7 @@ class Room extends Base
                 //报名状态
                 $result[$key]['statusStr'] = self::getJoinStatus($vo['status']);
                 // 生成操作按钮
-                $result[$key]['operate'] = $this->makeBtn($vo['id']);
+//                $result[$key]['operate'] = $this->makeBtn($vo['id']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
             }
 
@@ -261,7 +277,7 @@ class Room extends Base
                     $result[$key]['secondSignTime'] = '';
                 }
                 // 生成操作按钮
-                $result[$key]['operate'] = $this->makeBtn($vo['id']);
+//                $result[$key]['operate'] = $this->makeBtn($vo['id']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
             }
 
@@ -276,6 +292,29 @@ class Room extends Base
             2=>'普通房间'
         ];
         $this->assign(['type'=>$type]);
+        return $this->fetch();
+    }
+
+    //排行榜
+    public function ranking(){
+        if(request()->isAjax()){
+            $type = 2;//1-打卡 2-房间挑战 3-闯关
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+            $where = [
+                'type'=>$type,
+            ];
+            $data = db('money_get')->where($where)->order('moneyGet','desc')->limit($offset,$limit)->select();
+            foreach($data as $k => $v){
+                $user = db('member')->where('id',$v['uid'])->find();
+                $data[$k]['nickname'] = $user['nickname'];
+            }
+            $return['total'] = db('money_get')->where($where)->count();  //总数据
+            $return['rows'] = $data;
+            return json($return);
+        }
         return $this->fetch();
     }
 }

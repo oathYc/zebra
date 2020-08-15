@@ -101,6 +101,67 @@
                                 <textarea class="form-control" name="rule" >{$info['rule']}"</textarea>
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第一轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[one]"  onkeyup = "value=value.replace(/[^\d]/g,'')"  value="{$info['signTime']['one']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第二轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[two]" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['two']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第三轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[three]"  onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['three']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第四轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="signTime[four]" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['four']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第五轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[five]" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['five']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第六轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[six]"  onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['six']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第七轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[seven]"  onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['seven']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第八轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[eight]"  onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['eight']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第九轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[night]"  onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['night']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">第十轮签到时间：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text"  class="form-control" name="signTime[ten]" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="默认3分钟"  value="{$info['signTime']['ten']}">
+                            </div>
+                        </div>
                         <div class="form-group">
                             <div class="col-sm-4 col-sm-offset-6">
                                 <a class="btn-primary btn" href="Javascript:history.go(-1)">返回</a>

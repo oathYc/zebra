@@ -89,7 +89,7 @@ class Api extends Controller
                 'phone'=>$phone,
                 'nickname'=>$name,
                 'unionid'=>$unionid,
-                'createTime'=>time(),
+                'updateTime'=>time(),
             ];
             $res = db('member')->where('openid',$openid)->update($params);
         }
@@ -824,7 +824,7 @@ class Api extends Controller
         foreach($data as $k => $v){
             //报名人数
             $hadJoin = db('pass_join')->where(['passId'=>$v['id']])->group('uid')->count();
-            $data[$k]['number'] = $hadJoin?$hadJoin:0;
+            $data[$k]['joinNum'] = $hadJoin?$hadJoin:0;
             //报名金额
             $joinMoney = db('pass_join')->where('passId',$v['id'])->sum('joinMoney');
             $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
@@ -851,7 +851,39 @@ class Api extends Controller
      * 闯关详情
      */
     public function passDetail(){
-
+        $uid = $this->uid;
+        $passId = input('passId');
+        Share::checkEmptyParams(['passId'=>$passId]);
+        $pass = db('pass')->where('id',$passId)->find();
+        if(!$pass){
+            Share::jsonData(0,'','没有该闯关活动！');
+        }
+        //报名人数
+        $hadJoin = db('pass_join')->where(['passId'=>$passId])->group('uid')->count();
+        $pass['joinNum'] = $hadJoin?$hadJoin:0;
+        //报名金额
+        $joinMoney = db('pass_join')->where('passId',$passId)->sum('joinMoney');
+        $pass['joinMoney'] = $joinMoney?$joinMoney:0;
+        //是否报名
+        $join = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
+        if(!$join){
+            $isJoin = 0;//0-当前未参加  1-已参加
+            $signData = [];
+        }else{//判断是否已过结束时间
+            $now = date('Y-m-d H:i:s');
+            if($now > $join['endTime']){
+                //判断打卡状态
+                Share::checkPassStatus($uid,$passId,$join['id']);
+                $isJoin = 0;
+            }else{
+                $isJoin = 1;
+            }
+            //获取签到时间数据
+            $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
+        }
+        $pass['isJoin'] = $isJoin;
+        $pass['signData'] = $signData;
+        Share::jsonData(1,$pass);
     }
 
     /**
@@ -859,27 +891,175 @@ class Api extends Controller
      * 闯关报名
      */
     public function passJoin(){
-
+        $uid = $this->uid;
+        $passId = input('passId');
+        Share::checkEmptyParams(['passId'=>$passId]);
+        $pass = db('pass')->where('id',$passId)->find();
+        if(!$pass){
+            Share::jsonData(0,'','没有该闯关活动！');
+        }
+        if($pass['status'] != 1){
+            Share::jsonData(0,'','该闯关活动已下线！');
+        }
+        //判断是否在报名时间内
+        Share::checkPassJoinTime($pass);
+        //检查是否已经报名
+        $now = date('Y-m-d H:i:s');
+        $time = strtotime($now);
+        $hadJoin = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
+        if($hadJoin && $hadJoin['endTime'] > $now){//已参加且未结束
+            Share::jsonData(0,'','你当前已经参加了该闯关活动(闯关中)，不可重复参加！');
+        }elseif($hadJoin && $hadJoin['endTime'] < $now){//已参加且已结束  判断状态修改
+            Share::checkPassStatus($uid,$passId,$hadJoin['id']);
+        }
+        //获取报名结束时间
+        $hour = $pass['hour'];
+        $second = $hour*3600;
+        $endSecond = $time + $second;
+        $endTime = date('Y-m-d H:i:s',$endSecond);
+        //添加报名
+        $params = [
+            'uid'=>$uid,
+            'passId'=>$passId,
+            'joinTime'=>$now,
+            'joinMoney'=>$pass['money'],
+            'status'=>0,//参加状态  0-参与中 1-已完成 2-未完成
+            'createTime'=>$time,
+            'endTime'=>$endTime,
+            'isReward'=>0,
+        ];
+        //扣除用户报名费用
+        Share::reducePassJoinMoney($uid,$pass['money']);
+        $res = db('pass_join')->insert($params);
+        if($res){//报名成功
+            //生成用户闯关签到
+            $join = db('pass_join')->where($params)->find();
+            Share::createUserPassSign($uid,$pass,$join);
+            Share::jsonData(1,'','报名成功');
+        }else{
+            Share::jsonData(0,'','报名失败');
+        }
     }
     /**
      * 闯关活动
      * 签到
      */
     public function passSign(){
-
+        $uid = $this->uid;
+        $passId = input('passId');
+        Share::checkEmptyParams(['passId'=>$passId]);
+        $pass = db('pass')->where('id',$passId)->find();
+        if(!$pass){
+            Share::jsonData(0,'','没有该闯关活动');
+        }
+        if($pass['status'] != 1){
+            Share::jsonData(0,'','当前闯关活动已下线');
+        }
+        $nowTime = date('Y-m-d H:i:s');//当前时间
+        //获取报名信息
+        $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'endTime'=>['>=',$nowTime],'status'=>0])->find();
+        if(!$join){
+            Share::jsonData(0,'','你当前还没有报名该闯关活动！');
+        }
+        //获取当前时间段内的打卡记录
+        $sign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'signTimeBegin'=>['<=',$nowTime],'signTimeEnd'=>['>=',$nowTime]])->find();
+        if(!$sign){
+            Share::jsonData(0,'','当前不在打卡时间内！');
+        }
+        if($sign['status'] == 1){
+            Share::jsonData(0,'','已打卡，请勿重复打卡!');
+        }
+        //判断之前的打卡成功次数
+        $hadSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'number'=>['<',$sign['number']],'status'=>1])->count();
+        if($hadSign < ($sign['number'] - 1)){
+            //修改参加状态  未完成
+            db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
+            Share::jsonData(0,'','您已挑战失败，打卡无效');
+        }
+        //打卡
+        $res = db('pass_sign')->where('id',$sign['id'])->update(['status'=>1,'signTime'=>$nowTime]);
+        if($res){
+            //判断是否完成挑战
+            if($sign['number'] == 10){//最后一轮打卡
+                //修改参加状态  已完成
+                db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+                //发放奖励
+                Share::sendPassReward($uid,$pass);
+                db('pass_join')->where('id',$join['id'])->update(['isReward'=>1]);
+            }
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','打卡失败，请刷新重试！');
+        }
     }
     /**
      * 闯关活动
      * 我的报名
      */
     public function myPass(){
-
+        $uid = $this->uid;
+        $status = input('status',99);//99-全部  0-参与中 1-已完成 2-未完成
+        $where = [
+            'uid'=>$uid,
+        ];
+        if($status != 99){
+            $where['status'] = $status;
+        }
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $offset = $pageSize*($page-1);
+        $total = db('pass_join')->where($where)->count();
+        $data = db('pass_join')->where($where)->limit($offset,$pageSize)->order('joinTime','desc')->select();
+        foreach($data as $k => $v){
+            $pass = db('pass')->where('id',$v['passId'])->find();
+            $data[$k]['pass'] = $pass;
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data
+        ];
+        Share::jsonData(1,$return);
     }
     /**
      * 闯关活动
      * 我的签到
      */
     public function myPassSign(){
-
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $offset = $pageSize*($page-1);
+        $total = db('pass_sign')->where(['uid'=>$uid,'status'=>1])->count();
+        $data = db('pass_sign')->where(['uid'=>$uid,'status'=>1])->limit($offset,$pageSize)->order('signTime','desc')->select();
+        foreach($data as $k => $v){
+            $pass = db('pass')->where('id',$v['passId'])->find();
+            $data[$k]['pass'] = $pass?$pass:[];
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 分享有奖
+     */
+    public function  shareReward(){
+        $uid = $this->uid;
+        //打卡次数
+        $signNum = Share::getUserSignNum($uid);
+        //累计收益
+        $moneyGet = Share::getUserMoneyGet($uid);
+        //加入天数
+        $createTime = db('member')->where('id',$uid)->find()['createTime'];
+        $joinDate = date('Y-m-d',$createTime);
+        $now = date('Y-m-d');//今天
+        $joinDays = floor((strtotime($now) - strtotime($joinDate))/86400) +1;
+        $return = [
+            'signNum'=>$signNum,
+            'moneyGet'=>$moneyGet,
+            'joinDay'=>$joinDays,
+        ];
+        Share::jsonData(1,$return);
     }
 }
