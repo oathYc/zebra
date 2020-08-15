@@ -66,11 +66,17 @@ class Pass extends Base
             }
 
             try{
+                $signTime = $param['signTime'];
+                unset($param['signTime']);
                 db('pass')->insert($param);
             }catch(\Exception $e){
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
-
+            $passId = db('pass')->getLastInsID();
+            //记录闯关签到时间
+            $signTime['passId'] = $passId;
+            $signTime['createTime'] = time();
+            db('pass_time')->insert($signTime);
             return json(['code' => 1, 'data' => '', 'msg' => '添加闯关活动成功']);
         }
         return $this->fetch();
