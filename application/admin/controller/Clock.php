@@ -220,4 +220,26 @@ class Clock extends Base
         }
         return $this->fetch();
     }
+    //排行榜
+    public function ranking(){
+        if(request()->isAjax()){
+            $type = 1;//1-打卡 2-房间挑战 3-闯关
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+            $where = [
+                'type'=>$type,
+            ];
+            $data = db('money_get')->where($where)->order('moneyGet','desc')->limit($offset,$limit)->select();
+            foreach($data as $k => $v){
+                $user = db('member')->where('id',$v['uid'])->find();
+                $data[$k]['nickname'] = $user['nickname'];
+            }
+            $return['total'] = db('money_get')->where($where)->count();  //总数据
+            $return['rows'] = $data;
+            return json($return);
+        }
+        return $this->fetch();
+    }
 }

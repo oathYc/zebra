@@ -59,6 +59,8 @@ class Share extends \think\Model
                     $data = $host.$data;
                 }elseif(strpos($data,"uploads/file/20") == 1){//文件
                     $data = $host.$data;
+                }elseif(strpos($data,"uploads/category/20") == 1){//后台上传
+                    $data = $host.$data;
                 }
             }
         }

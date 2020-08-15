@@ -202,9 +202,62 @@
 接口参数
 返回参数
 
+接口名称    闯关-闯关活动
+接口路径    passList
+接口参数
+返回参数    money           报名金额
+           joinMoney        当前活动已报名的金额总数
+           isJoin           是否参加 0-未参加 1-已参加
+           joinNum          报名人数
 
+接口名称    闯关-闯关详情
+接口路径    passDetail
+接口参数    passId          闯关活动id
+返回参数    money           报名金额
+           joinMoney        当前活动已报名的金额总数
+           isJoin           是否参加 0-未参加 1-已参加
+           joinNum          报名人数
+           signData         签到挑战数据
+           signData.status   签到状态 0-未签到 1-已签到
+           signData.number         第几轮签到挑战
+           signData.signTimeBegin  签到开始时间
+           signData.signTimeEnd     签到结束时间
+           signData.signTime         用户签到时间
 
+接口名称    闯关-闯关报名
+接口路径    passJoin
+接口参数    passId          闯关活动id
+返回参数
 
+接口名称    闯关-闯关签到
+接口路径    passSign
+接口参数    passId          闯关活动id
+返回参数
+
+接口名称    闯关-我的闯关
+接口路径    myPass
+接口参数    status          99-全部  0-参与中 1-已完成 2-未完成 默认99
+返回参数    status          0-参与中 1-已完成 2-未完成
+            joinTime        报名时间
+            joinMoney        报名金额
+            endTime          挑战结束时间
+            pass            活动信息集合
+
+接口名称    闯关-我的签到
+接口路径    myPassSign
+接口参数    page                页数 默认1
+            pageSize           每页数量 默认10
+返回参数     signTime            签到时间
+            signTimeBegin       签到开始时间
+            signTimeEnd         签到结束时间
+            number              第几轮签到
+
+接口名称    分享有奖
+接口路径    shareReward
+接口参数
+返回参数     signNum              签到次数
+            moneyGet             累计收益
+            joinDay              加入天数
 
 
 

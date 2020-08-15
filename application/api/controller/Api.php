@@ -89,7 +89,7 @@ class Api extends Controller
                 'phone'=>$phone,
                 'nickname'=>$name,
                 'unionid'=>$unionid,
-                'createTime'=>time(),
+                'updateTime'=>time(),
             ];
             $res = db('member')->where('openid',$openid)->update($params);
         }
@@ -824,7 +824,7 @@ class Api extends Controller
         foreach($data as $k => $v){
             //报名人数
             $hadJoin = db('pass_join')->where(['passId'=>$v['id']])->group('uid')->count();
-            $data[$k]['number'] = $hadJoin?$hadJoin:0;
+            $data[$k]['joinNum'] = $hadJoin?$hadJoin:0;
             //报名金额
             $joinMoney = db('pass_join')->where('passId',$v['id'])->sum('joinMoney');
             $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
@@ -860,7 +860,7 @@ class Api extends Controller
         }
         //报名人数
         $hadJoin = db('pass_join')->where(['passId'=>$passId])->group('uid')->count();
-        $pass['number'] = $hadJoin?$hadJoin:0;
+        $pass['joinNum'] = $hadJoin?$hadJoin:0;
         //报名金额
         $joinMoney = db('pass_join')->where('passId',$passId)->sum('joinMoney');
         $pass['joinMoney'] = $joinMoney?$joinMoney:0;
@@ -868,6 +868,7 @@ class Api extends Controller
         $join = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
         if(!$join){
             $isJoin = 0;//0-当前未参加  1-已参加
+            $signData = [];
         }else{//判断是否已过结束时间
             $now = date('Y-m-d H:i:s');
             if($now > $join['endTime']){
@@ -877,8 +878,11 @@ class Api extends Controller
             }else{
                 $isJoin = 1;
             }
+            //获取签到时间数据
+            $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
         }
         $pass['isJoin'] = $isJoin;
+        $pass['signData'] = $signData;
         Share::jsonData(1,$pass);
     }
 
@@ -1007,7 +1011,7 @@ class Api extends Controller
         $total = db('pass_join')->where($where)->count();
         $data = db('pass_join')->where($where)->limit($offset,$pageSize)->order('joinTime','desc')->select();
         foreach($data as $k => $v){
-            $pass = db('pass')->where('id',$v['passId'])->fond();
+            $pass = db('pass')->where('id',$v['passId'])->find();
             $data[$k]['pass'] = $pass;
         }
         $return = [
@@ -1050,7 +1054,7 @@ class Api extends Controller
         $createTime = db('member')->where('id',$uid)->find()['createTime'];
         $joinDate = date('Y-m-d',$createTime);
         $now = date('Y-m-d');//今天
-        $joinDays = floor((strtotime($now) - strtotime($joinDate))/86400);
+        $joinDays = floor((strtotime($now) - strtotime($joinDate))/86400) +1;
         $return = [
             'signNum'=>$signNum,
             'moneyGet'=>$moneyGet,

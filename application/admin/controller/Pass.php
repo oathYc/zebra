@@ -177,7 +177,7 @@ class Pass extends Base
                 }else{
                     $result[$key]['passName'] = '已被删除';
                 }
-
+                $result[$key]['rewardStr'] = $vo['isReward'] == 1?'已发放':'未发放';
                 //获取报名者信息
                 $user = db('member')->where('id',$vo['uid'])->find();
                 $result[$key]['nickname'] = $user['nickname'];
@@ -202,8 +202,8 @@ class Pass extends Base
             return '';
         }
     }
-    //打卡签到
-    public function clockSign(){
+    //闯关签到
+    public function passSign(){
         if (request()->isAjax()) {
 
             $param = input('param.');
@@ -211,30 +211,54 @@ class Pass extends Base
             $limit = $param['pageSize'];
             $offset = ($param['pageNumber'] - 1) * $limit;
 
-            $where = [];
+            $where = [
+                'status'=>1,//获取已签到的
+            ];
 
-            $result = db('clock_in_sign')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
+            $result = db('pass_sign')->where($where)->limit($offset, $limit)->order('signTime', 'desc')->select();
             foreach ($result as $key => $vo) {
                 //获取打卡活动信息
-                $clockId = $vo['clockInId'];
-                $clock = db('clock_in')->where("id",$clockId)->find();
-                if($clock){
-                    $result[$key]['clockName'] = $clock['name'];
+                $passId = $vo['passId'];
+                $pass = db('pass')->where("id",$passId)->find();
+                if($pass){
+                    $result[$key]['passName'] = $pass['name'];
                 }else{
-                    $result[$key]['clockName'] = '已被删除';
+                    $result[$key]['passName'] = '已被删除';
                 }
                 //报名信息
-                $clockJoin = db('clock_in_join')->where('id',$vo['joinId'])->find();
-                $result[$key]['joinTime'] = $clockJoin['beginTime'];
+                $passJoin = db('pass_join')->where('id',$vo['joinId'])->find();
+                $result[$key]['joinTime'] = $passJoin['joinTime'];
 
                 //获取报名者信息
                 $user = db('member')->where('id',$vo['uid'])->find();
                 $result[$key]['nickname'] = $user['nickname'];
             }
-            $return['total'] = db('clock_in_join')->count();  //总数据
+            $return['total'] = db('pass_sign')->where($where)->count();  //总数据
             $return['rows'] = $result;
             return json($return);
 
+        }
+        return $this->fetch();
+    }
+    //排行榜
+    public function ranking(){
+        if(request()->isAjax()){
+            $type = 3;//1-打卡 2-房间挑战 3-闯关
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+            $where = [
+                'type'=>$type,
+            ];
+            $data = db('money_get')->where($where)->order('moneyGet','desc')->limit($offset,$limit)->select();
+            foreach($data as $k => $v){
+                $user = db('member')->where('id',$v['uid'])->find();
+                $data[$k]['nickname'] = $user['nickname'];
+            }
+            $return['total'] = db('money_get')->where($where)->count();  //总数据
+            $return['rows'] = $data;
+            return json($return);
         }
         return $this->fetch();
     }
