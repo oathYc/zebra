@@ -95,8 +95,15 @@ class Api extends Controller
         }
         if($res){//登录成功
             $user = db('member')->where('openid',$openid)->find();
-            session('uid',$user['id']);
+            $uid = $user['id'];
+            session('uid',$uid);
             session('login',time());
+            //打卡次数
+            $signNum = Share::getUserSignNum($uid);
+            //累计收益
+            $moneyGet = Share::getUserMoneyGet($uid);
+            $user['signNum'] = $signNum;
+            $user['moneyGet'] = $moneyGet;
             Share::jsonData(1,$user,'登录成功');
         }else{
             Share::jsonData(0,'','授权失败！');
