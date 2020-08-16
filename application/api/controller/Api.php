@@ -189,6 +189,12 @@ class Api extends Controller
     public function myMessage(){
         $uid = $this->uid;
         $user = db('member')->where('id',$uid)->find();
+        //打卡次数
+        $signNum = Share::getUserSignNum($uid);
+        //累计收益
+        $moneyGet = Share::getUserMoneyGet($uid);
+        $user['signNum'] = $signNum;
+        $user['moneyGet'] = $moneyGet;
         Share::jsonData(1,$user);
     }
     /**
