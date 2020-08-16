@@ -89,6 +89,7 @@ class Api extends Controller
                 'phone'=>$phone,
                 'nickname'=>$name,
                 'unionid'=>$unionid,
+                'avatar'=>$headimg,
                 'updateTime'=>time(),
             ];
             $res = db('member')->where('openid',$openid)->update($params);
