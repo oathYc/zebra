@@ -50,6 +50,20 @@ class Api extends Controller
         }
         $this->uid = $uid;
     }
+
+    //TODO 余额充值
+    public function wxPay(){
+        $uid = $this->uid;
+        $money = input('money',0);
+        Share::checkEmptyParams(['money'=>$money]);
+        Appwxpay::recharge($uid,$money);
+    }
+    /**
+     * 微信回调
+     */
+    public function wxNotify(){
+        Appwxpay::notify();
+    }
     //TODO 微信授权登录
     public function wxLogin() {
 //            $json = '{"nickname":".","openid":"o8m6C57HIDfgizWst5ORVxyAXjfI","unionid":"oTa415y5Xs0rTBmN20ngPoEuSMFg","headimgurl":"http://thirdwx.qlogo.cn/mmopen/vi_32/SkxPZKY0iboCkjbtGXic5oYmFAJNnS1UjiaGs2rGfZutA1FZydUAKl2h7cVGfCtYX50SibbOugJzUgsZQuvQvlhbtw/132"}';
