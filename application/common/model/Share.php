@@ -908,4 +908,23 @@ class Share extends \think\Model
         $moneyGet = db('money_get')->where(['uid'=>$uid])->sum('moneyGet');
         return $moneyGet?$moneyGet:0;
     }
+    /**
+     * 房间挑战
+     * 今日打卡
+     */
+    public function getTodayRoomSign($uid,$roomId,$signNum){
+        $today = date('Y-m-d');
+        $sign = db('sign')->where(['uid'=>$uid,'roomId'=>$roomId,'date'=>$today])->find();
+        if(!$sign){
+            return 0;//0-未打卡
+        }
+        $sign = 0;
+        if($sign['firstSign'] == 1){
+            $sign = 1;
+            if($sign['secondSign'] == 1 && $signNum == 2){
+                $sign = 2;
+            }
+        }
+        return $sign;
+    }
 }

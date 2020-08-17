@@ -353,6 +353,18 @@ class Api extends Controller
             $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
             $data[$k]['avatar'] = $user['avatar'];
+            //报名人数
+            $joinCount = db('room_join')->where('roomId',$v['id'])->count();
+            $data[$k]['joinNum'] = intval($joinCount);
+            //是否已经报名
+            $isJoin = db('room_join')->where(['roomId'=>$v['id'],'uid'=>$uid])->find();
+            if($isJoin){
+                $data[$k]['joinData'] = $isJoin;
+                $data[$k]['isJoin'] = 1;
+            }else{
+                $data[$k]['isJoin'] = 0;
+                $data[$k]['joinData'] = [];
+            }
         }
         $return = [
             'total'=>$total,
@@ -383,10 +395,15 @@ class Api extends Controller
         if($isJoin){
             $room['joinData'] = $isJoin;
             $room['isJoin'] = 1;
+            $isSign = Share::getTodayRoomSign($uid,$roomId,$room['signNum']);
         }else{
             $room['isJoin'] = 0;
             $room['joinData'] = [];
+            $isSign = 0;//0-未打卡 1-已打卡
         }
+        $room['joinNum'] = $joinCount;
+        //已打卡次数
+        $room['isSign'] = $isSign;
         Share::jsonData(1,$room);
     }
     /**
