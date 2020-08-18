@@ -912,7 +912,7 @@ class Share extends \think\Model
      * 房间挑战
      * 今日打卡
      */
-    public function getTodayRoomSign($uid,$roomId,$signNum){
+    public static function getTodayRoomSign($uid,$roomId,$signNum){
         $today = date('Y-m-d');
         $sign = db('sign')->where(['uid'=>$uid,'roomId'=>$roomId,'date'=>$today])->find();
         if(!$sign){
