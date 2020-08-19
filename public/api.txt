@@ -198,7 +198,10 @@
 接口名称    排行榜-打卡排行
 接口路径    clockInRanking
 接口参数
-返回参数
+返回参数    ranking             排行榜
+            own                 自身排行榜信息
+            mySite              等于0时未上榜
+            myMoney             收益金额
 
 接口名称    排行榜-房间挑战排行
 接口路径    roomRanking
@@ -207,6 +210,16 @@
 
 接口名称    排行榜-闯关排行
 接口路径    passRanking
+接口参数
+返回参数
+
+接口名称    排行榜-习惯打卡排行
+接口路径    habitRanking
+接口参数
+返回参数
+
+接口名称    排行榜-邀请排行
+接口路径    inviteRanking
 接口参数
 返回参数
 
