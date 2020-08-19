@@ -103,7 +103,7 @@ class Api extends Controller
                 'phone'=>$phone,
                 'nickname'=>$name,
                 'unionid'=>$unionid,
-                'avatar'=>$headimg,
+//                'avatar'=>$headimg,
                 'updateTime'=>time(),
             ];
             $res = db('member')->where('openid',$openid)->update($params);
@@ -822,13 +822,25 @@ class Api extends Controller
      * 前十
      */
     public function clockInRanking(){
+        $uid = $this->uid;
         $data = db('money_get')->where(['type'=>1])->limit(0,10)->order('moneyGet','desc')->select();
+        $own = [
+            'mySite'=>0,
+            'myMoney'=>0,
+        ];
         foreach($data as $k => $v){
             $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
-            $data[$k]['avatar'] = $user['avatar'];
+            $data[$k]['avatar'] = $user['avatar'];if($v['uid'] == $uid){
+                $own['mySite'] = $k+1;
+                $own['myMoney'] = $v['moneyGet'];
+            }
         }
-        Share::jsonData(1,$data);
+        $return = [
+            'ranking'=>$data,
+            'own'=>$own,
+        ];
+        Share::jsonData(1,$return);
     }
     /**
      * 排行榜
@@ -836,13 +848,25 @@ class Api extends Controller
      * 前十
      */
     public function roomRanking(){
+        $uid = $this->uid;
         $data = db('money_get')->where(['type'=>2])->limit(0,10)->order('moneyGet','desc')->select();
+        $own = [
+            'mySite'=>0,
+            'myMoney'=>0,
+        ];
         foreach($data as $k => $v){
             $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
-            $data[$k]['avatar'] = $user['avatar'];
+            $data[$k]['avatar'] = $user['avatar'];if($v['uid'] == $uid){
+                $own['mySite'] = $k+1;
+                $own['myMoney'] = $v['moneyGet'];
+            }
         }
-        Share::jsonData(1,$data);
+        $return = [
+            'ranking'=>$data,
+            'own'=>$own,
+        ];
+        Share::jsonData(1,$return);
     }
     /**
      * 排行榜
@@ -850,15 +874,79 @@ class Api extends Controller
      * 前十
      */
     public function passRanking(){
+        $uid = $this->uid;
         $data = db('money_get')->where(['type'=>3])->limit(0,10)->order('moneyGet','desc')->select();
+        $own = [
+            'mySite'=>0,
+            'myMoney'=>0,
+        ];
         foreach($data as $k => $v){
             $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
             $data[$k]['avatar'] = $user['avatar'];
+            if($v['uid'] == $uid){
+                $own['mySite'] = $k+1;
+                $own['myMoney'] = $v['moneyGet'];
+            }
         }
-        Share::jsonData(1,$data);
+        $return = [
+            'ranking'=>$data,
+            'own'=>$own,
+        ];
+        Share::jsonData(1,$return);
     }
-
+    /**
+     * 排行榜
+     * 习惯打卡榜
+     */
+    public function habitRanking(){
+        $uid = $this->uid;
+        $data = db('money_get')->field("*,sum(moneyGet) as moneyGet")->group('uid')->limit(0,10)->order('moneyGet','desc')->select();
+        $own = [
+            'mySite'=>0,
+            'myMoney'=>0,
+        ];
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['uid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+            if($v['uid'] == $uid){
+                $own['mySite'] = $k+1;
+                $own['myMoney'] = $v['moneyGet'];
+            }
+        }
+        $return = [
+            'ranking'=>$data,
+            'own'=>$own,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     *排行榜
+     * 邀请榜
+     */
+    public function inviteRanking(){
+        $uid = $this->uid;
+        $data = db('money_get')->where(['type'=>3])->limit(0,10)->order('moneyGet','desc')->select();
+        $own = [
+            'mySite'=>0,
+            'myMoney'=>0,
+        ];
+        foreach($data as $k => $v){
+            $user = db('member')->where('id',$v['shareUid'])->find();
+            $data[$k]['nickname'] = $user['nickname'];
+            $data[$k]['avatar'] = $user['avatar'];
+            if($v['shareUid'] == $uid){
+                $own['mySite'] = $k+1;
+                $own['myMoney'] = $v['moneyGet'];
+            }
+        }
+        $return = [
+            'ranking'=>$data,
+            'own'=>$own,
+        ];
+        Share::jsonData(1,$return);
+    }
     /**
      * 闯关活动
      * 闯关活动列表
