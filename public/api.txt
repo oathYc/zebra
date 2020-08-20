@@ -149,6 +149,7 @@
             currJoin                    是否报名 1-已报名 0-未报名
             status                      1-启用 0-关闭
             joinMoney                   报名金额
+            yesterdayMoney              昨日收益金额
 
 
 接口名称    打卡活动-打卡报名
