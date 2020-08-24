@@ -969,4 +969,10 @@ class Share extends \think\Model
             self::jsonData(0,'','您的实名认证审核未通过，请重新提交审核！');
         }
     }
+    /**
+     * 关闭已结束的闯关
+     */
+    public static function closePassEnd(){
+
+    }
 }

@@ -956,6 +956,8 @@ class Api extends Controller
     public function  passList(){
         $uid = $this->uid;
         $data = db('pass')->where('status',1)->order('number','desc')->select();
+        //关闭结束的闯关活动
+        Share::closePassEnd();
         foreach($data as $k => $v){
             //报名人数
             $hadJoin = db('pass_join')->where(['passId'=>$v['id']])->group('uid')->count();
@@ -1035,6 +1037,10 @@ class Api extends Controller
         }
         if($pass['status'] != 1){
             Share::jsonData(0,'','该闯关活动已下线！');
+        }
+        $date = date('Y-m-d H:i:s');
+        if($pass['passEndTime'] <= $date){
+            Share::jsonData(0,'','该活动已结束');
         }
         //判断是否在报名时间内
         Share::checkPassJoinTime($pass);
