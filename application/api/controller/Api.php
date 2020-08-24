@@ -1198,6 +1198,7 @@ class Api extends Controller
         Share::jsonData(1,$return);
     }
     /**
+     * 金额记录
      * 习惯卷记录
      */
     public function myMoneyRecord(){
@@ -1213,7 +1214,7 @@ class Api extends Controller
             $where['moneyType'] = $type;
         }
         $total = db('user_money_record')->where($where)->count();
-        $data = db('user_money_record')->where($where)->limit($offset,$pageSize)->select();
+        $data = db('user_money_record')->where($where)->order('createTime','desc')->limit($offset,$pageSize)->select();
         foreach($data as $k => $v){
             $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
         }
@@ -1226,6 +1227,7 @@ class Api extends Controller
         Share::jsonData(1,$return);
     }
     /**
+     * 金额记录
      * 收益记录
      */
     public function myMoneyAdd(){
@@ -1252,6 +1254,97 @@ class Api extends Controller
         $user = db('member')->where('id',$uid)->find();
         $return = [
             'money'=>$user['money'],
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 金额体现
+     * 提现判断
+     * 实名认证判断
+     */
+    public function returnCheck(){
+        $uid = $this->uid;
+        $user = db('member')->where('id',$uid)->find();
+        $return = [
+            'uid'=>$uid,
+            'real_name'=>$user['real_name'],
+            'card'=>$user['card'],
+            'check'=>$user['check'],
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 金额提现
+     * 实名认证提交
+     */
+    public function realNameApply(){
+        $uid = $this->uid;
+        $realName = input('realName');
+        $card = input('card');
+        Share::checkEmptyParams(['realName'=>$realName,'card'=>$card]);
+        db('member')->where('id',$uid)->update(['real_name'=>$realName,'card'=>$card,'check'=>1]);
+        Share::jsonData(1,'','提交成功');
+    }
+    /**
+     * 金额体现
+     * 体现申请
+     */
+    public function returnApply(){
+        $uid = $this->uid;
+        $money = input('money',0);
+        $type = input('type',1);//1-微信 2-支付宝
+        $phone = input('phone','');//提现手机号  支付宝必填
+        Share::checkEmptyParams(['money'=>$money]);
+        if($type ==2 && !$phone){
+            Share::jsonData(0,'','请填写支付宝提现手机号');
+        }
+        //判断是否实名审核通过
+        Share::checkRealNameStatus($uid);
+        //手续费
+        $procedures = 0;
+        Share::checkReturnMoney($uid,$money,$procedures);//检查余额
+        //体现申请
+        $params = [
+            'uid'=>$uid,
+            'money'=>$money,
+            'status'=>0,//0-体现申请中  1-已体现
+            'createTime'=>time(),//申请时间
+            'procedures'=>$procedures,
+            'type'=>$type,
+            'phone'=>$phone,
+        ];
+        $res = db('user_return')->insert($params);
+        if($res){
+            Share::jsonData(1,'','申请成功,等待审核');
+        }else{
+            Share::jsonData(0,'','申请失败，请重试');
+        }
+    }
+    /**
+     * 提现记录
+     */
+    public function myReturn(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $offset = $pageSize*($page-1);
+        $status = input('status',99);//99-全部 0-提现中 1-已提现
+        $where = [
+            'uid'=>$uid,
+        ];
+        if($status != 99){
+            $where['status'] = $status;
+        }
+        $total = db('user_return')->where($where)->count();
+        $data = db('user_return')->where($where)->order('createTime','desc')->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
+            $data[$k]['returnTime'] = date('Y-m-d H:i:s',$v['returnTime']);
+            $data[$k]['typeStr'] = $v['type'] == 1?'微信':'支付宝';
+        }
+        $return = [
             'total'=>$total,
             'data'=>$data,
         ];

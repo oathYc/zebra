@@ -927,4 +927,46 @@ class Share extends \think\Model
         }
         return $sign;
     }
+    /**
+     * 余额体现申请
+     * 体现金额判断
+     * 除去冻结金额
+     */
+    public static function checkReturnMoney($uid,$money,$procedures=0){
+        $user = db('member')->where('id',$uid)->find();
+        if(!$user){
+            self::jsonData(0,'','没有该用户');
+        }
+        $returnMoney = $money + $procedures;
+        if($user['money'] < $returnMoney){
+            self::jsonData(0,'','你的余额（'.$user['money'].'）不足');
+        }
+        //获取用户当前的冻结资金 体现申请中
+        $frozen = db('user_return')->where(['uid'=>$uid,'status'=>0])->sum('money');
+        //可体现金额
+        $canApply = $user['money'] - $frozen;
+        if($canApply < $returnMoney){
+            self::jsonData(0,'','排除冻结资金（'.$frozen.'），你的可提现金额（'.$canApply.'）不足！');
+        }
+    }
+    /**
+     * 实名状态判断
+     * 提现申请
+     * 实名认证审核状态 0-未提交 1-待审核 2-审核通过 3-审核失败
+     */
+    public static function checkRealNameStatus($uid){
+        $user = db('member')->where('id',$uid)->find();
+        if(!$user){
+            self::jsonData(0,'','没有该用户！');
+        }
+        if($user['check'] == 0){
+            self::jsonData(0,'','您还未提交实名认证审核，无法申请提现！');
+        }
+        if($user['check'] == 1){
+            self::jsonData(0,'','您的实名认证待审核中，暂无法申请提现！');
+        }
+        if($user['check'] == 3){
+            self::jsonData(0,'','您的实名认证审核未通过，请重新提交审核！');
+        }
+    }
 }

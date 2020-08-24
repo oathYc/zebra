@@ -287,15 +287,41 @@
            pageSize                 每页数量 默认10
            moneyType                去处 0-充值 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
 返回参数    type                        1-新增 2-减少
+           money                        当前余额
 
 接口名称    我的收益
 接口路径    myMoneyAdd
 接口参数    page                    页数 默认1
            pageSize                 每页数量 默认10
            moneyType                收益类型 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
+返回参数    money                        当前余额
+
+接口名称    金额体现-实名认证信息
+接口路径    returnCheck
+接口参数
+返回参数    real_name               真实姓名
+            card                    身份证号
+            check                   审核状态 0-未提交实名认证资料 1-平台审核中 2-审核通过 3-审核失败  审核通过才可进行提现申请
+
+接口名称    金额体现-实名认证信息提交
+接口路径    realNameApply
+接口参数    realName            真实姓名
+            card                身份证号
 返回参数
 
+接口名称    金额体现-提现申请
+接口路径    returnApply
+接口参数    money               提现金额
+           type                提现类型 1-微信 2-支付宝 默认1
+           phone            提现手机号  支付宝提现必填
+返回参数
 
-
+接口名称    金额体现-提现记录
+接口路径    myReturn
+接口参数    page                    页数 默认1
+           pageSize                 每页数量 默认10
+           status                   默认99  99-全部 0-提现中 1-已提现
+返回参数    createTime                  申请时间
+            returnTime                  提现时间
 
 
