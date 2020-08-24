@@ -281,7 +281,19 @@
             moneyGet             累计收益
             joinDay              加入天数
 
+接口名称    我的习惯卷记录
+接口路径    myMoneyRecord
+接口参数    page                    页数 默认1
+           pageSize                 每页数量 默认10
+           moneyType                去处 0-充值 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
+返回参数    type                        1-新增 2-减少
 
+接口名称    我的收益
+接口路径    myMoneyAdd
+接口参数    page                    页数 默认1
+           pageSize                 每页数量 默认10
+           moneyType                收益类型 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
+返回参数
 
 
 

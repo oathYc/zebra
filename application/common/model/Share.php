@@ -150,7 +150,7 @@ class Share extends \think\Model
      * 用户创建房间
      * 扣除指定的费用
      */
-    public static function reduceRoomMoney($uid,$money){
+    public static function reduceRoomMoney($uid,$money,$name=''){
         $user = db('member')->where('id',$uid)->find();
         if(!$user){
             self::jsonData(0,'','没有该用户');
@@ -163,7 +163,7 @@ class Share extends \think\Model
         $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
         if($res){
             //记录余额使用记录
-            self::userMoneyRecord($uid,$money,'参与房间挑战支付挑战费用',2,2);
+            self::userMoneyRecord($uid,$money,'参与房间挑战支付挑战费用-'.$name,2,2);
         }else{
             self::jsonData(0,'','扣除费用失败，请重试');
         }
@@ -543,7 +543,7 @@ class Share extends \think\Model
         $addMoney = $user['money'] + $money;
         $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
         if($res){
-            self::userMoneyRecord($uid,$money,'打卡活动每日奖励',1,1);
+            self::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$clock['name'],1,1);
             self::userMoneyGet($uid,$money,1);
         }
     }
@@ -565,12 +565,12 @@ class Share extends \think\Model
      * 挑战成功
      * 退还本金
      */
-    public static function returnClockInMoney($uid,$money){
+    public static function returnClockInMoney($uid,$money,$clock){
         $user = db('member')->where('id',$uid)->find();
         $addMoney = $user['money'] + $money;
         $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
         if($res){
-            self::userMoneyRecord($uid,$money,'打卡活动本金退还',1,1);
+            self::userMoneyRecord($uid,$money,'打卡活动本金退还'.'-'.$clock['name'],1,1);
         }else{
             Share::jsonData(0,'','本金退还失败');
         }
@@ -684,7 +684,7 @@ class Share extends \think\Model
                     $addMoney = $user['money'] + $userRewardMoney;
                     $res = db('member')->where('id',$r)->update(['money'=>$addMoney]);
                     if($res){
-                        self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放',1,2);
+                        self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放'.'-'.$room['name'],1,2);
                         self::userMoneyGet($r,$userRewardMoney,2);//收益记录
                     }
                 }
@@ -696,7 +696,7 @@ class Share extends \think\Model
                 $addMoney = $user['money'] + $room['money'];
                 $res = db('member')->where('id',$w)->update(['money'=>$addMoney]);
                 if($res){
-                    self::userMoneyRecord($w,$room['money'],'房间挑战报名费退还',1,2);
+                    self::userMoneyRecord($w,$room['money'],'房间挑战报名费退还'.'-'.$room['name'],1,2);
                 }
             }
         }
@@ -785,7 +785,7 @@ class Share extends \think\Model
         if($money){
             $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
             if($res){
-                self::userMoneyRecord($uid,$money,'闯关奖励发送',1,3);
+                self::userMoneyRecord($uid,$money,'闯关奖励发送'.'-'.$pass['name'],1,3);
                 //收益记录
                 self::userMoneyGet($uid,$money,3);
             }else{
@@ -795,7 +795,7 @@ class Share extends \think\Model
         //退还本金
         $returnMoney = $addMoney + $pass['money'];
         $re = db('member')->where('id',$uid)->update(['money'=>$returnMoney]);
-        self::userMoneyRecord($uid,$pass['money'],'闯关本金退还',1,3);
+        self::userMoneyRecord($uid,$pass['money'],'闯关本金退还'.'-'.$pass['name'],1,3);
     }
     /**
      * 闯关报名
@@ -812,7 +812,7 @@ class Share extends \think\Model
      * 闯关报名
      * 扣除用户报名费用
      */
-    public static function reducePassJoinMoney($uid,$money){
+    public static function reducePassJoinMoney($uid,$money,$pass){
         $user = db('member')->where('id',$uid)->find();
         if($user['money'] < $money){
             self::jsonData(0,'','用户余额不足，请先充值！');
@@ -821,7 +821,7 @@ class Share extends \think\Model
         $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
         if($res){
             //记录余额消费记录
-            self::userMoneyRecord($uid,$money,'闯关报名费扣除',2,3);
+            self::userMoneyRecord($uid,$money,'闯关报名费扣除-'.$pass['name'],2,3);
         }else{
             self::jsonData(0,'','扣除闯关报名费失败，请稍后重试！');
         }

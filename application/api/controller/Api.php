@@ -315,7 +315,7 @@ class Api extends Controller
         $params['uid'] = $uid;
         $params['status'] = 0;//状态 0-报名中   1-活动中 2-活动结束
         //创建房间费用扣除
-        Share::reduceRoomMoney($uid,$params['money']);
+        Share::reduceRoomMoney($uid,$params['money'],$params['name']);
         $res = db('room_create')->insert($params);
         if($res){
             $roomId = db('room_create')->getLastInsID();
@@ -437,7 +437,7 @@ class Api extends Controller
             }
         }
         //扣除报名费用
-        Share::reduceRoomMoney($uid,$room['money']);
+        Share::reduceRoomMoney($uid,$room['money'],$room['name']);
         //记录挑战报名信息
         $params = [
             'uid'=>$uid,
@@ -718,7 +718,7 @@ class Api extends Controller
             Share::clockInReward($uid,$hadSign['joinMoney'],$clock);
             //退还报名费
             if($hadNum >= $clock['days']){
-                Share::returnClockInMoney($uid,$hadSign['joinMoney']);
+                Share::returnClockInMoney($uid,$hadSign['joinMoney'],$clock);
             }
             Share::jsonData(1);
         }else{
@@ -1064,7 +1064,7 @@ class Api extends Controller
             'isReward'=>0,
         ];
         //扣除用户报名费用
-        Share::reducePassJoinMoney($uid,$pass['money']);
+        Share::reducePassJoinMoney($uid,$pass['money'],$pass);
         $res = db('pass_join')->insert($params);
         if($res){//报名成功
             //生成用户闯关签到
@@ -1194,6 +1194,66 @@ class Api extends Controller
             'signNum'=>$signNum,
             'moneyGet'=>$moneyGet,
             'joinDay'=>$joinDays,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 习惯卷记录
+     */
+    public function myMoneyRecord(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $type = input('moneyType',99);//类型 0-充值 1-打卡 2-房间挑战 3-闯关 99-全部
+        $offset = $pageSize*($page-1);
+        $where = [
+            'uid'=>$uid,
+        ];
+        if($type != 99){
+            $where['moneyType'] = $type;
+        }
+        $total = db('user_money_record')->where($where)->count();
+        $data = db('user_money_record')->where($where)->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
+        }
+        $user = db('member')->where('id',$uid)->find();
+        $return = [
+            'money'=>$user['money'],
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
+    }
+    /**
+     * 收益记录
+     */
+    public function myMoneyAdd(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $type = input('moneyType',99);//类型  1-打卡 2-房间挑战 3-闯关 99-全部
+        $offset = $pageSize*($page-1);
+        $where = [
+            'uid'=>$uid,
+            'type'=>1,
+        ];
+        $arr = [1,2,3];
+        if($type != 99 && in_array($type,$arr)){
+            $where['moneyType'] = $type;
+        }else{
+            $where['moneyType'] = ['in',$arr];
+        }
+        $total = db('user_money_record')->where($where)->count();
+        $data = db('user_money_record')->where($where)->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
+        }
+        $user = db('member')->where('id',$uid)->find();
+        $return = [
+            'money'=>$user['money'],
+            'total'=>$total,
+            'data'=>$data,
         ];
         Share::jsonData(1,$return);
     }
