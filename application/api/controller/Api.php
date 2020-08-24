@@ -1003,6 +1003,9 @@ class Api extends Controller
         $pass['joinMoney'] = $joinMoney?$joinMoney:0;
         //是否报名
         $join = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
+        $hadSign = 0;//当前打卡轮数
+        $nextBegin = '';//下一轮签到开始时间
+        $nextEnd = '';//下一轮签到结束时间
         if(!$join){
             $isJoin = 0;//0-当前未参加  1-已参加
             $signData = [];
@@ -1012,14 +1015,27 @@ class Api extends Controller
                 //判断打卡状态
                 Share::checkPassStatus($uid,$passId,$join['id']);
                 $isJoin = 0;
+                $signData = [];
             }else{
+                //获取签到时间数据
+                $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
+                //获取打卡轮数
+                foreach($signData as $k => $v){
+                    if($v['status'] ==0){
+                        $nextBegin = $v['signTimeBegin'];
+                        $nextEnd = $v['signTimeEnd'];
+                        $hadSign = $v['number'] - 1;
+                        break;
+                    }
+                }
                 $isJoin = 1;
             }
-            //获取签到时间数据
-            $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
         }
         $pass['isJoin'] = $isJoin;
         $pass['signData'] = $signData;
+        $pass['hadSign'] = $hadSign;
+        $pass['nextSignBegin'] = $nextBegin;
+        $pass['nextSignEnd'] = $nextEnd;
         Share::jsonData(1,$pass);
     }
 
