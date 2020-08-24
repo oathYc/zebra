@@ -108,7 +108,7 @@ class Share extends \think\Model
     /**
      * 用户金额记录日志
      * type  1-新增 2-减少
-     * $moneyType 0-充值 1-打卡 2-房间挑战 3-闯关
+     * $moneyType 0-充值 1-打卡 2-房间挑战 3-闯关 4-余额体现
      */
     public static function userMoneyRecord($uid,$money,$remark,$type,$moneyType){
         $params = [
