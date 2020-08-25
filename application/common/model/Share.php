@@ -685,6 +685,7 @@ class Share extends \think\Model
                     $res = db('member')->where('id',$r)->update(['money'=>$addMoney]);
                     if($res){
                         self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放'.'-'.$room['name'],1,2);
+//                        self::rewardRecord($r,$userRewardMoney,$roomId,2,$joinId);//1-打卡 2-房间挑战 3-闯关
                         self::userMoneyGet($r,$userRewardMoney,2);//收益记录
                     }
                 }
@@ -714,6 +715,31 @@ class Share extends \think\Model
             'roomBegin'=>$room['beginDate'],
         ];
         db('room_record')->insert($params);
+    }
+    /**
+     * 用户收益记录
+     * type  1-打卡 2-房间挑战 3-闯关
+     */
+    public static function rewardRecord($uid,$money,$objectId,$type,$joinId=0){
+        $params = [];
+        $date = date('Y-m-d');
+        $time = time();
+        if($type ==1){
+            $params = [
+                'uid'=>$uid,
+                'clockInId'=>$objectId,
+                'joinId'=>$joinId,
+                'date'=>$date,
+                'money'=>$money,
+                'createTime'=>$time,
+            ];
+        }elseif($type ==2){
+
+        }elseif($type ==3){
+
+        }
+
+
     }
     /**
      * 邀请码设置
@@ -973,6 +999,26 @@ class Share extends \think\Model
      * 关闭已结束的闯关
      */
     public static function closePassEnd(){
-
+        $date = date('Y-m-d H:i:s');
+        $current = db('pass')->where(['status'=>1])->select();
+        foreach($current as $k => $v){
+            if($v['passEndTime'] <= $date){//活动已结束
+                db('pass')->where('id',$v['id'])->update(['status'=>0]);
+            }
+        }
+    }
+    /**
+     * 打卡活动
+     * 获取昨日收益
+     */
+    public static function getYesterdayMoneyByClock($uid,$clockInId,$joinId){
+        return 0;
+    }
+    /**
+     * 房间挑战
+     * 获取昨日收益
+     */
+    public static function getYesterdayMoneyByRoom($uid,$roomId){
+        return 0;
     }
 }

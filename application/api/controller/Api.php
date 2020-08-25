@@ -415,6 +415,8 @@ class Api extends Controller
         $room['joinNum'] = $joinCount;
         //已打卡次数
         $room['isSign'] = $isSign;
+        //昨日收益金额
+        $room['yesterdayMoney'] = Share::getYesterdayMoneyByRoom($uid,$roomId);
         Share::jsonData(1,$room);
     }
     /**
@@ -630,7 +632,7 @@ class Api extends Controller
         $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
         $clock['joinMoney'] = $joinMoney?$joinMoney:0;
         //昨日收益金额
-        $clock['yesterdayMoney'] = 0;
+        $clock['yesterdayMoney'] = Share::getYesterdayMoneyByClock($uid,$id,$isJoin['id']);
         Share::jsonData(1,$clock);
     }
     /**
@@ -965,10 +967,9 @@ class Api extends Controller
      * 闯关活动列表
      */
     public function  passList(){
-        $uid = $this->uid;
-        $data = db('pass')->where('status',1)->order('number','desc')->select();
-        //关闭结束的闯关活动
+        $uid = $this->uid;//关闭结束的闯关活动
         Share::closePassEnd();
+        $data = db('pass')->where('status',1)->order('number','desc')->select();
         foreach($data as $k => $v){
             //报名人数
             $hadJoin = db('pass_join')->where(['passId'=>$v['id']])->group('uid')->count();
@@ -1126,9 +1127,9 @@ class Api extends Controller
         if(!$pass){
             Share::jsonData(0,'','没有该闯关活动');
         }
-        if($pass['status'] != 1){
-            Share::jsonData(0,'','当前闯关活动已下线');
-        }
+//        if($pass['status'] != 1){
+//            Share::jsonData(0,'','当前闯关活动已下线');
+//        }
         $nowTime = date('Y-m-d H:i:s');//当前时间
         //获取报名信息
         $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'endTime'=>['>=',$nowTime],'status'=>0])->find();
