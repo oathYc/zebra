@@ -19,7 +19,7 @@ header("Access-Control-Allow-Origin:*");
 class Api extends Controller
 {
     public  $noCheck = [
-        'register','login','gettoken','wxnotify','wxlogin'
+        'register','login','gettoken','wxnotify','wxlogin','alinotify'
     ];//跳过登录token验证
     public $uid;
     const PAY = 0;
@@ -52,11 +52,22 @@ class Api extends Controller
     }
 
     //TODO 余额充值
-    public function wxPay(){
+    public function rechargePay(){
         $uid = $this->uid;
         $money = input('money',0);
+        $type = input('type',1);//1-微信 2-支付宝
         Share::checkEmptyParams(['money'=>$money]);
-        Appwxpay::recharge($uid,$money);
+        if($type == 1){
+            Appwxpay::recharge($uid,$money);
+        }else{
+            Appalipay::recharge($uid,$money);
+        }
+    }
+    /**
+     * 支付宝回调
+     */
+    public function aliNotify(){
+        Appalipay::notify();
     }
     /**
      * 微信回调

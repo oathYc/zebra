@@ -28,6 +28,7 @@ class Appwxpay extends Controller
             'createTime'=>time(),
             'status'=>0,
             'orderNo'=>$out_trade_no,
+            'type'=>1,
         ];
         $res = db('money_recharge')->insert($params);
         if(!$res){
@@ -166,7 +167,7 @@ xml;
                         $result = db('member')->where('id',$uid)->update(['money'=>$add]);
                         if($result){
                             //记录充值日志
-                            Share::userMoneyRecord($uid,$money,'余额充值',1,0);
+                            Share::userMoneyRecord($uid,$money,'余额充值-微信',1,0);
                             echo "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>";
                         }
                     }

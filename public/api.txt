@@ -8,9 +8,10 @@
          其余接口都需要传递 accessToken（getToken接口返回的accessToken值） 参数进行token验证
          放在header请求头里面传递
 
-接口名称    余额充值-微信支付
-接口路径    wxPay
+接口名称    余额充值-微信支付宝支付
+接口路径    rechargePay
 接口参数    money               充值金额
+            type                1-微信 2-支付宝 默认1
 返回参数
 
 
