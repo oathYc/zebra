@@ -1030,16 +1030,22 @@ class Api extends Controller
             }else{
                 //获取签到时间数据
                 $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
+                $isJoin = 1;
                 //获取打卡轮数
                 foreach($signData as $k => $v){
                     if($v['status'] ==0){
                         $nextBegin = $v['signTimeBegin'];
                         $nextEnd = $v['signTimeEnd'];
                         $hadSign = $v['number'] - 1;
+                        //判断当前未签到是否在后面
+                        if($nextBegin < $now && $now > $nextEnd){
+                            //已过打卡时间但是为签到  失败处理
+                            $isJoin = 0;
+                            db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
+                        }
                         break;
                     }
                 }
-                $isJoin = 1;
             }
         }
         $pass['isJoin'] = $isJoin;
