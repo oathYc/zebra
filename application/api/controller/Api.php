@@ -103,12 +103,15 @@ class Api extends Controller
                 'openid'=>$openid,
                 'unionid'=>$unionid,
                 'avatar'=>$headimg,
-                'inviteCode'=>$inviteCode
+                'inviteCode'=>$inviteCode,
+                'inviterCode'=>isset($inviteCode)?$inviteCode:'',
             ];
-            if($inviterCode){
-                $params['inviterCode'] = $inviterCode;
-            }
             $res = db('member')->insert($params);
+            if($inviterCode){
+                $uid = db('member')->where(['openid'=>$openid])->find()['id'];
+                //邀请奖励
+                Share::shareReward($uid,0,'',4);
+            }
         }else{//修改
             $params = [
                 'phone'=>$phone,
@@ -461,6 +464,9 @@ class Api extends Controller
         ];
         $res = db('room_join')->insert($params);
         if($res){
+            //邀请人信息记录
+            $objectStr = '房间挑战（'.$room['name'].'）';
+            Share::shareReward($uid,$roomId,$objectStr,2);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','报名失败，请售后重试！');
@@ -677,6 +683,9 @@ class Api extends Controller
         ];
         $res = db('clock_in_join')->insert($params);
         if($res){
+            //邀请人信息记录
+            $objectStr = '打卡挑战（'.$clock['name'].'）';
+            Share::shareReward($uid,$clockId,$objectStr,1);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','报名失败，请重试!');
@@ -806,6 +815,8 @@ class Api extends Controller
         }
         $res = db('member')->where('id',$uid)->update(['inviterCode'=>$inviterCode]);
         if($res){
+            //邀请人奖励
+            Share::shareReward($uid,0,'',4);
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','添加失败，请重试！');
@@ -835,6 +846,7 @@ class Api extends Controller
      * 排行榜
      * 打卡排行榜
      * 前十
+     * 1-打卡 2-房间挑战 3-闯关 4-邀请奖励
      */
     public function clockInRanking(){
         $uid = $this->uid;
@@ -861,6 +873,7 @@ class Api extends Controller
      * 排行榜
      * 房间挑战排行榜
      * 前十
+     * 1-打卡 2-房间挑战 3-闯关 4-邀请奖励
      */
     public function roomRanking(){
         $uid = $this->uid;
@@ -887,6 +900,7 @@ class Api extends Controller
      * 排行榜
      * 闯关排行榜
      * 前十
+     * 1-打卡 2-房间挑战 3-闯关 4-邀请奖励
      */
     public function passRanking(){
         $uid = $this->uid;
@@ -913,10 +927,11 @@ class Api extends Controller
     /**
      * 排行榜
      * 习惯打卡榜
+     * 1-打卡 2-房间挑战 3-闯关 4-邀请奖励
      */
     public function habitRanking(){
         $uid = $this->uid;
-        $data = db('money_get')->field("*,sum(moneyGet) as moneyGet")->group('uid')->limit(0,10)->order('moneyGet','desc')->select();
+        $data = db('money_get')->field("*,sum(moneyGet) as moneyGet")->group('uid')->limit(0,10)->where(['type'=>['!=',4]])->order('moneyGet','desc')->select();
         $own = [
             'mySite'=>0,
             'myMoney'=>0,
@@ -939,19 +954,20 @@ class Api extends Controller
     /**
      *排行榜
      * 邀请榜
+     * 1-打卡 2-房间挑战 3-闯关 4-邀请奖励
      */
     public function inviteRanking(){
         $uid = $this->uid;
-        $data = db('money_get')->where(['type'=>3])->limit(0,10)->order('moneyGet','desc')->select();
+        $data = db('money_get')->where(['type'=>4])->limit(0,10)->order('moneyGet','desc')->select();
         $own = [
             'mySite'=>0,
             'myMoney'=>0,
         ];
         foreach($data as $k => $v){
-            $user = db('member')->where('id',$v['shareUid'])->find();
+            $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
             $data[$k]['avatar'] = $user['avatar'];
-            if($v['shareUid'] == $uid){
+            if($v['uid'] == $uid){
                 $own['mySite'] = $k+1;
                 $own['myMoney'] = $v['moneyGet'];
             }
@@ -1110,6 +1126,10 @@ class Api extends Controller
             //生成用户闯关签到
             $join = db('pass_join')->where($params)->find();
             Share::createUserPassSign($uid,$pass,$join);
+
+            //邀请人信息记录
+            $objectStr = '闯关挑战（'.$pass['name'].'）';
+            Share::shareReward($uid,$passId,$objectStr,3);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1,'','报名成功');
         }else{
             Share::jsonData(0,'','报名失败');
@@ -1339,6 +1359,9 @@ class Api extends Controller
         Share::checkEmptyParams(['money'=>$money]);
         if($type ==2 && !$phone){
             Share::jsonData(0,'','请填写支付宝提现手机号');
+        }
+        if($money < 20){
+            Share::jsonData(0,'','提现金额不能小于20');
         }
         //判断是否实名审核通过
         Share::checkRealNameStatus($uid);

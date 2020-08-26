@@ -108,7 +108,7 @@ class Share extends \think\Model
     /**
      * 用户金额记录日志
      * type  1-新增 2-减少
-     * $moneyType 0-充值 1-打卡 2-房间挑战 3-闯关 4-余额体现
+     * $moneyType 0-充值 1-打卡 2-房间挑战 3-闯关 4-余额提现  5-下级用户奖励
      */
     public static function userMoneyRecord($uid,$money,$remark,$type,$moneyType){
         $params = [
@@ -124,7 +124,7 @@ class Share extends \think\Model
     /**
      * 用户收益记录
      * 收益统计
-     * 1-打卡 2-房间挑战 3-闯关
+     * 1-打卡 2-房间挑战 3-闯关  4-邀请奖励
      */
     public static function userMoneyGet($uid,$money,$type){
         $where = [
@@ -1056,5 +1056,45 @@ class Share extends \think\Model
         }else{
             return 0;
         }
+    }
+    /**
+     * 邀请奖励
+     * objectId  活动id
+     * type 1-打卡 2-房间挑战 3-闯关 4-邀请新人
+     */
+    public static function shareReward($uid,$objectId,$objectStr,$type=4){
+        //判断用户是有有邀请人
+        $user = db('member')->where('id',$uid)->find();
+        if(!$user || $user['inviterCode']){
+            return false;
+        }
+        $sharer = db('member')->where('inviteCode',$user['inviterCode'])->find();
+        if(!$sharer){
+            return false;
+        }
+        $sharerUid = $sharer['id'];
+        //判断是否已经奖励过该类活动
+        $hadReward = db('share_reward')->where(['uid'=>$sharerUid,'shareUid'=>$uid,'type'=>$type])->find();
+        if($hadReward){
+            return false;
+        }
+        $money = $type==4?8.8:3;//新人奖励8.8  参加活动奖励3元
+        $insert = [
+            'uid'=>$sharerUid,
+            'shareUid'=>$uid,
+            'type'=>$type,
+            'money'=>$money,
+            'objectId'=>$objectId,
+            'createTime'=> time(),
+        ];
+        db('share_reward')->insert($insert);
+        //记录邀请奖励收益
+        self::userMoneyGet($uid,$money,4);
+        //余额增加
+        $addMoney = $sharer['money'] + $money;
+        db('member')->where('id',$sharer['id'])->update(['money'=>$addMoney]);
+        //余额变化记录
+        $remark = $type==4?'邀请新人奖励':'参加活动挑战奖励-'.$objectStr;
+        self::userMoneyRecord($uid,$money,$remark,1,5);
     }
 }
