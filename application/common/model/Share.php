@@ -531,7 +531,7 @@ class Share extends \think\Model
      * 打卡活动
      * 发放奖励
      */
-    public static function clockInReward($uid,$joinMoney,$clock){
+    public static function clockInReward($uid,$joinMoney,$clock,$join){
         if($clock['rewardType'] == 1){//固定金额
             $money = $clock['reward'];
         }else{//百分比
@@ -544,6 +544,7 @@ class Share extends \think\Model
         $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
         if($res){
             self::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$clock['name'],1,1);
+            self::rewardRecord($uid,$money,$clock['id'],1,$join['id']);
             self::userMoneyGet($uid,$money,1);
         }
     }
@@ -606,6 +607,7 @@ class Share extends \think\Model
         }
         $day = $room['day'];//房间挑战天数
         $finishUser = [];//完成挑战用户
+        $todayUserJoin = [];//用户参与id集合
         $todaySign = [];//今日签到用户
         $signNum = $room['signNum'];//房间签到数
         $today = date('Y-m-d');//今日时间
@@ -628,6 +630,7 @@ class Share extends \think\Model
                 }
             }elseif($signNum == 1 && $isSign['firstSign'] ==1){//一次签到
                 $todaySign[] =$v['uid'];//今日完成打卡的用户
+                $todayUserJoin[] = $v['id'];//参与的报名id
                 if($finish == 1){//活动结束 判断是否都完成挑战
                     $hadSign = db('sign')->where(['uid'=>$v['uid'],'roomId'=>$roomId,'type'=>1])->group('date')->count();
                     if($hadSign == $day){//打卡天数完成
@@ -642,6 +645,7 @@ class Share extends \think\Model
             }elseif($signNum == 2 && $isSign['firstSign'] == 1 && $isSign['secondSign'] == 1){
                 //二次签到
                 $todaySign[] = $v['uid'];
+                $todayUserJoin[] = $v['id'];//参与的报名id
                 if($finish == 1){//活动结束 判断是否都完成挑战
                     $hadSign = db('sign')->where(['uid'=>$v['uid'],'roomId'=>$roomId,'type'=>1])->group('date')->count();
                     if($hadSign == $day){//打卡天数完成
@@ -685,7 +689,7 @@ class Share extends \think\Model
                     $res = db('member')->where('id',$r)->update(['money'=>$addMoney]);
                     if($res){
                         self::userMoneyRecord($r,$userRewardMoney,'房间挑战每日奖励金发放'.'-'.$room['name'],1,2);
-//                        self::rewardRecord($r,$userRewardMoney,$roomId,2,$joinId);//1-打卡 2-房间挑战 3-闯关
+                        self::rewardRecord($r,$userRewardMoney,$roomId,2,$todayUserJoin[$p]);//1-打卡 2-房间挑战 3-闯关
                         self::userMoneyGet($r,$userRewardMoney,2);//收益记录
                     }
                 }
@@ -724,7 +728,7 @@ class Share extends \think\Model
         $params = [];
         $date = date('Y-m-d');
         $time = time();
-        if($type ==1){
+        if($type ==1){//打卡挑战
             $params = [
                 'uid'=>$uid,
                 'clockInId'=>$objectId,
@@ -733,12 +737,31 @@ class Share extends \think\Model
                 'money'=>$money,
                 'createTime'=>$time,
             ];
-        }elseif($type ==2){
-
-        }elseif($type ==3){
-
+            $res = db('clock_reward')->insert($params);
+        }elseif($type ==2){//房间挑战
+            $params = [
+                'uid'=>$uid,
+                'roomId'=>$objectId,
+                'joinId'=>$joinId,
+                'date'=>$date,
+                'money'=>$money,
+                'createTime'=>$time,
+            ];
+            $res = db('room_reward')->insert($params);
+        }elseif($type ==3){//闯关挑战
+            $params = [
+                'uid'=>$uid,
+                'passId'=>$objectId,
+                'joinId'=>$objectId,
+                'date'=>$date,
+                'money'=>$money,
+                'createTime'=>$time,
+            ];
+            $res = db('room_reward')->insert($params);
+        }else{
+            return false;
         }
-
+        return true;
 
     }
     /**
@@ -771,7 +794,7 @@ class Share extends \think\Model
         if($pass['challenge'] == $total){//挑战成功
             db('pass_join')->where('id',$joinId)->update(['status'=>1]);
             if($join['isReward'] != 1){//发放奖励
-                self::sendPassReward($uid,$pass);
+                self::sendPassReward($uid,$pass,$joinId);
                 db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);
             }
         }else{
@@ -781,7 +804,7 @@ class Share extends \think\Model
     /**
      * 发放闯关奖励
      */
-    public static function sendPassReward($uid,$pass){
+    public static function sendPassReward($uid,$pass,$joinId){
         $today = date('Y-m-d');
         $beginTime = $today.' 00:00:00';
         $endTime = $today.' 23:59:59';
@@ -812,6 +835,7 @@ class Share extends \think\Model
             $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
             if($res){
                 self::userMoneyRecord($uid,$money,'闯关奖励发送'.'-'.$pass['name'],1,3);
+                self::rewardRecord($uid,$money,$pass['id'],3,$joinId);//1-打卡 2-房间挑战 3-闯关
                 //收益记录
                 self::userMoneyGet($uid,$money,3);
             }else{
@@ -1012,13 +1036,25 @@ class Share extends \think\Model
      * 获取昨日收益
      */
     public static function getYesterdayMoneyByClock($uid,$clockInId,$joinId){
-        return 0;
+        $yesterDay = date('Y-m-d',strtotime("-1day"));
+        $moneyRecord = db('clock_reward')->where(['uid'=>$uid,'clockInId'=>$clockInId,'joinId'=>$joinId,'date'=>$yesterDay])->find();
+        if($moneyRecord){
+            return $moneyRecord['money'];
+        }else{
+            return 0;
+        }
     }
     /**
      * 房间挑战
      * 获取昨日收益
      */
     public static function getYesterdayMoneyByRoom($uid,$roomId){
-        return 0;
+        $yesterDay = date('Y-m-d',strtotime("-1day"));
+        $moneyRecord = db('room_reward')->where(['uid'=>$uid,'roomId'=>$roomId,'date'=>$yesterDay])->find();
+        if($moneyRecord){
+            return $moneyRecord['money'];
+        }else{
+            return 0;
+        }
     }
 }

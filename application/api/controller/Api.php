@@ -728,7 +728,7 @@ class Api extends Controller
             }
             db('clock_in_join')->where('id',$hadSign['id'])->update($update);
             //发放奖励
-            Share::clockInReward($uid,$hadSign['joinMoney'],$clock);
+            Share::clockInReward($uid,$hadSign['joinMoney'],$clock,$hadSign);
             //退还报名费
             if($hadNum >= $clock['days']){
                 Share::returnClockInMoney($uid,$hadSign['joinMoney'],$clock);
@@ -1159,7 +1159,7 @@ class Api extends Controller
                 //修改参加状态  已完成
                 db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                 //发放奖励
-                Share::sendPassReward($uid,$pass);
+                Share::sendPassReward($uid,$pass,$join['id']);
                 db('pass_join')->where('id',$join['id'])->update(['isReward'=>1]);
             }
             Share::jsonData(1);
