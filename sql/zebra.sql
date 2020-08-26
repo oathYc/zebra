@@ -11,7 +11,7 @@
  Target Server Version : 50726
  File Encoding         : 65001
 
- Date: 16/08/2020 17:34:09
+ Date: 26/08/2020 18:00:32
 */
 
 SET NAMES utf8mb4;
@@ -34,7 +34,7 @@ CREATE TABLE `ws_admins`  (
 -- ----------------------------
 -- Records of ws_admins
 -- ----------------------------
-INSERT INTO `ws_admins` VALUES (1, 'admin', '2cd1a1f1f0483ab855328b21ad14e172', '127.0.0.1', 1597479584, 1);
+INSERT INTO `ws_admins` VALUES (1, 'admin', '2cd1a1f1f0483ab855328b21ad14e172', '127.0.0.1', 1598428418, 1);
 INSERT INTO `ws_admins` VALUES (2, 'oathYc', 'ea8d570ec4d38e7993c48f9af2e69122', '127.0.0.1', 1596015964, 1);
 
 -- ----------------------------
@@ -113,6 +113,21 @@ CREATE TABLE `ws_clock_in_sign`  (
 INSERT INTO `ws_clock_in_sign` VALUES (1, 29, 4, 4, '2020-08-06 16:26:02', '2020-08-06', 1596702362);
 
 -- ----------------------------
+-- Table structure for ws_clock_reward
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_clock_reward`;
+CREATE TABLE `ws_clock_reward`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL COMMENT '用户id',
+  `clockInId` int(11) NULL DEFAULT NULL COMMENT '打卡活动id',
+  `joinId` int(11) NULL DEFAULT NULL COMMENT '报名id',
+  `date` char(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '日期',
+  `money` decimal(10, 2) NULL DEFAULT NULL COMMENT '奖励金额',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '打卡收益记录表' ROW_FORMAT = Fixed;
+
+-- ----------------------------
 -- Table structure for ws_member
 -- ----------------------------
 DROP TABLE IF EXISTS `ws_member`;
@@ -135,14 +150,15 @@ CREATE TABLE `ws_member`  (
   `real_name` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '真实姓名',
   `inviteCode` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '我的邀请码',
   `inviterCode` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '邀请人的邀请码',
+  `check` tinyint(1) NULL DEFAULT 0 COMMENT '实名认证审核状态 0-未提交 1-待审核 2-审核通过 3-审核失败',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = MyISAM AUTO_INCREMENT = 32 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '会员表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of ws_member
 -- ----------------------------
-INSERT INTO `ws_member` VALUES (29, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc', 1597481586, 66.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, NULL, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjkdddd', 'asdfghjk');
-INSERT INTO `ws_member` VALUES (31, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc1', 1597481586, 19.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, NULL, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjk', 'asdfghjkdddd');
+INSERT INTO `ws_member` VALUES (29, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc', 1596721890, 5.91, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, 1598323228, 'fdssvfvdffdbbg', 'fdvvfvf', '3434454', '成都', 'asdfghjkdddd', 'asdfghjk', 2);
+INSERT INTO `ws_member` VALUES (31, '', 'e10adc3949ba59abbe56e057f20f883e', 'oathYc', 'oathYc1', 1596721890, 19.01, '123456', '/uploads/avatar/20200804/mr.jpg', '0', NULL, 1598323228, 'fdssvfvdffdbbg', 'fdvvfvf', NULL, NULL, 'asdfghjk', 'asdfghjkdddd', 0);
 
 -- ----------------------------
 -- Table structure for ws_money_get
@@ -151,19 +167,12 @@ DROP TABLE IF EXISTS `ws_money_get`;
 CREATE TABLE `ws_money_get`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uid` int(11) NULL DEFAULT NULL,
-  `type` tinyint(1) NULL DEFAULT NULL COMMENT '1-打卡 2-房间挑战 3-闯关',
+  `type` tinyint(1) NULL DEFAULT NULL COMMENT '1-打卡 2-房间挑战 3-闯关 4-邀请新人奖励',
   `moneyGet` decimal(10, 2) NULL DEFAULT NULL COMMENT '收益金额',
   `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
   `updateTime` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '收益统计表' ROW_FORMAT = Fixed;
-
--- ----------------------------
--- Records of ws_money_get
--- ----------------------------
-INSERT INTO `ws_money_get` VALUES (1, 29, 3, 1.00, 1597486346, '2020-08-15 18:12:26');
-INSERT INTO `ws_money_get` VALUES (2, 29, 1, 11.00, 1597486346, NULL);
-INSERT INTO `ws_money_get` VALUES (3, 29, 2, 22.00, 1597486346, NULL);
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '收益统计表' ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Table structure for ws_money_recharge
@@ -177,24 +186,32 @@ CREATE TABLE `ws_money_recharge`  (
   `status` tinyint(1) NULL DEFAULT NULL COMMENT '状态 0-充值中 1-充值成功',
   `payTime` int(11) NULL DEFAULT NULL COMMENT '支付回调时间',
   `orderNo` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '订单号',
+  `type` tinyint(1) NULL DEFAULT 1 COMMENT '1-微信 2-支付宝',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 15 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '余额充值' ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 22 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '余额充值' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of ws_money_recharge
 -- ----------------------------
-INSERT INTO `ws_money_recharge` VALUES (3, 2, 11.00, 1595126193, 0, NULL, 'RE15951261937236');
-INSERT INTO `ws_money_recharge` VALUES (4, 2, 11.00, 1595126259, 0, NULL, 'RE15951262592108');
-INSERT INTO `ws_money_recharge` VALUES (5, 2, 11.00, 1595126303, 0, NULL, 'RE15951263034706');
-INSERT INTO `ws_money_recharge` VALUES (6, 2, 11.00, 1595126314, 0, NULL, 'RE15951263144278');
-INSERT INTO `ws_money_recharge` VALUES (7, 2, 11.00, 1595126332, 0, NULL, 'RE15951263326387');
-INSERT INTO `ws_money_recharge` VALUES (8, 2, 11.00, 1595126389, 0, NULL, 'RE15951263891918');
-INSERT INTO `ws_money_recharge` VALUES (9, 2, 11.00, 1595126409, 0, NULL, 'RE15951264093006');
-INSERT INTO `ws_money_recharge` VALUES (10, 2, 11.00, 1595126438, 0, NULL, 'RE15951264385569');
-INSERT INTO `ws_money_recharge` VALUES (11, 2, 11.00, 1595126456, 0, NULL, 'RE15951264561857');
-INSERT INTO `ws_money_recharge` VALUES (12, 2, 11.00, 1595126480, 0, NULL, 'RE15951264802651');
-INSERT INTO `ws_money_recharge` VALUES (13, 2, 11.00, 1595126536, 0, NULL, 'RE15951265363956');
-INSERT INTO `ws_money_recharge` VALUES (14, 2, 11.00, 1595128549, 0, NULL, 'RE15951285491794');
+INSERT INTO `ws_money_recharge` VALUES (3, 2, 11.00, 1595126193, 0, NULL, 'RE15951261937236', 1);
+INSERT INTO `ws_money_recharge` VALUES (4, 2, 11.00, 1595126259, 0, NULL, 'RE15951262592108', 1);
+INSERT INTO `ws_money_recharge` VALUES (5, 2, 11.00, 1595126303, 0, NULL, 'RE15951263034706', 1);
+INSERT INTO `ws_money_recharge` VALUES (6, 2, 11.00, 1595126314, 0, NULL, 'RE15951263144278', 1);
+INSERT INTO `ws_money_recharge` VALUES (7, 2, 11.00, 1595126332, 0, NULL, 'RE15951263326387', 1);
+INSERT INTO `ws_money_recharge` VALUES (8, 2, 11.00, 1595126389, 0, NULL, 'RE15951263891918', 1);
+INSERT INTO `ws_money_recharge` VALUES (9, 2, 11.00, 1595126409, 0, NULL, 'RE15951264093006', 1);
+INSERT INTO `ws_money_recharge` VALUES (10, 2, 11.00, 1595126438, 0, NULL, 'RE15951264385569', 1);
+INSERT INTO `ws_money_recharge` VALUES (11, 2, 11.00, 1595126456, 0, NULL, 'RE15951264561857', 1);
+INSERT INTO `ws_money_recharge` VALUES (12, 2, 11.00, 1595126480, 0, NULL, 'RE15951264802651', 1);
+INSERT INTO `ws_money_recharge` VALUES (13, 2, 11.00, 1595126536, 0, NULL, 'RE15951265363956', 1);
+INSERT INTO `ws_money_recharge` VALUES (14, 2, 11.00, 1595128549, 0, NULL, 'RE15951285491794', 1);
+INSERT INTO `ws_money_recharge` VALUES (15, 29, 1.00, 1598323310, 0, NULL, 'CG15983233108643', 2);
+INSERT INTO `ws_money_recharge` VALUES (16, 29, 1.00, 1598323383, 0, NULL, 'CG15983233834884', 2);
+INSERT INTO `ws_money_recharge` VALUES (17, 29, 1.00, 1598323560, 0, NULL, 'CG15983235603065', 2);
+INSERT INTO `ws_money_recharge` VALUES (18, 29, 1.00, 1598323707, 0, NULL, 'CG15983237071291', 2);
+INSERT INTO `ws_money_recharge` VALUES (19, 29, 1.00, 1598324895, 0, NULL, 'CG15983248957187', 2);
+INSERT INTO `ws_money_recharge` VALUES (20, 29, 1.00, 1598325248, 0, NULL, 'CG15983252481497', 2);
+INSERT INTO `ws_money_recharge` VALUES (21, 29, 1.00, 1598325281, 0, NULL, 'CG15983252819696', 2);
 
 -- ----------------------------
 -- Table structure for ws_pass
@@ -219,15 +236,15 @@ CREATE TABLE `ws_pass`  (
   `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '闯关图片',
   `background` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '背景图片',
   `rule` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '闯关规则',
+  `passEndTime` datetime(0) NULL DEFAULT NULL COMMENT '活动结束时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关活动' ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关活动' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of ws_pass
 -- ----------------------------
-INSERT INTO `ws_pass` VALUES (1, '发布', '菜市场', 2.5, '00:00', '05:00', 0, 300, 1, 12.00, 1, '11', 10, 1596786586, 1, '/uploads/category/20200807/06ff6b5750980d868064b0764ef7251b.jpg', '/uploads/category/20200807/5849e79ee5d0014527206ebbfbfe9a77.jpg', '大V存储');
-INSERT INTO `ws_pass` VALUES (3, '发布', 'ss', 2.5, '04:00', '22:50', 240, 1370, 4, 1.00, 2, '1', 10, 1597480024, 1, '/uploads/category/20200815/f3e4192218f16cf43bd2f49373289731.jpg', '/uploads/category/20200815/db1eba43fa2702771e420b88f91a1739.jpg', '');
-INSERT INTO `ws_pass` VALUES (4, '闯关挑战', '闯关挑战', 2.5, '05:00', '19:00', 300, 1140, 2, 12.00, 2, '1', 10, 1597480467, 1, '/uploads/category/20200815/ae7252b9788d76c8a43a19d4bef8689d.jpg', '/uploads/category/20200815/746916c5fbe47abc1c531e4b7bfecd93.jpg', '闯关挑战');
+INSERT INTO `ws_pass` VALUES (1, '发布', '菜市场', 2.5, '00:00', '05:00', 0, 300, 1, 12.00, 1, '11', 10, 1596786586, 1, '/uploads/category/20200807/06ff6b5750980d868064b0764ef7251b.jpg', '/uploads/category/20200807/5849e79ee5d0014527206ebbfbfe9a77.jpg', '大V存储', NULL);
+INSERT INTO `ws_pass` VALUES (3, 'med-d2d', 'dddd', 2.5, '05:00', '21:00', 300, 1260, 5, 12.00, 2, '0.1', 10, 1598255963, 1, '/uploads/category/20200824/160ae64e93457b8e75bb6ada6c24e276.jpg', '/uploads/category/20200824/5ff004dc65c9c1a35f4f9dc68bd31932.jpg', 'fffffff', '2020-08-28 00:00:00');
 
 -- ----------------------------
 -- Table structure for ws_pass_join
@@ -239,19 +256,27 @@ CREATE TABLE `ws_pass_join`  (
   `passId` int(11) NULL DEFAULT NULL,
   `joinTime` datetime(0) NULL DEFAULT NULL COMMENT '报名时间',
   `joinMoney` decimal(10, 2) NULL DEFAULT NULL COMMENT '报名金额',
-  `status` tinyint(1) NULL DEFAULT 0 COMMENT '参加状态  0-参与中 1-已完成 2-未完成',
+  `status` tinyint(1) NULL DEFAULT NULL COMMENT '参加状态  0-参与中 1-已完成 2-未完成',
   `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
   `endTime` datetime(0) NULL DEFAULT NULL COMMENT '结束时间',
-  `isReward` tinyint(1) NULL DEFAULT 0 COMMENT '是否发送奖励 0-未发送 1-已发送',
+  `isReward` tinyint(1) NULL DEFAULT 0 COMMENT '是否发送奖励 0-未发生 1-已发送',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户闯关报名' ROW_FORMAT = Fixed;
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户闯关报名' ROW_FORMAT = Fixed;
 
 -- ----------------------------
--- Records of ws_pass_join
+-- Table structure for ws_pass_reward
 -- ----------------------------
-INSERT INTO `ws_pass_join` VALUES (1, 29, 4, '2020-08-15 17:52:40', 12.00, 2, 1597485160, '2020-08-15 20:22:40', 0);
-INSERT INTO `ws_pass_join` VALUES (2, 29, 4, '2020-08-15 17:54:35', 12.00, 1, 1597485275, '2020-08-15 20:24:35', 1);
-INSERT INTO `ws_pass_join` VALUES (3, 29, 4, '2020-08-15 18:13:31', 12.00, 0, 1597486411, '2020-08-15 20:43:31', 0);
+DROP TABLE IF EXISTS `ws_pass_reward`;
+CREATE TABLE `ws_pass_reward`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL COMMENT '用户id',
+  `passId` int(11) NULL DEFAULT NULL COMMENT '打卡活动id',
+  `joinId` int(11) NULL DEFAULT NULL COMMENT '报名id',
+  `date` char(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '日期',
+  `money` decimal(10, 2) NULL DEFAULT NULL COMMENT '奖励金额',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关收益记录表' ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Table structure for ws_pass_sign
@@ -265,35 +290,11 @@ CREATE TABLE `ws_pass_sign`  (
   `status` tinyint(1) NULL DEFAULT NULL COMMENT '打卡状态  0-未打卡 1-已打卡',
   `number` int(2) NULL DEFAULT NULL COMMENT '第几轮打卡',
   `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
-  `signTimeBegin` datetime(0) NULL DEFAULT NULL COMMENT '打卡开始时间',
-  `signTimeEnd` datetime(0) NULL DEFAULT NULL COMMENT '打卡结束时间',
-  `signTime` datetime(0) NULL DEFAULT NULL COMMENT '签到时间',
+  `signTime` datetime(0) NULL DEFAULT NULL COMMENT '打卡时间',
+  `signTimeBegin` datetime(0) NULL DEFAULT NULL,
+  `signTimeEnd` datetime(0) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户闯关签到记录' ROW_FORMAT = Fixed;
-
--- ----------------------------
--- Records of ws_pass_sign
--- ----------------------------
-INSERT INTO `ws_pass_sign` VALUES (1, 29, 4, 2, 1, 1, 1597485275, '2020-08-15 17:09:35', '2020-08-15 17:12:34', '2020-08-15 17:57:21');
-INSERT INTO `ws_pass_sign` VALUES (2, 29, 4, 2, 1, 2, 1597485275, '2020-08-15 17:15:35', '2020-08-15 17:13:34', '2020-08-15 17:58:01');
-INSERT INTO `ws_pass_sign` VALUES (3, 29, 4, 2, 1, 3, 1597485275, '2020-08-15 17:30:35', '2020-08-15 17:33:34', '2020-08-15 18:10:06');
-INSERT INTO `ws_pass_sign` VALUES (4, 29, 4, 2, 1, 4, 1597485275, '2020-08-15 18:50:35', '2020-08-15 17:53:34', '2020-08-15 18:10:52');
-INSERT INTO `ws_pass_sign` VALUES (5, 29, 4, 2, 1, 5, 1597485275, '2020-08-15 19:03:35', '2020-08-15 17:53:34', '2020-08-15 18:10:55');
-INSERT INTO `ws_pass_sign` VALUES (6, 29, 4, 2, 1, 6, 1597485275, '2020-08-15 19:11:35', '2020-08-15 17:53:34', '2020-08-15 18:10:58');
-INSERT INTO `ws_pass_sign` VALUES (7, 29, 4, 2, 1, 7, 1597485275, '2020-08-15 19:33:35', '2020-08-15 17:53:34', '2020-08-15 18:11:01');
-INSERT INTO `ws_pass_sign` VALUES (8, 29, 4, 2, 1, 8, 1597485275, '2020-08-15 19:40:35', '2020-08-15 17:53:34', '2020-08-15 18:11:04');
-INSERT INTO `ws_pass_sign` VALUES (9, 29, 4, 2, 1, 9, 1597485275, '2020-08-15 19:56:35', '2020-08-15 17:53:34', '2020-08-15 18:11:06');
-INSERT INTO `ws_pass_sign` VALUES (10, 29, 4, 2, 1, 10, 1597485275, '2020-08-15 17:22:35', '2020-08-15 20:25:34', '2020-08-15 18:12:26');
-INSERT INTO `ws_pass_sign` VALUES (11, 29, 4, 3, 0, 1, 1597486411, '2020-08-15 18:18:31', '2020-08-15 18:21:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (12, 29, 4, 3, 0, 2, 1597486411, '2020-08-15 18:43:31', '2020-08-15 18:46:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (13, 29, 4, 3, 0, 3, 1597486411, '2020-08-15 18:45:31', '2020-08-15 18:48:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (14, 29, 4, 3, 0, 4, 1597486411, '2020-08-15 19:13:31', '2020-08-15 19:16:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (15, 29, 4, 3, 0, 5, 1597486411, '2020-08-15 19:26:31', '2020-08-15 19:29:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (16, 29, 4, 3, 0, 6, 1597486411, '2020-08-15 19:41:31', '2020-08-15 19:44:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (17, 29, 4, 3, 0, 7, 1597486411, '2020-08-15 19:46:31', '2020-08-15 19:49:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (18, 29, 4, 3, 0, 8, 1597486411, '2020-08-15 20:01:31', '2020-08-15 20:04:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (19, 29, 4, 3, 0, 9, 1597486411, '2020-08-15 20:18:31', '2020-08-15 20:21:30', NULL);
-INSERT INTO `ws_pass_sign` VALUES (20, 29, 4, 3, 0, 10, 1597486411, '2020-08-15 20:29:31', '2020-08-15 20:32:30', NULL);
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户闯关签到记录' ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Table structure for ws_pass_time
@@ -314,13 +315,12 @@ CREATE TABLE `ws_pass_time`  (
   `ten` int(2) NULL DEFAULT NULL COMMENT '第十轮',
   `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关活动打卡时间' ROW_FORMAT = Fixed;
+) ENGINE = MyISAM AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '闯关活动打卡时间' ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Records of ws_pass_time
 -- ----------------------------
-INSERT INTO `ws_pass_time` VALUES (1, 3, 1, 2, 3, 4, 5, 6, 7, 9, 8, 3, 1597480024);
-INSERT INTO `ws_pass_time` VALUES (2, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1597480467);
+INSERT INTO `ws_pass_time` VALUES (1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1598255963);
 
 -- ----------------------------
 -- Table structure for ws_room_create
@@ -401,7 +401,22 @@ CREATE TABLE `ws_room_record`  (
   `failUser` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '打卡失败用户uid集合',
   `finishUser` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '完成挑战用户uid集合',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '每日房间挑战数据统计' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for ws_room_reward
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_room_reward`;
+CREATE TABLE `ws_room_reward`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL COMMENT '用户id',
+  `roomId` int(11) NULL DEFAULT NULL COMMENT '打卡活动id',
+  `date` char(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '日期',
+  `money` decimal(10, 2) NULL DEFAULT NULL COMMENT '奖励金额',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  `joinId` int(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '房间挑战收益记录表' ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Table structure for ws_room_type
@@ -423,6 +438,22 @@ CREATE TABLE `ws_room_type`  (
 -- ----------------------------
 INSERT INTO `ws_room_type` VALUES (5, 2, '1', '程序池 传传传 ', 1596450589, 600.00, 5.00);
 INSERT INTO `ws_room_type` VALUES (4, 1, '1', '的深V从出发  保底', 1596450583, 123.00, 1.00);
+
+-- ----------------------------
+-- Table structure for ws_share_reward
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_share_reward`;
+CREATE TABLE `ws_share_reward`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL COMMENT '奖励用户id',
+  `shareUid` int(11) NULL DEFAULT NULL COMMENT '邀请用户uid',
+  `type` tinyint(1) NULL DEFAULT NULL COMMENT '1-打卡 2-房间挑战  3-闯关 ',
+  `money` decimal(10, 2) NULL DEFAULT NULL COMMENT '奖励金额',
+  `parentUid` int(11) NULL DEFAULT NULL COMMENT '邀请用户的邀请人id',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '创建时间',
+  `objectId` int(11) NULL DEFAULT NULL COMMENT '参加的活动id',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Fixed;
 
 -- ----------------------------
 -- Table structure for ws_sign
@@ -480,26 +511,45 @@ CREATE TABLE `ws_user_money_record`  (
   `uid` int(11) NULL DEFAULT NULL,
   `money` decimal(10, 2) NULL DEFAULT NULL,
   `remark` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `type` tinyint(1) NULL DEFAULT 1,
+  `type` tinyint(1) NULL DEFAULT 1 COMMENT '1-新增 2-减少',
   `createTime` int(11) NULL DEFAULT NULL,
   `moneyType` tinyint(1) NULL DEFAULT 0 COMMENT '0-充值 1-打卡 2-房间挑战 3-闯关',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 54 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '用户金额记录' ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 51 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '用户金额记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of ws_user_money_record
 -- ----------------------------
 INSERT INTO `ws_user_money_record` VALUES (48, 29, 1.00, '打卡活动本金退还', 1, 1596702362, 0);
-INSERT INTO `ws_user_money_record` VALUES (47, 29, 0.01, '打卡活动每日奖励', 1, 1596702362, 0);
-INSERT INTO `ws_user_money_record` VALUES (46, 29, 1.00, '参与房间挑战支付挑战费用', 2, 1596535746, 0);
-INSERT INTO `ws_user_money_record` VALUES (45, 29, 1.00, '创建房间支付挑战费用', 2, 1596535268, 0);
-INSERT INTO `ws_user_money_record` VALUES (44, 29, 1.00, '创建房间支付挑战费用', 2, 1596532552, 0);
-INSERT INTO `ws_user_money_record` VALUES (43, 29, 1.00, '创建房间支付挑战费用', 2, 1596532430, 0);
-INSERT INTO `ws_user_money_record` VALUES (42, 29, 1.00, '创建房间支付挑战费用', 2, 1596528416, 0);
-INSERT INTO `ws_user_money_record` VALUES (49, 29, 12.00, '闯关报名费扣除', 2, 1597485160, 3);
-INSERT INTO `ws_user_money_record` VALUES (50, 29, 12.00, '闯关报名费扣除', 2, 1597485275, 3);
-INSERT INTO `ws_user_money_record` VALUES (51, 29, 1.00, '闯关奖励发送', 1, 1597486346, 3);
-INSERT INTO `ws_user_money_record` VALUES (52, 29, 12.00, '闯关本金退还', 1, 1597486346, 3);
-INSERT INTO `ws_user_money_record` VALUES (53, 29, 12.00, '闯关报名费扣除', 2, 1597486411, 3);
+INSERT INTO `ws_user_money_record` VALUES (47, 29, 0.01, '打卡活动每日奖励', 1, 1596702362, 1);
+INSERT INTO `ws_user_money_record` VALUES (46, 29, 1.00, '参与房间挑战支付挑战费用', 2, 1596535746, 2);
+INSERT INTO `ws_user_money_record` VALUES (45, 29, 1.00, '创建房间支付挑战费用', 2, 1596535268, 2);
+INSERT INTO `ws_user_money_record` VALUES (44, 29, 1.00, '创建房间支付挑战费用', 2, 1596532552, 2);
+INSERT INTO `ws_user_money_record` VALUES (43, 29, 1.00, '创建房间支付挑战费用', 2, 1596532430, 3);
+INSERT INTO `ws_user_money_record` VALUES (42, 29, 1.00, '创建房间支付挑战费用', 2, 1596528416, 3);
+INSERT INTO `ws_user_money_record` VALUES (49, 29, 12.00, '余额体现，体现金额-12.00元，手续费-0.00元', 2, 1598253223, 4);
+INSERT INTO `ws_user_money_record` VALUES (50, 29, 1.10, '余额体现，体现金额-1.00元，手续费-0.10元', 2, 1598253332, 4);
+
+-- ----------------------------
+-- Table structure for ws_user_return
+-- ----------------------------
+DROP TABLE IF EXISTS `ws_user_return`;
+CREATE TABLE `ws_user_return`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NULL DEFAULT NULL,
+  `money` decimal(10, 2) NULL DEFAULT NULL COMMENT '提现金额',
+  `status` tinyint(1) NULL DEFAULT NULL COMMENT '状态 0-提现中 1-已提现',
+  `createTime` int(11) NULL DEFAULT NULL COMMENT '申请时间',
+  `returnTime` int(11) NULL DEFAULT NULL COMMENT '提现时间',
+  `procedures` decimal(10, 2) NULL DEFAULT 0.00 COMMENT '手续费',
+  `type` tinyint(1) NULL DEFAULT NULL COMMENT '提现渠道 1-微信 2-支付宝',
+  `phone` char(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '提现手机号',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户提现' ROW_FORMAT = Fixed;
+
+-- ----------------------------
+-- Records of ws_user_return
+-- ----------------------------
+INSERT INTO `ws_user_return` VALUES (1, 29, 1.00, 0, 1598240923, 1598253332, 0.10, 1, '');
 
 SET FOREIGN_KEY_CHECKS = 1;
