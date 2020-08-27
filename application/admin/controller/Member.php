@@ -115,7 +115,7 @@ class Member extends Base
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeReturnBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
-                $result[$key]['returnTime'] = date('Y-m-d H:i:s',$vo['returnTime']);
+                $result[$key]['returnTime'] = $vo['status']==1?date('Y-m-d H:i:s',$vo['returnTime']):'';
                 $result[$key]['typeStr'] = $vo['status']==1?'微信':'支付宝';
                 $result[$key]['statusStr'] = $vo['status']==1?'已提现':'提现中';
             }
