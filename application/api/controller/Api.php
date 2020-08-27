@@ -609,6 +609,9 @@ class Api extends Controller
             }else{
                 $data[$k]['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
             }
+            //打卡报名金额获取
+            $prices =db('clock_in_price')->where('clockInId',$v['id'])->order('price','asc')->select();
+            $data[$k]['prices'] = $prices;
         }
         Share::jsonData(1,$data);
     }
@@ -639,6 +642,9 @@ class Api extends Controller
         $clock['joinMoney'] = $joinMoney?$joinMoney:0;
         //昨日收益金额
         $clock['yesterdayMoney'] = Share::getYesterdayMoneyByClock($uid,$id,$isJoin['id']);
+        //打卡报名金额获取
+        $prices =db('clock_in_price')->where('clockInId',$clock['id'])->order('price','asc')->select();
+        $clock['prices'] = $prices;
         Share::jsonData(1,$clock);
     }
     /**
@@ -656,12 +662,17 @@ class Api extends Controller
         if($clock['status'] != 1){
             Share::jsonData(0,'','当前打卡活动已关闭！');
         }
-        if($joinMoney > $clock['maxMoney']){
-            Share::jsonData(0,'','当前活动最大报名金额为'.$clock['maxMoney']);
+//        if($joinMoney > $clock['maxMoney']){
+//            Share::jsonData(0,'','当前活动最大报名金额为'.$clock['maxMoney']);
+//        }
+        //判断是否有该价格
+        $hadMoney = db('clock_in_price')->where(['clockInId'=>$clockId,'price'=>$joinMoney])->find();
+        if(!$hadMoney){
+            Share::jsonData(0,'','没有该价格');
         }
-        if($joinMoney < 1){
-            Share::jsonData(0,'','报名金额不能小于1元');
-        }
+//        if($joinMoney < 1){
+//            Share::jsonData(0,'','报名金额不能小于1元');
+//        }
         //判断当前是否已经报名
         $hadSign = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->find();
         if($hadSign){
@@ -1013,6 +1024,9 @@ class Api extends Controller
                 }
             }
             $data[$k]['isJoin'] = $isJoin;
+            //报名价格获取
+            $prices = db('pass_price')->where('passId',$v['id'])->order('price','asc')->select();
+            $data[$k]['prices'] = $prices;
         }
         Share::jsonData(1,$data);
     }
@@ -1075,6 +1089,9 @@ class Api extends Controller
         $pass['hadSign'] = $hadSign;
         $pass['nextSignBegin'] = $nextBegin;
         $pass['nextSignEnd'] = $nextEnd;
+        //报名价格获取
+        $prices = db('pass_price')->where('passId',$pass['id'])->order('price','asc')->select();
+        $pass['prices'] = $prices;
         Share::jsonData(1,$pass);
     }
 
@@ -1085,7 +1102,8 @@ class Api extends Controller
     public function passJoin(){
         $uid = $this->uid;
         $passId = input('passId');
-        Share::checkEmptyParams(['passId'=>$passId]);
+        $joinMoney = input('joinMoney');
+        Share::checkEmptyParams(['passId'=>$passId,'joinMoney'=>$joinMoney]);
         $pass = db('pass')->where('id',$passId)->find();
         if(!$pass){
             Share::jsonData(0,'','没有该闯关活动！');
@@ -1099,6 +1117,11 @@ class Api extends Controller
         }
         //判断是否在报名时间内
         Share::checkPassJoinTime($pass);
+        //判断是否有该报名价格
+        $hadMoney = db('pass_price')->where(['passId'=>$passId,'price'=>$joinMoney])->find();
+        if(!$hadMoney){
+            Share::jsonData(0,'','没有该报名价格');
+        }
         //检查是否已经报名
         $now = date('Y-m-d H:i:s');
         $time = strtotime($now);
@@ -1118,14 +1141,14 @@ class Api extends Controller
             'uid'=>$uid,
             'passId'=>$passId,
             'joinTime'=>$now,
-            'joinMoney'=>$pass['money'],
+            'joinMoney'=>$joinMoney,
             'status'=>0,//参加状态  0-参与中 1-已完成 2-未完成
             'createTime'=>$time,
             'endTime'=>$endTime,
             'isReward'=>0,
         ];
         //扣除用户报名费用
-        Share::reducePassJoinMoney($uid,$pass['money'],$pass);
+        Share::reducePassJoinMoney($uid,$joinMoney,$pass);
         $res = db('pass_join')->insert($params);
         if($res){//报名成功
             //生成用户闯关签到

@@ -138,12 +138,12 @@
             image                       封面图
             background                  背景图
             rule                        挑战规则
-            maxMoney                    金额上限
             days                        挑战天数
             rewardType                  奖励类型 1-固定金额 2-百分比
             reward                      奖励值 对应rewardType
+            prices                      报名金额数据 数组
 
-接口名称    打卡活动-打卡列表
+接口名称    打卡活动-打卡详情
 接口路径    clockDetail
 接口参数    clockInId                   打卡活动id
 返回参数    currJoinNum                 报名人数
@@ -151,12 +151,13 @@
             status                      1-启用 0-关闭
             joinMoney                   报名金额
             yesterdayMoney              昨日收益金额
+            prices                      报名金额数据 数组
 
 
 接口名称    打卡活动-打卡报名
 接口路径    clockInJoin
 接口参数    clockInId                   打卡活动id
-            joinMoney                   报名金额
+            joinMoney                   报名金额  报名金额数组内的金额
 返回参数
 
 接口名称    打卡活动-打卡签到
@@ -232,6 +233,7 @@
            joinMoney        当前活动已报名的金额总数
            isJoin           是否参加 0-未参加 1-已参加
            joinNum          报名人数
+            prices                      报名金额数据 数组
 
 接口名称    闯关-闯关详情
 接口路径    passDetail
@@ -254,10 +256,12 @@
            signData.signTimeBegin  签到开始时间
            signData.signTimeEnd     签到结束时间
            signData.signTime         用户签到时间
+            prices                      报名金额数据 数组
 
 接口名称    闯关-闯关报名
 接口路径    passJoin
 接口参数    passId          闯关活动id
+            joinMoney       报名金额 报名列表内的
 返回参数
 
 接口名称    闯关-闯关签到
