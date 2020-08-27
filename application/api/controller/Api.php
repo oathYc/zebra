@@ -783,7 +783,11 @@ class Api extends Controller
      */
     public function helpMsg(){
         $content = db('system')->where('type',2)->find();
-        Share::jsonData(1,$content);
+        $arr[] = [
+            'title'=>$content['content'],
+            'content'=>$content['content']
+        ];
+        Share::jsonData(1,$arr);
     }
     /**
      * 免责申明
