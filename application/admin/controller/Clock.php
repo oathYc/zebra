@@ -31,6 +31,13 @@ class Clock extends Base
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                //打卡价格
+                $prices = db('clock_in_price')->where('clockInId',$vo['id'])->order('price','asc')->select();
+                $pricesArr = [];
+                foreach($prices as $v){
+                    $pricesArr[] = $v['price'];
+                }
+                $result[$key]['moneys'] = implode('、',$pricesArr);
             }
             $return['total'] = db('clock_in')->count();  //总数据
             $return['rows'] = $result;
@@ -46,6 +53,9 @@ class Clock extends Base
 
             $param = input('post.');
             unset($param['file']);
+            $moneys = $param['moneys'];
+            unset($param['moneys']);
+            $param['maxMoney'] = $moneys[0];
             $param['beginTime'] = Share::getMinute($param['beginTimeStr']);
             $param['endTime'] = Share::getMinute($param['endTimeStr']);
             if($param['endTime'] <= $param['beginTime']){
@@ -60,6 +70,20 @@ class Clock extends Base
 
             try{
                 db('clock_in')->insert($param);
+                $clockId = db('clock_in')->where('name',$param['name'])->find()['id'];
+                //记录打卡报名金额
+                $time = time();
+                $moneyArr = [];
+                foreach($moneys as $k => $v){
+                    $moneyArr[] = [
+                        'clockInId'=>$clockId,
+                        'price'=>$v,
+                        'createTime'=>$time,
+                    ];
+                }
+                if($moneyArr){
+                    db('clock_in_price')->insertAll($moneyArr);
+                }
             }catch(\Exception $e){
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
@@ -122,6 +146,15 @@ class Clock extends Base
             $info['background'] = '';
         }
         $info['statusStr'] = $info['status'] == 1?'启用':'关闭';
+        //获取报名金额
+        //打卡价格
+        $prices = db('clock_in_price')->where('clockInId',$info['id'])->order('price','asc')->select();
+        $pricesArr = [];
+        foreach($prices as $v){
+            $pricesArr[] = $v['price'];
+        }
+        $info['moneys'] = implode('元、',$pricesArr).'元';
+
         $this->assign('info',$info);
         return $this->fetch();
     }

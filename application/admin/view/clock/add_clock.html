@@ -22,6 +22,12 @@
         .merge-box .scrollbox .merge-list {
             padding-bottom: 5px;
         }
+        .moneyInput{
+            position: relative;
+            left: 193px;
+            display: inline-block;
+            top: -34px;
+        }
     </style>
 </head>
 <body class="gray-bg">
@@ -53,10 +59,11 @@
                                 <input id="days" type="text" class="form-control" name="days" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">金额上限：</label>
-                            <div class="input-group col-sm-4">
-                                <input id="maxMoney" type="text" class="form-control" name="maxMoney" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')">
+                        <div class="form-group " id="moneyParent">
+                            <label class="col-sm-3 control-label">报名金额：</label>
+                            <div class="input-group col-sm-3">
+                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="报名价格">
+                                <buttom class="btn btn-primary moneyInput"  onclick="addMoney()" >添加</buttom>
                             </div>
                         </div>
                         <div class="form-group layui-form-item">
@@ -259,6 +266,17 @@
         }
         $($(".laydate-time-list li ol")[2]).find("li").remove();  //清空秒
 
+    }
+    function deleteMoney(_this){
+        $(_this).parents('.moneyDiv').remove();
+    }
+    function addMoney(){
+        var str = '';
+        str += '<div class="input-group col-sm-3 layui-col-md-offset3 moneyDiv">\n' +
+            '                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\\d]/g,\'\')" placeholder="报名价格">\n' +
+            '                                <a class="btn  btn-primary moneyInput" href="#" onclick="deleteMoney(this)" >删除</a>\n' +
+            '                            </div>';
+        $('#moneyParent').append(str);
     }
 </script>
 </body>

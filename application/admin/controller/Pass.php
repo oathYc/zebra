@@ -31,6 +31,13 @@ class Pass extends Base
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                //报名价格
+                $prices = db('pass_price')->where('passId',$vo['id'])->order('price','asc')->select();
+                $pricesArr = [];
+                foreach($prices as $v){
+                    $pricesArr[] = $v['price'];
+                }
+                $result[$key]['moneys'] = implode('、',$pricesArr);
             }
             $return['total'] = db('pass')->count();  //总数据
             $return['rows'] = $result;
@@ -53,10 +60,15 @@ class Pass extends Base
             if(!$param['hour']){
                 $param['hour'] = '2.5';
             }
-            if($param['money'] < 1){
-                Share::jsonData(0,'','报名金额必须大于1');
-            }
+//            if($param['money'] < 1){
+//                Share::jsonData(0,'','报名金额必须大于1');
+//            }
+
+            $moneys = $param['moneys'];
+            unset($param['moneys']);
+            $param['money'] = $moneys[0];
             $param['createTime'] = time();
+
             if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
                 $param['reward'] = 100;
             }
@@ -69,6 +81,20 @@ class Pass extends Base
                 $signTime = $param['signTime'];
                 unset($param['signTime']);
                 db('pass')->insert($param);
+                $passId = db('pass')->where('name',$param['name'])->find()['id'];
+                //记录打卡报名金额
+                $time = time();
+                $moneyArr = [];
+                foreach($moneys as $k => $v){
+                    $moneyArr[] = [
+                        'passId'=>$passId,
+                        'price'=>$v,
+                        'createTime'=>$time,
+                    ];
+                }
+                if($moneyArr){
+                    db('pass_price')->insertAll($moneyArr);
+                }
             }catch(\Exception $e){
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
@@ -140,6 +166,14 @@ class Pass extends Base
         }
         $info['statusStr'] = $info['status'] == 1?'启用':'关闭';
         $info['signTime'] = db('pass_time')->where(['passId'=>$info['id']])->find();
+        //获取报名金额
+        //打卡价格
+        $prices = db('pass_price')->where('passId',$info['id'])->order('price','asc')->select();
+        $pricesArr = [];
+        foreach($prices as $v){
+            $pricesArr[] = $v['price'];
+        }
+        $info['moneys'] = implode('元、',$pricesArr).'元';
         $this->assign('info',$info);
         return $this->fetch();
     }
