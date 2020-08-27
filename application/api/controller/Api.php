@@ -1294,7 +1294,7 @@ class Api extends Controller
         $uid = $this->uid;
         $page = input('page',1);
         $pageSize = input('pageSize',10);
-        $type = input('moneyType',99);//类型  1-打卡 2-房间挑战 3-闯关 99-全部
+        $type = input('moneyType',99);//类型  1-打卡 2-房间挑战 3-闯关 4-邀请奖励 99-全部
         $offset = $pageSize*($page-1);
         $where = [
             'uid'=>$uid,
@@ -1312,10 +1312,13 @@ class Api extends Controller
             $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
         }
         $user = db('member')->where('id',$uid)->find();
+        //历史总收益
+        $totalAdd = db('user_money_record')->where($where)->sum('money');
         $return = [
             'money'=>$user['money'],
             'total'=>$total,
             'data'=>$data,
+            'historyProfit'=>$totalAdd?$totalAdd:0,
         ];
         Share::jsonData(1,$return);
     }

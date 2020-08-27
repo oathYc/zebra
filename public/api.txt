@@ -304,6 +304,7 @@
            pageSize                 每页数量 默认10
            moneyType                收益类型 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
 返回参数    money                        当前余额
+           historyProfit            历史收益
 
 接口名称    金额体现-实名认证信息
 接口路径    returnCheck
