@@ -6,6 +6,8 @@
  */
 
 namespace app\admin\controller;
+use app\api\controller\Appalipay;
+use app\api\controller\Appwxpay;
 use app\common\model\Share;
 use app\common\utils\Mail;
 use think\Request;
@@ -216,11 +218,7 @@ class Member extends Base
 
             try {
                 $return = db('user_return')->where('id',$id)->find();
-                if($return['type'] ==1){//微信提现
-
-                }else{//支付宝提现
-
-                }
+                $realName = db('member')->where('id',$return['uid'])->find()['name'];
                 //判断用户余额
                 $user= db('member')->where("id",$return['uid'])->find();
                 if(!$user){
@@ -236,6 +234,14 @@ class Member extends Base
                 }
                 if($return['status'] != 0){
                     return json(['code' => 1, 'data' => '', 'msg' => '该申请状态不是提现中！']);
+                }
+                if($return['type'] ==1){//微信提现
+                    $res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
+                }else{//支付宝提现
+                    $res = Appalipay::alipayReturn($return['phone'],$return['money'],$realName);
+                }
+                if(!isset($res['code']) || $res['code'] != 1){
+                    return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
                 }
                 db('user_return')->where('id', $id)->update(['status'=>1,'returnTime'=>time()]);
                 //修改用户余额

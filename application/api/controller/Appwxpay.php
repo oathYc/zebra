@@ -6,17 +6,17 @@
 
 class Appwxpay extends Controller
 {
+    const APPID = 'wxaa22c85e9c1350e6';//wxfc89d0b322f96cc8
+    const MCHID = '1601114191';//1524220761
+    const KEY = '2cc505c44553cd657fb32759c1db9e60';//70921929a63a8cc192d1c45e0fc6037a
 
 	public static function recharge($uid,$money) {
 
 	    //--********************** author:loveAKY 修改支付参数 date:2020-7-18 18:16
 
-		$appid="wxaa22c85e9c1350e6";//wxfc89d0b322f96cc8
-		$mch_id="1601114191";//1524220761
-		$key="2cc505c44553cd657fb32759c1db9e60";//70921929a63a8cc192d1c45e0fc6037a
-//        $appid="wxfc89d0b322f96cc8";//
-//		$mch_id="1524220761";//
-//		$key="70921929a63a8cc192d1c45e0fc6037a";//
+		$appid= self::APPID;
+		$mch_id= self::MCHID;
+		$key= self::KEY;
 
         //*********************************  end
 
@@ -178,4 +178,128 @@ xml;
             exit();
         }
 
+    /**
+     * 微信提现
+     * uid 用户id
+     * orderNumber  订单号
+     * money  提现金额
+     * serFee  服务费
+     * type  1-退款 2-提现
+     */
+    public static function WeixinReturn($uid,$orderNumber,$money){
+        if(!$uid  || !$money){
+            return ['code'=>0,'message'=>'参数错误'];
+        }
+        $user = db('member')->where('id',$uid)->find();
+        if(!$user){
+            return ['code'=>0,'message'=>'没有该用户'];
+        }
+        $url = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
+        $openid = $user['openid'];//用户openid
+        $mch_appid = self::APPID;//appid
+        $mchid = self::MCHID;;//商户号
+        $nonce_str = md5($orderNumber);//随机字符串
+        $partner_trade_no = $orderNumber;//商户订单号
+        $check_name = 'NO_CHECK';//校验用户姓名选项 NO_CHECK：不校验真实姓名 FORCE_CHECK：强校验真实姓名
+        $amount = 100*$money;//金额  分
+        $desc = '用户余额提现';///企业付款备注
+        $spbill_create_ip = $_SERVER['REMOTE_ADDR'];//ip地址
+        $signArr = ['openid'=>$openid,'mch_appid'=>$mch_appid,'mchid'=>$mchid,'nonce_str'=>$nonce_str,'partner_trade_no'=>$partner_trade_no,'check_name'=>$check_name,'amount'=>$amount,'desc'=>$desc,'spbill_create_ip'=>$spbill_create_ip];
+        //生成签名
+        ksort($signArr);
+        $key = self::KEY;
+        $sign = self::signWxpay($signArr,$key);//签名
+        $signArr['sign'] = $sign;
+        //组合xml数据
+        $xml = self::getXml($signArr);
+        $return = self::postCa($url,$xml);
+        $return = (array)simplexml_load_string($return, 'SimpleXMLElement', LIBXML_NOCDATA); //将微信返回的XML转换成数组
+        if(isset($return['return_code']) && $return['return_code'] == 'SUCCESS' && $return['result_code'] == 'SUCCESS'){
+            return ['code'=>1,'message'=>'success'];
+        }elseif(isset($return['return_msg'])){
+            return ['code'=>0,'message'=>$return['return_msg']];
+        }else{
+            return ['code'=>0,'message'=>'微信提现接口请求失败'];
+        }
+    }
+    /**
+     * 微信签名
+     * 签名生成
+     * @param $signArr
+     * md5算法加密 转大写
+     */
+    public static function signWxpay($signArr,$key){
+        $signStr = '';
+        foreach($signArr as $k => $v){
+            if($v != ''){
+                $signStr .= $k.'='.$v.'&';
+            }
+        }
+        $signStr.='key='.$key;
+        $signStr = md5($signStr);
+        $signStr = strtoupper($signStr);
+        return $signStr;
+    }
+    /**
+     * xsm数据组合
+     */
+    public static function getXml($data){
+        if(is_array($data)){
+            $xml = '<xml>';
+            foreach($data as $k => $v){
+                $xml .= "<$k>$v</$k>";
+            }
+            $xml .= "</xml>";
+            return $xml;
+        }else{
+            return '';
+        }
+    }
+    /**
+     * post请求
+     * @param $url
+     * @param string $post_data
+     * @param int $timeout
+     * @return mixed
+     * @Obelisk
+     */
+    public static  function postCa($url, $post_data = '', $timeout = 5){//curl
+        $ch = curl_init();
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);//设置执行最长秒数
+        curl_setopt ($ch, CURLOPT_POST, 1);
+        if(is_array($post_data)){
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_data));
+        }else{
+            curl_setopt($ch, CURLOPT_POSTFIELDS,$post_data);//微信 xml数据
+        }
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        //忽略证书
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        //默认格式为PEM，可以注释
+        $dir = dirname(__FILE__);
+        $cert = $dir."/wxCa/apiclient_cert.pem";
+        $key = $dir.'/wxCa/apiclient_key.pem';
+        curl_setopt($ch,CURLOPT_SSLCERTTYPE,'PEM');
+        curl_setopt($ch,CURLOPT_SSLCERT,$cert);
+        //默认格式为PEM，可以注释
+        curl_setopt($ch,CURLOPT_SSLKEYTYPE,'PEM');
+        curl_setopt($ch,CURLOPT_SSLKEY,$key);
+        $data = curl_exec($ch);
+        if ($data) {
+            curl_close($ch);
+            return $data;
+        } else {
+            $error = curl_errno($ch);
+//            $info = curl_getinfo($ch);
+//            var_dump($info);
+            echo "call faild, errorCode:$error\n";
+            echo "<a href='http://curl.haxx.se/libcurl/c/libcurl-errors.html'>错误原因查询</a></br>";
+            curl_close($ch);
+            return false;
+        }
+    }
 }

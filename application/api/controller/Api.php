@@ -799,6 +799,7 @@ class Api extends Controller
      * 已有邀请人不可修改
      */
     public function addInviter(){
+        Share::jsonData(0,'','你已注册，不能绑定邀请人！');
         $uid = $this->uid;
         $inviterCode = input('inviterCode','');
         Share::checkEmptyParams(['inviterCode'=>$inviterCode]);
@@ -1371,6 +1372,7 @@ class Api extends Controller
         //手续费
         $procedures = 0;
         Share::checkReturnMoney($uid,$money,$procedures);//检查余额
+        $orderNo = 'TX'.time().rand(11111,99999);
         //体现申请
         $params = [
             'uid'=>$uid,
@@ -1380,6 +1382,7 @@ class Api extends Controller
             'procedures'=>$procedures,
             'type'=>$type,
             'phone'=>$phone,
+            'orderNo'=>$orderNo,
         ];
         $res = db('user_return')->insert($params);
         if($res){

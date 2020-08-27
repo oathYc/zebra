@@ -126,18 +126,12 @@ class Appalipay extends Controller
 
 // 支付宝
     public static function alipayReturn($account,$amount,$username) {
-//	    echo 33;die;
         $order_no = date('Ymd') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
 
 //            $res = $this -> userWithDraw($order_no,'863758424@qq.com',0.1,'吴亚丁');
         $res = self::userWithDraw($order_no,$account,$amount,$username);
 
-//        if ($res == 1) {
-//            Db::name('tx') -> insert(['uid'=>36,'money'=>1,'way'=>1,'type' => 1,'time' => time()]);
-//
-//            return 1;
-//        }
-        return true;
+        return $res;
     }
 
 
@@ -154,7 +148,7 @@ class Appalipay extends Controller
     public static function userWithDraw(
         $out_biz_no,$payee_account,$amount,$payee_real_name,$returnId)
     {
-        $payer_show_name = '用户餐厅付款';
+        $payer_show_name = '用户余额提现';
         $remark = '提现到支付宝';
         $aop = new \AopClient();
         $aop->gatewayUrl = self::GATEWAY;//支付宝网关 https://openapi.alipay.com/gateway.do这个是不变的
@@ -179,14 +173,14 @@ class Appalipay extends Controller
 
         $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
         $resultCode = $result->$responseNode->code;
-
+        file_put_contents('reponse.txt',$result);
         if(!empty($resultCode)&&$resultCode == 10000){
             //提现成功以后 更新表状态
             //并且记录 流水等等
             file_put_contents("txlog.txt",'支付宝账号：'.$payee_account.','.'真实姓名：'.$payee_real_name.','.'转账金额：'.$amount.PHP_EOL,FILE_APPEND);
-            return true;
+            return  ['code'=>1,'message'=>'提现成功'];
         }
-        return false;
+        return ['code'=>0,'message'=>'提现失败'];
     }
 
 
