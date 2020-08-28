@@ -93,48 +93,6 @@ class Member extends Base
         return $this->fetch();
     }
 
-    // 用户体现记录
-    public function returnApply()
-    {
-        if (request()->isAjax()) {
-
-            $param = input('param.');
-
-            $limit = $param['pageSize'];
-            $offset = ($param['pageNumber'] - 1) * $limit;
-
-            $where = [];
-            if ($param['status'] != 99) {//99-全部 0-体现申请中  1-已提现
-                $where['status'] = $param['status'];
-            }
-
-            $result = db('user_return')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
-            foreach ($result as $key => $vo) {
-                $user = db('member')->where('id',$vo['uid'])->find();
-                // 优化显示头像
-                $result[$key]['avatar'] = '<img src="' . $user['avatar'] . '" width="40px" height="40px">';
-                $result[$key]['nickname'] = $user['nickname'];
-                // 生成操作按钮
-                $result[$key]['operate'] = $this->makeReturnBtn($vo['id'],$vo['status']);
-                $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
-                $result[$key]['returnTime'] = $vo['status']==1?date('Y-m-d H:i:s',$vo['returnTime']):'';
-                $result[$key]['typeStr'] = $vo['status']==1?'微信':'支付宝';
-                $result[$key]['statusStr'] = $vo['status']==1?'已提现':'提现中';
-            }
-
-            $return['total'] = db('user_return')->where($where)->count();  //总数据
-            $return['rows'] = $result;
-
-            return json($return);
-
-        }
-        $status = [
-            0=>'申请中',
-            1=>'已提现'
-        ];
-        $this->assign('status',$status);
-        return $this->fetch();
-    }
     //余额操作类型
     public static function getMoneyTypeStr($moneyType){
         $arr = [
@@ -211,6 +169,48 @@ class Member extends Base
             return json(['code' => 1, 'data' => '', 'msg' => '删除客用户成功']);
         }
     }
+    // 用户提现记录
+    public function returnApply()
+    {
+        if (request()->isAjax()) {
+
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+
+            $where = [];
+            if ($param['status'] != 99) {//99-全部 0-体现申请中  1-已提现
+                $where['status'] = $param['status'];
+            }
+
+            $result = db('user_return')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
+            foreach ($result as $key => $vo) {
+                $user = db('member')->where('id',$vo['uid'])->find();
+                // 优化显示头像
+                $result[$key]['avatar'] = '<img src="' . $user['avatar'] . '" width="40px" height="40px">';
+                $result[$key]['nickname'] = $user['nickname'];
+                // 生成操作按钮
+                $result[$key]['operate'] = $this->makeReturnBtn($vo['id'],$vo['status']);
+                $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                $result[$key]['returnTime'] = $vo['status']==1?date('Y-m-d H:i:s',$vo['returnTime']):'';
+                $result[$key]['typeStr'] = $vo['status']==1?'微信':'支付宝';
+                $result[$key]['statusStr'] = $vo['status']==1?'已提现':'提现中';
+            }
+
+            $return['total'] = db('user_return')->where($where)->count();  //总数据
+            $return['rows'] = $result;
+
+            return json($return);
+
+        }
+        $status = [
+            0=>'申请中',
+            1=>'已提现'
+        ];
+        $this->assign('status',$status);
+        return $this->fetch();
+    }
     //用户提现 同意
     public function userReturn(){
         if (request()->isAjax()) {
@@ -257,4 +257,85 @@ class Member extends Base
         }
     }
 
+    // 用户实名认证
+    public function realName()
+    {
+        $checkArr = [1,2,3];//1-认证中  2-已认证 3-认证失败
+        if (request()->isAjax()) {
+
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+
+            $where = [];
+            if ($param['check'] != 99) {//99-全部 1-认证中  2-已认证 3-认证失败
+                $where['check'] = $param['check'];
+            }else{
+                $where['check'] = ['in',$checkArr];
+            }
+
+            $result = db('member')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
+            foreach ($result as $key => $vo) {
+                // 优化显示头像
+                $result[$key]['avatar'] = '<img src="' . $vo['avatar'] . '" width="40px" height="40px">';
+                // 生成操作按钮
+                $result[$key]['operate'] = $this->makeRealNameBtn($vo['id'],$vo['check']);
+                $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                $result[$key]['checkStr'] = self::getCheckStr($vo['check']);
+            }
+
+            $return['total'] = db('member')->where($where)->count();  //总数据
+            $return['rows'] = $result;
+
+            return json($return);
+
+        }
+        $check = [
+            1=>'认证中',
+            2=>'认证成功',
+            3=>'认证失败',
+        ];
+        $this->assign('check',$check);
+        return $this->fetch();
+    }
+
+    //获取认证状态
+    public static function getCheckStr($check){
+        $arr = [
+            1=>'认证中',
+            2=>'认证成功',
+            3=>'认证失败',
+        ];
+        if(isset($arr[$check])){
+            return $arr[$check];
+        }else{
+            return '';
+        }
+    }
+    //设置实名认证按钮
+    public static function makeRealNameBtn($id,$check){
+        $operate = '';
+        if($check == 1 || $check == 3) {//0-申请中
+            $operate .= '<a href="javascript:realNameCheck(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
+            $operate .= '<i class="fa fa-paste"></i>通过</button></a> ';
+        }
+        return $operate;
+    }
+    //实名认证审核
+    public function realNameCheck(){
+        if (request()->isAjax()) {
+            $id = input('param.id/d');
+            try {
+                $member = db('member')->where('id',$id)->find();
+                if(!$member){
+                    return json(['code' => 1, 'data' => '', 'msg' => '申请用户不存在']);
+                }
+                db('member')->where('id',$id)->update(['check'=>2]);
+            } catch (\Exception $e) {
+                return json(['code' => -1, 'data' => '', 'msg' => $e->getMessage()]);
+            }
+            return json(['code' => 1, 'data' => '', 'msg' => '操作成功']);
+        }
+    }
 }
