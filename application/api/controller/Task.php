@@ -51,10 +51,10 @@ class Task extends Controller
             $endTime = strtotime($beginDate) + 86400*($days-1) + 60*$endSign;//最后打卡时间
             //发放每天的奖励给坚持打卡的用户
             if($endTime <= $nowTime){//活动结束
-                Share::roomEveryDayReward($room['id'],1);//1-活动完成 0-活动未完成 完成退还报名费
+                Share::roomEveryDayReward($v['id'],1);//1-活动完成 0-活动未完成 完成退还报名费
                 db('room_create')->where('id',$v['id'])->update(['status'=>2]);//修改状态为活动结束
             }else{
-                Share::roomEveryDayReward($room['id'],0);
+                Share::roomEveryDayReward($v['id'],0);
             }
         }
    }
