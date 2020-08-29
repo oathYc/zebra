@@ -50,4 +50,13 @@ class Index extends Controller
 
         return $this->fetch();
     }
+    /**
+     * 注册页面
+     * 邀请
+     */
+    public function invite(){
+        $code = input('get.code');
+        $this->assign('code',$code);
+        return $this->fetch();
+    }
 }

@@ -24,6 +24,20 @@
             inviterCode         邀请人的邀请码
 返回参数     成功后自动登录 返回用户信息
 
+接口名称    获取验证码
+接口路径    getCode
+接口参数    phone            电话号码 请求后code传请1234  当前没接短信接口 写死的
+返回参数
+
+接口名称    注册
+接口路径    register
+接口参数    phone            电话号码
+           password         密码
+           code             验证码
+           surePass         确认密码
+           inviterCode       邀请人的邀请码
+返回参数
+
 接口名称    获取token
 接口路径    getToken
 接口参数

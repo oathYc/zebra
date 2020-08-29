@@ -19,7 +19,7 @@ use think\Route;
 //Route::post('v1/user/add-message','api/User/addMessage');
 //
 ///*token*/
-//Route::get('v1/token/token','api/Token/token');
+//Route::get('invite/:code','index/index/invite');
 //Route::get('v1/token/refresh','api/Token/refresh');
 ///*上传图片*/
 //Route::post('v1/user/img','api/User/img');

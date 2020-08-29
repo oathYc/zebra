@@ -83,7 +83,7 @@ class Api extends Controller
         $openid = strip_tags(input('openid')); //openid
         $unionid = strip_tags(input('unionid'));
         $inviterCode = strip_tags(input('inviterCode'));//邀请人的邀请码
-        $phone = ""; // 手机号码
+        $phone = strip_tags(input('phone')); // 手机号码
         $password = "123456"; // 密码
         $headimg = strip_tags(input('headimgurl'));
 //			$headimg = $str['headimgurl'];
@@ -92,25 +92,47 @@ class Api extends Controller
         $user = db('member')->where('openid',$openid)->find();
         if(!$user){//新增
             $inviteCode = Share::getInviteCode();
-            $params = [
-                'phone'=>$phone,
-                'password'=>md5($password),
-                'real_pass'=>$password,
-                'username'=>$name,
-                'nickname'=>$name,
-                'createTime'=>time(),
-                'money'=>0,
-                'openid'=>$openid,
-                'unionid'=>$unionid,
-                'avatar'=>$headimg,
-                'inviteCode'=>$inviteCode,
-                'inviterCode'=>isset($inviteCode)?$inviteCode:'',
-            ];
-            $res = db('member')->insert($params);
-            if($inviterCode){
-                $uid = db('member')->where(['openid'=>$openid])->find()['id'];
-                //邀请奖励
-                Share::shareReward($uid,0,'',4);
+            //判断是否有相同电话码号的已注册用户
+            $code = 0;
+            if($phone){
+                $hadPhone = db('member')->where(['phone'=>$phone])->find();
+                if($hadPhone && !$hadPhone['openid']){
+                    $code = 1;
+                    $params = [
+                        'password'=>md5($password),
+                        'real_pass'=>$password,
+                        'username'=>$name,
+                        'nickname'=>$name,
+                        'openid'=>$openid,
+                        'unionid'=>$unionid,
+                        'avatar'=>$headimg,
+                        'inviteCode'=>$inviteCode,
+//                        'inviterCode'=>isset($inviteCode)?$inviteCode:'',
+                    ];
+                    $res = db('member')->where('id',$hadPhone['id'])->update($params);
+                }
+            }
+            if($code != 1){
+                $params = [
+                    'phone'=>$phone,
+                    'password'=>md5($password),
+                    'real_pass'=>$password,
+                    'username'=>$name,
+                    'nickname'=>$name,
+                    'createTime'=>time(),
+                    'money'=>0,
+                    'openid'=>$openid,
+                    'unionid'=>$unionid,
+                    'avatar'=>$headimg,
+                    'inviteCode'=>$inviteCode,
+                    'inviterCode'=>isset($inviteCode)?$inviteCode:'',
+                ];
+                $res = db('member')->insert($params);
+                if($inviterCode){
+                    $uid = db('member')->where(['openid'=>$openid])->find()['id'];
+                    //邀请奖励
+                    Share::shareReward($uid,0,'',4);
+                }
             }
         }else{//修改
             $params = [
@@ -140,6 +162,143 @@ class Api extends Controller
 
     }
 
+    /**
+     * 获取验证码
+     */
+    public function getCode(){
+        $phone = input('post.phone');
+        Share::checkEmptyParams(['phone'=>$phone]);
+        if(strlen($phone) != 11){
+            Share::jsonData(0,'','手机号码长度有误');
+        }
+        $code = rand(1111,9999);
+        $endTime = time()+300;//有效时间五分钟
+        $codeArr = [
+            'code'=>1234,
+            'endTime'=>$endTime
+        ];
+//        $sms = new Sms();
+//        $sms->smsSendCode($phone,$code);
+        session($phone,$codeArr);
+        $data = [];
+        Share::jsonData(1,$data,'success');
+    }
+
+    /**
+     * 注册接口
+     */
+    pubLic function register(){
+        $phone = input("phone");
+        $code = input('code');
+        $password = input('password');
+        $surePass = input('surePass');
+        $inviterCode = input('inviterCode','');
+        $params = [
+            'phone'=>$phone,
+            'code'=>$code,
+            'password'=>$password,
+            'surePass'=>$surePass
+        ];
+        Share::checkEmptyParams($params);
+        if($password != $surePass){
+            Share::jsonData(0,'','两次密码不一致');
+        }
+        //查看当前用户是否已经注册
+        $hadUser = db('member')->where("phone",$phone)->find();
+        if($hadUser){
+            Share::jsonData(0,'','当前用户已经注册');
+        }
+        //验证验证码是否正确
+        $trueCode = session($phone);
+        $now = time();
+        if($now > $trueCode['endTime']){
+            Share::jsonData(0,'','验证码已过期！');
+        }
+        if($trueCode['code'] != $code){
+            Share::jsonData(0,'','验证码不正确！');
+        }
+        $insert = [
+            'phone'=>$phone,
+            'password'=>md5($password),
+            'real_pass'=>$password,
+            'createTime'=>$now,
+            'money'=>0,
+            'inviterCode'=>$inviterCode,
+        ];
+        $res = db('member')->insert($insert);
+        if($res){
+            session($phone,null);
+            Share::jsonData(1,'','注册成功');
+        }else{
+            Share::jsonData(0,'','注册失败');
+        }
+    }
+    /**
+     * 忘记密码
+     * 修改密码
+     */
+    pubLic function forgetPass(){
+        $phone = input("phone");
+        $code = input('code');
+        $password = input('password');
+        $surePass = input('surePass');
+        $params = [
+            'phone'=>$phone,
+            'code'=>$code,
+            'password'=>$password,
+            'surePass'=>$surePass
+        ];
+        Share::checkEmptyParams($params);
+        if($password != $surePass){
+            Share::jsonData(0,'','两次密码不一致');
+        }
+        //查看当前用户是否已经注册
+        $hadUser = db('member')->where("phone",$phone)->find();
+        if(!$hadUser){
+            Share::jsonData(0,'','你还没有注册过！');
+        }
+        //验证验证码是否正确
+        $trueCode = session($phone);
+        $now = time();
+        if($now > $trueCode['endTime']){
+            Share::jsonData(0,'','验证码已过期！');
+        }
+        if($trueCode['code'] != $code){
+            Share::jsonData(0,'','验证码不正确！');
+        }
+        $insert = [
+            'phone'=>$phone,
+            'password'=>md5($password),
+            'real_pass'=>$password,
+        ];
+        $res = db('member')->where('phone',$phone)->update($insert);
+        if($res){
+            session($phone,null);
+            Share::jsonData(1,'','修改成功');
+        }else{
+            Share::jsonData(0,'','修改失败');
+        }
+    }
+    /**
+     * 用户登录
+     */
+    public function login(){
+        $phone = input('post.phone');
+        $password = input('post.password');
+        Share::checkEmptyParams(['phone'=>$phone,'password'=>$password]);
+        $user = db('member')->where(['phone'=>$phone,'password'=>md5($password)])->find();
+        if($user){
+            session('uid',$user['id']);
+            session('login',time());
+            //记录用户登录
+            self::saveUserLogin($user['id'],1);//1-账号登录 2-微信登录
+            $token = Token::setAccessToken();
+            $user['token'] = $token;
+            Share::jsonData(1,$user,'登录成功');
+        }else{
+            Share::jsonData(0,'','用户名或密码错误');
+        }
+    }
 
     /**
      * 获取token
