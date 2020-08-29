@@ -96,7 +96,7 @@ class Api extends Controller
             $code = 0;
             if($phone){
                 $hadPhone = db('member')->where(['phone'=>$phone])->find();
-                if($hadPhone && !$hadPhone['openid']){
+                if($hadPhone && !$hadPhone['openid']){//电话号码注册过但为绑定微信账号
                     $code = 1;
                     $params = [
                         'password'=>md5($password),
@@ -125,14 +125,13 @@ class Api extends Controller
                     'unionid'=>$unionid,
                     'avatar'=>$headimg,
                     'inviteCode'=>$inviteCode,
-                    'inviterCode'=>isset($inviteCode)?$inviteCode:'',
                 ];
                 $res = db('member')->insert($params);
-                if($inviterCode){
-                    $uid = db('member')->where(['openid'=>$openid])->find()['id'];
+//                if($inviterCode){
+//                    $uid = db('member')->where(['openid'=>$openid])->find()['id'];
                     //邀请奖励
-                    Share::shareReward($uid,0,'',4);
-                }
+//                    Share::shareReward($uid,0,'',4);
+//                }
             }
         }else{//修改
             $params = [
@@ -208,6 +207,12 @@ class Api extends Controller
         if($hadUser){
             Share::jsonData(0,'','当前用户已经注册');
         }
+        if($inviterCode){
+            $sharer = db('member')->where('inviteCode',$inviterCode)->find();
+            if(!$sharer){
+                Share::jsonData(0,'','没有该邀请人信息');
+            }
+        }
         //验证验证码是否正确
         $trueCode = session($phone);
         $now = time();
@@ -228,6 +233,11 @@ class Api extends Controller
         $res = db('member')->insert($insert);
         if($res){
             session($phone,null);
+            if($inviterCode){
+                $uid = db('member')->where(['phone'=>$phone])->find()['id'];
+//                邀请奖励
+                Share::shareReward($uid,0,'',4);
+            }
             Share::jsonData(1,'','注册成功');
         }else{
             Share::jsonData(0,'','注册失败');

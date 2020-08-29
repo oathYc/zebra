@@ -22,6 +22,7 @@
             unionid
             headimgurl          头像
             inviterCode         邀请人的邀请码
+            phone               电话号码
 返回参数     成功后自动登录 返回用户信息
 
 接口名称    获取验证码
