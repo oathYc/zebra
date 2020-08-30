@@ -803,6 +803,7 @@ class Api extends Controller
         $isJoin = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'status'=>1])->find();//是否当前参与中
         if($isJoin){
             $clock['currJoin'] = 1;
+            $clock['joinTime'] = $isJoin['createTime'];
             $date = date('Y-m-d');
             $todaySign = db('clock_in_sign')->where(['uid'=>$uid,'joinId'=>$isJoin['id'],'clockInId'=>$clock['id'],'date'=>$date])->find();
             if($todaySign){
@@ -1264,30 +1265,21 @@ class Api extends Controller
         if(!$join){
             $isJoin = 0;//0-当前未参加  1-已参加
             $signData = [];
-        }else{//判断是否已过结束时间
+        }else{//判断是否有未签到记录
             $now = date('Y-m-d H:i:s');
-            if($now > $join['endTime']){
-                //判断打卡状态
-                Share::checkPassStatus($uid,$passId,$join['id']);
+            $noSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->find();
+            if($noSign){
                 $isJoin = 0;
                 $signData = [];
             }else{
                 //获取签到时间数据
                 $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
                 $isJoin = 1;
-                //获取打卡轮数
-                foreach($signData as $k => $v){
-                    if($v['status'] ==0){
-                        $nextBegin = $v['signTimeBegin'];
-                        $nextEnd = $v['signTimeEnd'];
-                        $hadSign = $v['number'] - 1;
-                        //判断当前未签到是否在后面
-                        if($nextBegin < $now && $now > $nextEnd){
-                            //已过打卡时间但是为签到  失败处理
-                            $isJoin = 0;
-                            db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
-                        }
-                        break;
+                if($join['signStatus'] ==2){
+                    $needSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->find();
+                    if($needSign){
+                        $nextBegin= $needSign['signTimeBegin'];
+                        $nextEnd = $needSign['signTimeEnd'];
                     }
                 }
             }
@@ -1354,14 +1346,15 @@ class Api extends Controller
             'createTime'=>$time,
             'endTime'=>$endTime,
             'isReward'=>0,
+            'signStatus'=>2,//0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
         ];
         //扣除用户报名费用
         Share::reducePassJoinMoney($uid,$joinMoney,$pass);
         $res = db('pass_join')->insert($params);
         if($res){//报名成功
-            //生成用户闯关签到
+            //生成用户闯关签到 第一轮
             $join = db('pass_join')->where($params)->find();
-            Share::createUserPassSign($uid,$pass,$join);
+            Share::createUserPassSignNew($uid,$pass,$join);
 
             //邀请人信息记录
             $objectStr = '闯关挑战（'.$pass['name'].'）';
@@ -1370,6 +1363,40 @@ class Api extends Controller
         }else{
             Share::jsonData(0,'','报名失败');
         }
+    }
+    /**
+     * 闯关活动
+     * 签到状态修改
+     */
+    public function passSignStatus(){
+        $uid = $this->uid;
+        $status = input('status',1);//1-停止 2-继续挑战
+        $passId = input('passId');
+        $joinId = input('joinId');
+        Share::checkEmptyParams(['passId'=>$passId,'joinId'=>$joinId]);
+        $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'status'=>0,'id'=>$joinId])->find();
+        if(!$join){
+            Share::jsonData(0,'','您还没有挑战中的活动，不能进行该操作');
+        }
+        if($join['status'] == 1){
+            db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+            Share::jsonData(0,'','你已停止该挑战，不能进行该操作');
+        }
+        if($status != 1 && $status != 2){
+            Share::jsonData(0,'','修改状态不对');
+        }
+        if($status ==2 ){//继续挑战
+
+        }else{
+
+        }
+        $res = db('pass_join')->where('id',$joinId)->update(['signStatus'=>$status]);
+        if($res){
+
+        }else{
+            Share::jsonData(0,'','操作失败');
+        }
+
     }
     /**
      * 闯关活动
@@ -1388,36 +1415,49 @@ class Api extends Controller
 //        }
         $nowTime = date('Y-m-d H:i:s');//当前时间
         //获取报名信息
-        $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'endTime'=>['>=',$nowTime],'status'=>0])->find();
+        $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
         if(!$join){
             Share::jsonData(0,'','你当前还没有报名该闯关活动！');
         }
-        //获取当前时间段内的打卡记录
-        $sign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'signTimeBegin'=>['<=',$nowTime],'signTimeEnd'=>['>=',$nowTime]])->find();
+        if($join['signStatus'] == 0){
+            Share::jsonData(0,'','当前挑战是暂停状态，请先开启挑战');
+        }
+        if($join['signStatus'] == 1){
+            db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+            Share::jsonData(0,'','当前活动已停止，请重新报名参加');
+        }
+        //判断当前签到次数是否已达到
+        $hadSignNumber = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>1])->group('number')->count();
+        if($hadSignNumber >= $pass['challenge']){
+            db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+            Share::jsonData(0,'','您已完成挑战');
+        }
+        //获取当前未打卡记录
+        $sign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->order('number','desc')->find();
         if(!$sign){
-            Share::jsonData(0,'','当前不在打卡时间内！');
+            Share::jsonData(0,'','没有打卡信息！');
         }
-        if($sign['status'] == 1){
-            Share::jsonData(0,'','已打卡，请勿重复打卡!');
+        if($nowTime < $sign['signTimeBegin'] ){
+            Share::jsonData(0,'','还没有到打卡时间，请稍后尝试');
         }
-        //判断之前的打卡成功次数
-        $hadSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'number'=>['<',$sign['number']],'status'=>1])->count();
-        if($hadSign < ($sign['number'] - 1)){
-            //修改参加状态  未完成
+        if($nowTime > $sign['signTimeEnd']){
+            //修改参与参与状态
             db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
-            Share::jsonData(0,'','您已挑战失败，打卡无效');
+            Share::jsonData(0,'','已过打卡时间，挑战失败');
         }
         //打卡
         $res = db('pass_sign')->where('id',$sign['id'])->update(['status'=>1,'signTime'=>$nowTime]);
         if($res){
             //判断是否完成挑战
-            if($sign['number'] == 10){//最后一轮打卡
+            if($sign['number'] == $pass['number']){//最后一轮打卡
                 //修改参加状态  已完成
                 db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                 //发放奖励
-                Share::sendPassReward($uid,$pass,$join['id']);
-                db('pass_join')->where('id',$join['id'])->update(['isReward'=>1]);
+//                Share::sendPassReward($uid,$pass,$join['id']);
+//                db('pass_join')->where('id',$join['id'])->update(['isReward'=>1]);
             }
+            //修改签到状态
+            db('pass_join')->where('id',$join['id'])->update(['signStatus'=>0]);
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','打卡失败，请刷新重试！');

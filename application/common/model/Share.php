@@ -942,6 +942,68 @@ class Share extends \think\Model
         db('pass_sign')->insertAll($sign);
     }
     /**
+     * 闯关报名
+     * 报名签到生成
+     * 改版
+     * first  1-报名 2-继续挑战
+     */
+    public static function createUserPassSignNew($uid,$pass,$join,$first=1){
+        $signMinutes = 3;//获取该闯关的每轮签到时间   3 分钟
+        $time = time();
+        //挑战时长
+        $hour = $pass['hour'];
+        $minute = $hour*60;
+        //签到次数
+        $number = $pass['challenge'];
+        //计算每轮签到的时间间隔
+        $blankMinute = floor($minute/$number);
+        $randMinute = rand(1,$blankMinute);//随机时间段
+        if($first ==1){//报名进入 生成第一次的
+            //开始时间
+            $beginTime = strtotime($join['joinTime']);
+            $signBegin = $beginTime  + 60*$randMinute;
+            $signEnd = $signBegin + 60*$signMinutes -1;
+            $signBeginTime = date('Y-m-d H:i:s',$signBegin);
+            $signEndTime = date('Y-m-d H:i:s',$signEnd);
+            $number = 1;
+            $sign = [
+                'uid'=>$uid,
+                'passId'=>$pass['id'],
+                'joinId'=>$join['id'],
+                'status'=>0,//0-未打卡 1-已打卡
+                'number'=>1,//第几轮打卡
+                'createTime'=>$time,
+                'signTimeBegin'=>$signBeginTime,
+                'signTimeEnd'=>$signEndTime,
+            ];
+
+        }else{
+            //计算获取每一轮的打卡时间
+            $sign = [];
+            $time = time();
+            for($i=1;$i<=$number;$i++){
+                $signBegin = $beginTime + 60*($blankMinute*($i-1)) + 60*$randMinute;
+                $keyVal = self::getKeyVal($i);
+                $currSignMinute = $signMinutes[$keyVal];//单轮签到的时间长度
+                $signEnd = $signBegin + 60*$currSignMinute -1;
+                $signBeginTime = date('Y-m-d H:i:s',$signBegin);
+                $signEndTime = date('Y-m-d H:i:s',$signEnd);
+                $sign[] = [
+                    'uid'=>$uid,
+                    'passId'=>$pass['id'],
+                    'joinId'=>$join['id'],
+                    'status'=>0,//0-未打卡 1-已打卡
+                    'number'=>$i,//第几轮打卡
+                    'createTime'=>$time,
+                    'signTimeBegin'=>$signBeginTime,
+                    'signTimeEnd'=>$signEndTime,
+                ];
+            }
+        }
+        db('pass_sign')->insert($sign);
+
+    }
+    /**
      * 键值转换
      */
     public static function getKeyVal($key){
