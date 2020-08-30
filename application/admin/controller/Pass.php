@@ -60,11 +60,13 @@ class Pass extends Base
             if(!$param['hour']){
                 $param['hour'] = '2.5';
             }
-//            if($param['money'] < 1){
-//                Share::jsonData(0,'','报名金额必须大于1');
-//            }
-
+            if($param['challenge'] < 1){
+                return json(['code' => -1, 'data' => '', 'msg' => '挑战轮数必须大于1']);
+            }
             $moneys = $param['moneys'];
+            if(!$moneys){
+                return json(['code' => -1, 'data' => '', 'msg' => '请填写报名金额']);
+            }
             unset($param['moneys']);
             $param['money'] = $moneys[0];
             $param['createTime'] = time();
@@ -77,7 +79,7 @@ class Pass extends Base
                 return json(['code' => -1, 'data' => '', 'msg' => '该闯关活动（期数相同）已经存在']);
             };
             try{
-                $signTime = $param['signTime'];
+//                $signTime = $param['signTime'];
                 unset($param['signTime']);
                 db('pass')->insert($param);
                 $passId = db('pass')->where('name',$param['name'])->find()['id'];
@@ -99,9 +101,9 @@ class Pass extends Base
             }
             $passId = db('pass')->where('number',$param['number'])->find()['id'];
             //记录闯关签到时间
-            foreach($signTime as $k => $v){
-                $signTime[$k] = $v?$v:3;//默认三分钟
-            }
+//            foreach($signTime as $k => $v){
+//                $signTime[$k] = $v?$v:3;//默认三分钟
+//            }
             $signTime['passId'] = $passId;
             $signTime['createTime'] = time();
             db('pass_time')->insert($signTime);
