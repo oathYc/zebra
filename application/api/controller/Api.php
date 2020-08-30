@@ -851,7 +851,7 @@ class Api extends Controller
 //            Share::jsonData(0,'','报名金额不能小于1元');
 //        }
         //判断当前是否已经报名
-        $hadSign = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->find();
+        $hadSign = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clockId,'status'=>1])->find();
         if($hadSign){
             //判断当前打卡天数及状态
             Share::checkClockInStatus($uid,$hadSign,$clock);
