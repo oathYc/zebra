@@ -1378,17 +1378,18 @@ class Api extends Controller
         if(!$join){
             Share::jsonData(0,'','您还没有挑战中的活动，不能进行该操作');
         }
-        if($join['status'] == 1){
+        if($join['signStatus'] == 1){
             db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
             Share::jsonData(0,'','你已停止该挑战，不能进行该操作');
+        }
+        if($join['signStatus'] != 0){
+            Share::jsonData(0,'','当前活动不是暂停中，不能操作');
         }
         if($status != 1 && $status != 2){
             Share::jsonData(0,'','修改状态不对');
         }
         if($status ==2 ){//继续挑战
-
-        }else{
-
+            $update['status'] = 1;
         }
         $res = db('pass_join')->where('id',$joinId)->update(['signStatus'=>$status]);
         if($res){
