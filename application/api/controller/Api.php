@@ -1269,7 +1269,7 @@ class Api extends Controller
         }else{//判断是否有未签到记录
             $now = date('Y-m-d H:i:s');
             $noSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->find();
-            if($noSign){
+            if(!$noSign){
                 $isJoin = 0;
                 $signData = [];
             }else{
@@ -1283,6 +1283,7 @@ class Api extends Controller
                         $nextEnd = $needSign['signTimeEnd'];
                     }
                 }
+                $pass['signStatus'] = $isJoin['signStatus'];
             }
         }
         $pass['isJoin'] = $isJoin;
