@@ -803,8 +803,16 @@ class Api extends Controller
         $isJoin = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'status'=>1])->find();//是否当前参与中
         if($isJoin){
             $clock['currJoin'] = 1;
+            $date = date('Y-m-d');
+            $todaySign = db('clock_in_sign')->where(['uid'=>$uid,'joinId'=>$isJoin['id'],'clockInId'=>$clock['id'],'date'=>$date])->find();
+            if($todaySign){
+                $clock['todaySign'] = 1;
+            }else{
+                $clock['todaySign'] = 0;
+            }
         }else{
             $clock['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
+            $clock['todaySign'] = 0;//今日签到 0-未签到 1-已签到
         }
         //参与金额
         $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
@@ -927,6 +935,30 @@ class Api extends Controller
             Share::jsonData(0,'','打卡失败，请重试！');
         }
 
+    }
+    /**
+     * 打卡活动
+     * 我的参与
+     */
+    public function myClockList(){
+        $uid = $this->uid;
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $status = '';
+        $where = [
+            'uid'=>$uid,
+        ];
+        $offset = $pageSize*($page-1);
+        $total  = db('clock_in_join')->where($where)->count();
+        $data = db('clock_in_join')->where($where)->order('createTime','desc')->limit($offset,$pageSize)->select();
+        foreach($data as $k => $v){
+            $data[$k]['clock'] = db('clock_in')->where('id',$v['id'])->find();
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data,
+        ];
+        Share::jsonData(1,$return);
     }
     /**
      * 打卡活动

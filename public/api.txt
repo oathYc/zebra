@@ -167,6 +167,7 @@
             joinMoney                   报名金额
             yesterdayMoney              昨日收益金额
             prices                      报名金额数据 数组
+            todaySign                   今日签到  0-为签到 1-已签到
 
 
 接口名称    打卡活动-打卡报名
@@ -178,6 +179,12 @@
 接口名称    打卡活动-打卡签到
 接口路径    clockInSign
 接口参数    clockInId                   打卡活动id
+返回参数
+
+接口名称    打卡活动-我的参与
+接口路径    myClockList
+接口参数    page                   页数 默认1
+            pageSize                每页数量 默认10
 返回参数
 
 接口名称    打卡活动-打卡签到记录
