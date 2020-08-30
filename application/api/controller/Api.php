@@ -813,6 +813,7 @@ class Api extends Controller
         }else{
             $clock['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
             $clock['todaySign'] = 0;//今日签到 0-未签到 1-已签到
+            $clock['success'] = 0;//本次挑战 0-未完成 1-已完成
         }
         //参与金额
         $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
@@ -953,6 +954,8 @@ class Api extends Controller
         $data = db('clock_in_join')->where($where)->order('createTime','desc')->limit($offset,$pageSize)->select();
         foreach($data as $k => $v){
             $data[$k]['clock'] = db('clock_in')->where('id',$v['id'])->find();
+            //签到数据
+            $data[$k]['signData'] = db('clock_in_sign')->where(['uid'=>$uid,'clockInId'=>$v['clockInId'],'joinId'=>$v['id']])->order('clockInTime','asc')->select();
         }
         $return = [
             'total'=>$total,
