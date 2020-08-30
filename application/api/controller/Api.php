@@ -810,10 +810,14 @@ class Api extends Controller
             }else{
                 $clock['todaySign'] = 0;
             }
+            //当前打卡次数
+            $hadSign = db('clock_in_sign')->where(['uid'=>$uid,'joinId'=>$isJoin['id'],'clockInId'=>$clock['id']])->count();
+            $clock['hadSign'] = $hadSign?$hadSign:0;
         }else{
             $clock['currJoin'] = 0;;// 1-当前已参加 0-当前未参加
             $clock['todaySign'] = 0;//今日签到 0-未签到 1-已签到
             $clock['success'] = 0;//本次挑战 0-未完成 1-已完成
+            $clock['hadSign'] = 0;//已签到次数
         }
         //参与金额
         $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
