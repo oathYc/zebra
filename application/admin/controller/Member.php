@@ -142,14 +142,7 @@ class Member extends Base
     {
         $id = input('id');
         $info = db('member')->where('id', $id)->find();
-        if($info){
-
-            $info['workerStatus'] = $this->identityCheck($info['worker']);
-            $info['bossStatus'] = $this->identityCheck($info['boss']);
-            $info['driverStatus'] = $this->identityCheck($info['driver']);
-        }else{
-            $info = [];
-        }
+        $info['checkStatus'] = self::getCheckStr($info['check']);
         $this->assign(['info' => $info]);
         return $this->fetch('edit_user');
     }
@@ -303,6 +296,7 @@ class Member extends Base
     //获取认证状态
     public static function getCheckStr($check){
         $arr = [
+            0=>'未提交认证',
             1=>'认证中',
             2=>'认证成功',
             3=>'认证失败',
