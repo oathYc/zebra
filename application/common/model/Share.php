@@ -965,7 +965,6 @@ class Share extends \think\Model
             $signEnd = $signBegin + 60*$signMinutes -1;
             $signBeginTime = date('Y-m-d H:i:s',$signBegin);
             $signEndTime = date('Y-m-d H:i:s',$signEnd);
-            $number = 1;
             $sign = [
                 'uid'=>$uid,
                 'passId'=>$pass['id'],
@@ -978,27 +977,33 @@ class Share extends \think\Model
             ];
 
         }else{
-            //计算获取每一轮的打卡时间
-            $sign = [];
-            $time = time();
-            for($i=1;$i<=$number;$i++){
-                $signBegin = $beginTime + 60*($blankMinute*($i-1)) + 60*$randMinute;
-                $keyVal = self::getKeyVal($i);
-                $currSignMinute = $signMinutes[$keyVal];//单轮签到的时间长度
-                $signEnd = $signBegin + 60*$currSignMinute -1;
-                $signBeginTime = date('Y-m-d H:i:s',$signBegin);
-                $signEndTime = date('Y-m-d H:i:s',$signEnd);
-                $sign[] = [
-                    'uid'=>$uid,
-                    'passId'=>$pass['id'],
-                    'joinId'=>$join['id'],
-                    'status'=>0,//0-未打卡 1-已打卡
-                    'number'=>$i,//第几轮打卡
-                    'createTime'=>$time,
-                    'signTimeBegin'=>$signBeginTime,
-                    'signTimeEnd'=>$signEndTime,
-                ];
+            //计算获取新一轮的打卡时间
+            //开始时间
+            $beginTime = time();//当前时间开始  根据时间间隔计算新一轮的签到时间
+            $signBegin = $beginTime  + 60*$randMinute;
+            $signEnd = $signBegin + 60*$signMinutes -1;
+            $signBeginTime = date('Y-m-d H:i:s',$signBegin);
+            $signEndTime = date('Y-m-d H:i:s',$signEnd);
+            //获取当前轮数
+            $hadSignMax = db('pass_sign')->where(['uid'=>$uid,'passId'=>$pass['id'],'joinId'=>$join['id'],'status'=>1])->order('number','desc')->find();
+            $number  = $hadSignMax['number'];
+            if($number >=$pass['number']){
+                if($join['status'] != 1){
+                    db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+                }
+                Share::jsonData(0,'','已经挑战完成');
             }
+            $newNumber = $number + 1;
+            $sign = [
+                'uid'=>$uid,
+                'passId'=>$pass['id'],
+                'joinId'=>$join['id'],
+                'status'=>0,//0-未打卡 1-已打卡
+                'number'=>$newNumber,//第几轮打卡
+                'createTime'=>$time,
+                'signTimeBegin'=>$signBeginTime,
+                'signTimeEnd'=>$signEndTime,
+            ];
         }
         db('pass_sign')->insert($sign);
 

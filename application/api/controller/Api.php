@@ -577,6 +577,7 @@ class Api extends Controller
         $isJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
         if($isJoin){
             $room['joinData'] = $isJoin;
+            $room['joinTime'] = $isJoin['createTime'];
             $room['isJoin'] = 1;
             $isSign = Share::getTodayRoomSign($uid,$roomId,$room['signNum']);
         }else{
@@ -1388,12 +1389,19 @@ class Api extends Controller
         if($status != 1 && $status != 2){
             Share::jsonData(0,'','修改状态不对');
         }
-        if($status ==2 ){//继续挑战
+        $update = [
+            'signStatus'=>$status
+        ];
+        if($status ==1 ){//继续挑战
             $update['status'] = 1;
         }
-        $res = db('pass_join')->where('id',$joinId)->update(['signStatus'=>$status]);
+        $res = db('pass_join')->where('id',$joinId)->update($update);
         if($res){
-
+            if($status == 2){//生成下一轮的签到数据
+                $pass = db('pass')->where('id',$passId)->find();
+                Share::createUserPassSignNew($uid,$pass,$join,2);
+            }
+            Share::jsonData(1);
         }else{
             Share::jsonData(0,'','操作失败');
         }
@@ -1450,7 +1458,7 @@ class Api extends Controller
         $res = db('pass_sign')->where('id',$sign['id'])->update(['status'=>1,'signTime'=>$nowTime]);
         if($res){
             //判断是否完成挑战
-            if($sign['number'] == $pass['number']){//最后一轮打卡
+            if($sign['number'] == $pass['challenge']){//最后一轮打卡
                 //修改参加状态  已完成
                 db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                 //发放奖励
