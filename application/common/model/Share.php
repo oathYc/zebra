@@ -1056,14 +1056,14 @@ class Share extends \think\Model
      */
     public static function getTodayRoomSign($uid,$roomId,$signNum){
         $today = date('Y-m-d');
-        $sign = db('sign')->where(['uid'=>$uid,'roomId'=>$roomId,'date'=>$today])->find();
-        if(!$sign){
+        $signData = db('sign')->where(['uid'=>$uid,'roomId'=>$roomId,'date'=>$today])->find();
+        if(!$signData){
             return 0;//0-未打卡
         }
         $sign = 0;
-        if($sign['firstSign'] == 1){
+        if($signData['firstSign'] == 1){
             $sign = 1;
-            if($sign['secondSign'] == 1 && $signNum == 2){
+            if($signData['secondSign'] == 1 && $signNum == 2){
                 $sign = 2;
             }
         }
