@@ -1267,31 +1267,51 @@ class Api extends Controller
         if(!$join){
             $isJoin = 0;//0-当前未参加  1-已参加
             $signData = [];
-        }else{//判断是否有未签到记录
-            $now = date('Y-m-d H:i:s');
-            $noSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->find();
-            if(!$noSign){
+        }else{
+            //判断是否有未签到记录  0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+            if($join['signStatus'] == 1){
+                //停止挑战 修改状态
+                db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                 $isJoin = 0;
-                $signData = [];
-            }else{
-                //获取签到时间数据
-                $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
-                $isJoin = 1;
-                if($join['signStatus'] ==2){
-                    $needSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->find();
-                    if($needSign){
-                        $nextBegin= $needSign['signTimeBegin'];
-                        $nextEnd = $needSign['signTimeEnd'];
+                $todaySign = 0;
+            }elseif($join['signStatus'] == 2){
+                //判断是否挑战失败
+                $now = date('Y-m-d H:i:s');
+                $noSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','desc')->find();
+                if($noSign['status'] ==0){//当前未签到
+                    $todaySign = 0;
+                    //判断是否挑战失败
+                    if($now > $noSign['signTImeEnd']){//已挑战失败 修改状态
+                        db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
+                        $isJoin = 0;
+                    }else{//还未到签到时间
+                        $nextBegin= $noSign['signTimeBegin'];
+                        $nextEnd = $noSign['signTimeEnd'];
+                        $isJoin = 1;
                     }
+                }else{//今日已签到
+                    $todaySign = 1;//0-今日未签到 1-今日已签到
+                    $isJoin = 1;
                 }
-                $pass['signStatus'] = $isJoin['signStatus'];
+                //获取最新一轮的打卡轮数
+                if($isJoin ==1){
+                    $hadSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>1])->order('number','desc')->find()['number'];
+                }
+            }else{//暂停状态
+                $isJoin = 1;//获取签到时间数据
+                //获取最新一轮的打卡轮数
+                $hadSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>1])->order('number','desc')->find()['number'];
             }
+            $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
+            $signData = $signData?$signData:[];
+            $pass['signStatus'] = $isJoin['signStatus'];
         }
         $pass['isJoin'] = $isJoin;
         $pass['signData'] = $signData;
-        $pass['hadSign'] = $hadSign;
+        $pass['hadSign'] = $hadSign?$hadSign:0;
         $pass['nextSignBegin'] = $nextBegin;
         $pass['nextSignEnd'] = $nextEnd;
+        $pass['todaySign'] = $todaySign;
         //报名价格获取
         $prices = db('pass_price')->where('passId',$pass['id'])->order('price','asc')->select();
         $pass['prices'] = $prices;
