@@ -19,7 +19,7 @@ header("Access-Control-Allow-Origin:*");
 class Api extends Controller
 {
     public  $noCheck = [
-        'register','login','gettoken','wxnotify','wxlogin','alinotify'
+        'register','login','gettoken','wxnotify','wxlogin','alinotify','getcode'
     ];//跳过登录token验证
     public $uid;
     const PAY = 0;

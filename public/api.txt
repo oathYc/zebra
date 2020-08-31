@@ -4,7 +4,7 @@
 接口返回  code 0=失败 1=成功 100=未登录 101=登录失效   -1=token没传 -2=token错误 -3=token不是该用户的  999=token过期
          data   返回数据
          message    对应的信心描述
-接口要求  token验证  除了[wxlogin] 几个接口外
+接口要求  token验证  除了[wxlogin register getCode] 几个接口外
          其余接口都需要传递 accessToken（getToken接口返回的accessToken值） 参数进行token验证
          放在header请求头里面传递
 
