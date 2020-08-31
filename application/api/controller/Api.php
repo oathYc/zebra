@@ -959,7 +959,7 @@ class Api extends Controller
         $total  = db('clock_in_join')->where($where)->count();
         $data = db('clock_in_join')->where($where)->order('createTime','desc')->limit($offset,$pageSize)->select();
         foreach($data as $k => $v){
-            $data[$k]['clock'] = db('clock_in')->where('id',$v['id'])->find();
+            $data[$k]['clock'] = db('clock_in')->where('id',$v['clockInId'])->find();
             //签到数据
             $data[$k]['signData'] = db('clock_in_sign')->where(['uid'=>$uid,'clockInId'=>$v['clockInId'],'joinId'=>$v['id']])->order('clockInTime','asc')->select();
         }
