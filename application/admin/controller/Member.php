@@ -116,6 +116,8 @@ class Member extends Base
         $operate = '';
 //        $operate .= '<a href="/admin/member/detailUser?id='.$id.'">';
 //        $operate .= '<button type="button" class="btn btn-primary btn-sm"><i class="fa fa-paste"></i> 编辑</button></a> ';
+        $operate .= '<a href="/admin/member/editMoney?id='.$id.'">';
+        $operate .= '<button type="button" class="btn btn-primary btn-sm"><i class="fa fa-paste"></i> 余额</button></a> ';
         $operate .= '<a href="javascript:userDel(' . $id . ')"><button type="button" class="btn btn-danger btn-sm">';
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
@@ -142,7 +144,14 @@ class Member extends Base
     {
         $id = input('id');
         $info = db('member')->where('id', $id)->find();
-        $info['checkStatus'] = self::getCheckStr($info['check']);
+        if($info){
+
+            $info['workerStatus'] = $this->identityCheck($info['worker']);
+            $info['bossStatus'] = $this->identityCheck($info['boss']);
+            $info['driverStatus'] = $this->identityCheck($info['driver']);
+        }else{
+            $info = [];
+        }
         $this->assign(['info' => $info]);
         return $this->fetch('edit_user');
     }
@@ -296,7 +305,6 @@ class Member extends Base
     //获取认证状态
     public static function getCheckStr($check){
         $arr = [
-            0=>'未提交认证',
             1=>'认证中',
             2=>'认证成功',
             3=>'认证失败',
@@ -331,5 +339,25 @@ class Member extends Base
             }
             return json(['code' => 1, 'data' => '', 'msg' => '操作成功']);
         }
+    }
+    /**
+     * 余额修改
+     */
+    public function editMoney(){
+        if(request()->isAjax()){
+            $param = input('param.');
+            $uid = $param['id'];
+            $money = $param['money'];
+            $res = db('member')->where('id',$uid)->update(['money'=>$money]);
+            if($res){
+                return json(['code'=>1,'data'=>'','msg'=>'操作成功']);
+            }else{
+                return json(['code'=>-1,'data'=>'','msg'=>'操作失败']);
+            }
+        }
+        $id = input('id');
+        $user = db('member')->where('id',$id)->find();
+        $this->assign('info',$user);
+        return $this->fetch();
     }
 }
