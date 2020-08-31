@@ -1264,6 +1264,7 @@ class Api extends Controller
         $hadSign = 0;//当前打卡轮数
         $nextBegin = '';//下一轮签到开始时间
         $nextEnd = '';//下一轮签到结束时间
+        $todaySign = 0;
         if(!$join){
             $isJoin = 0;//0-当前未参加  1-已参加
             $signData = [];
