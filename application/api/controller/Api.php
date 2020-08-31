@@ -1328,11 +1328,12 @@ class Api extends Controller
         $now = date('Y-m-d H:i:s');
         $time = strtotime($now);
         $hadJoin = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
-        if($hadJoin && $hadJoin['endTime'] > $now){//已参加且未结束
+        if($hadJoin){//已参加且未结束
             Share::jsonData(0,'','你当前已经参加了该闯关活动(闯关中)，不可重复参加！');
-        }elseif($hadJoin && $hadJoin['endTime'] < $now){//已参加且已结束  判断状态修改
-            Share::checkPassStatus($uid,$passId,$hadJoin['id']);
         }
+//        elseif($hadJoin && $hadJoin['endTime'] < $now){//已参加且已结束  判断状态修改
+//            Share::checkPassStatus($uid,$passId,$hadJoin['id']);
+//        }
         //获取报名结束时间
         $hour = $pass['hour'];
         $second = $hour*3600;

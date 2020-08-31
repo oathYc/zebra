@@ -188,6 +188,7 @@
             pageSize                每页数量 默认10
 返回参数    signData                签到数据
             clock                   活动数据
+            status                  状态  0-失败 1-参与中 2-已完成
 
 接口名称    打卡活动-打卡签到记录
 接口路径    clockRecord
