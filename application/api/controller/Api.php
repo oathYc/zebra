@@ -910,8 +910,9 @@ class Api extends Controller
         $endTime = $clock['endTime'];
         //当前时间
         $currTime =Share::getMinute(date("H:m"));
+        $time = date('Y-m-d H:i:s');
         if($currTime < $beginTime || $currTime > $endTime){
-            Share::jsonData(0,'','当前（'.$currTime.'）不在活动打卡时间范围('.$beginTime.'-'.$endTime.')内！');
+            Share::jsonData(0,'','当前（'.$time.'-'.$currTime.'）不在活动打卡时间范围('.$beginTime.'-'.$endTime.')内！');
         }
         $today = date('Y-m-d');
         $params = [
