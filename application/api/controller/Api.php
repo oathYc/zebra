@@ -867,6 +867,8 @@ class Api extends Controller
                 Share::jsonData(0,'','你已经报名参加该打卡活动！');
             }
         }
+        //扣除报名费用
+        Share::reduceClockInMoney($uid,$joinMoney,$clock['name']);
         $params = [
             'uid'=>$uid,
             'clockInId'=>$clockId,

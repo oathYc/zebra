@@ -902,6 +902,24 @@ class Share extends \think\Model
         }
     }
     /**
+     * 打卡活动
+     * 扣除用户报名费用
+     */
+    public static function reduceClockInMoney($uid,$money,$clockName){
+        $user = db('member')->where('id',$uid)->find();
+        if($user['money'] < $money){
+            self::jsonData(0,'','用户余额不足，请先充值！');
+        }
+        $reduce = $user['money'] - $money;
+        $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
+        if($res){
+            //记录余额消费记录
+            self::userMoneyRecord($uid,$money,'打卡活动报名费扣除-'.$clockName,2,1);
+        }else{
+            self::jsonData(0,'','扣除报名费失败，请稍后重试！');
+        }
+    }
+    /**
      * 闯关报名
      * 报名签到生成
      */
