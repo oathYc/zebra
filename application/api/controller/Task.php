@@ -72,7 +72,7 @@ class Task extends Controller
        $endTime = $date.' 08:05:00';
        $pass = db('pass')->where(['isEnd'=>0,'passEndTime'=>['<=',$endTime]])->select();
        foreach($pass as $k => $v){
-           //判断当前状态
+           //判断当前状态 状态 0-下线 1-活动中
            if($v['status'] == 1){
                db('pass')->where('id',$v['id'])->update(['status'=>0]);
            }
@@ -96,12 +96,12 @@ class Task extends Controller
                    $challengeSuccess += 1;
                }
            }
-           $challengeFil = $totalChallenge - $challengeSuccess;//失败人数
+           $challengeFail = $totalChallenge - $challengeSuccess;//失败人数
            //判断活动奖励模式 奖励类型 1-失败金额瓜分百分比 2-固定金额  3-报名百分比
            $rewardType = $v['rewardType'];
            if($rewardType == 1){
                 //失败金奖励金额
-               $failMoney = $challengeFil*$v['money']*($v['reward']/100);
+               $failMoney = $challengeFail*$v['money']*($v['reward']/100);
                //每人奖励金额
                $rewardMoney = $failMoney/$challengeSuccess;
            }elseif($rewardType == 2){
