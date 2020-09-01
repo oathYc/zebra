@@ -832,6 +832,7 @@ class Api extends Controller
         //打卡报名金额获取
         $prices =db('clock_in_price')->where('clockInId',$clock['id'])->order('price','asc')->select();
         $clock['prices'] = $prices;
+        $clock['nowTime'] = time();
         Share::jsonData(1,$clock);
     }
     /**
