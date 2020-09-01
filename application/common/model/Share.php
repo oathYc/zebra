@@ -533,21 +533,19 @@ class Share extends \think\Model
             $beginTime =  strtotime($begin);
             //相差天数
             $reduceDay = floor($todayTime - $beginTime)/86400;//今天减报名时间
-            if($reduceDay > 0){//大于一天
-                $signNum = 0;
-                for($i=0;$i<$reduceDay;$i++){
-                    $date = $i*86400 + $beginTime;
-                    $targetDay = date('Y-m-d',$date);
-                    //是否打卡
-                    $hadSign = db('clock_in_sign')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'joinId'=>$clockJoin['id'],'date'=>$targetDay])->find();
-                    if($hadSign){
-                        $signNum += 1;
-                        if($signNum >= $days){//已连续打满打卡天数
-                            db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>2,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
-                        }
-                    }else{//当天没打卡  参与失败 修改状态
-                        db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//失败
+            $signNum = 0;
+            for($i=0;$i<=$reduceDay;$i++){
+                $date = $i*86400 + $beginTime;
+                $targetDay = date('Y-m-d',$date);
+                //是否打卡
+                $hadSign = db('clock_in_sign')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'joinId'=>$clockJoin['id'],'date'=>$targetDay])->find();
+                if($hadSign){
+                    $signNum += 1;
+                    if($signNum >= $days){//已连续打满打卡天数
+                        db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>2,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
                     }
+                }else{//当天没打卡  参与失败 修改状态
+                    db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//失败
                 }
             }
         }
