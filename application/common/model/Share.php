@@ -544,9 +544,21 @@ class Share extends \think\Model
                     if($signNum >= $days){//已连续打满打卡天数
                         db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>2,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
                     }
-                }else{//改天没有打卡记录
+                }else{//该天没有打卡记录
                     if($targetDay != $today){//不是今天
                         db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
+                    }else{
+                        //判断今天打卡状态
+                        $joinTime = $clockJoin['createTime'];
+                        //今日签到结束时间
+                        $signEndTime = strtotime($targetDay.' '.$clock['endTimeStr'].":59");
+                        if($joinTime < $signEndTime){//今日签到结束之前报的名
+                            //判断当前时间是否已过签到时间
+                            $now = time();
+                            if($now >= $signEndTime){//当前已过今日打卡签到时间  即未打卡
+                                db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
+                            }
+                        }
                     }
 
                 }
@@ -567,12 +579,10 @@ class Share extends \think\Model
         $money = self::getDecimalMoney($money);
         $user = db('member')->where('id',$uid)->find();
         $addMoney = $user['money'] + $money;
-        $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
-        if($res){
-            self::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$clock['name'],1,1);
-            self::rewardRecord($uid,$money,$clock['id'],1,$join['id']);
-            self::userMoneyGet($uid,$money,1);
-        }
+        db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+        self::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$clock['name'],1,1);
+        self::rewardRecord($uid,$money,$clock['id'],1,$join['id']);
+        self::userMoneyGet($uid,$money,1);
     }
     /**
      * 金额获取
