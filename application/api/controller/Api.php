@@ -1284,7 +1284,7 @@ class Api extends Controller
                 if($noSign['status'] ==0){//当前未签到
                     $todaySign = 0;
                     //判断是否挑战失败
-                    if($now > $noSign['signTImeEnd']){//已挑战失败 修改状态
+                    if($now > $noSign['signTimeEnd']){//已挑战失败 修改状态
                         db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
                         $isJoin = 0;
                     }else{//还未到签到时间
