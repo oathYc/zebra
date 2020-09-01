@@ -78,7 +78,7 @@ class Appalipay extends Controller
 	}
 	public static function notify(){
 
-        file_put_contents("alipay_notify.txt",date('Y-m-d H:i:s').'订单号：'.$_POST['out_trade_no'].'支付回调：'.PHP_EOL,FILE_APPEND);
+        file_put_contents("/uploads/alipay_notify.txt",date('Y-m-d H:i:s').'订单号：'.$_POST['out_trade_no'].'支付回调：'.PHP_EOL,FILE_APPEND);
 
 		$c = new \AopClient;
 		$c->alipayrsaPublicKey = self::PUBLICKEY;
@@ -177,7 +177,7 @@ class Appalipay extends Controller
         if(!empty($resultCode)&&$resultCode == 10000){
             //提现成功以后 更新表状态
             //并且记录 流水等等
-            file_put_contents("txlog.txt",'支付宝账号：'.$payee_account.','.'真实姓名：'.$payee_real_name.','.'转账金额：'.$amount.PHP_EOL,FILE_APPEND);
+            file_put_contents("/uploads/txlog.txt",'支付宝账号：'.$payee_account.','.'真实姓名：'.$payee_real_name.','.'转账金额：'.$amount.PHP_EOL,FILE_APPEND);
             return  ['code'=>1,'message'=>'提现成功'];
         }
         return ['code'=>0,'message'=>'提现失败'];
