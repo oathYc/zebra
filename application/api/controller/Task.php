@@ -90,12 +90,47 @@ class Task extends Controller
                    'uid'=>$p['uid'],
                    'signNumber'=>$signNumber,
                    'moneyReturn'=>$moneyReturn,//1—退本金 0-不退
+                   'joinId'=>$p['id'],
                ];
                if($moneyReturn ==1){//退本金即挑战成功
                    $challengeSuccess += 1;
                }
            }
+           $challengeFil = $totalChallenge - $challengeSuccess;//失败人数
            //判断活动奖励模式 奖励类型 1-失败金额瓜分百分比 2-固定金额  3-报名百分比
+           $rewardType = $v['rewardType'];
+           if($rewardType == 1){
+                //失败金奖励金额
+               $failMoney = $challengeFil*$v['money']*($v['reward']/100);
+               //每人奖励金额
+               $rewardMoney = $failMoney/$challengeSuccess;
+           }elseif($rewardType == 2){
+               $rewardMoney = $v['reward'];
+           }else{
+               $rewardMoney = $v['money'] * ($v['reward']/100);
+           }
+           $rewardMoney = Share::getDecimalMoney($rewardMoney);
+           //奖励发放
+           foreach($userSign as $t => $val){
+               $challengeNumber = $val['signNumber'];
+               $uid = $val['uid'];
+               $return = $val['moneyReturn'];
+               $joinId = $val['joinId'];
+               if($rewardType == 1){
+                   $userMoney = $rewardMoney;
+               }else{
+                   $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
+               }
+               //奖励发放
+               Share::sendPassRewardNew($uid,$userMoney,$v,$joinId);
+               //本金退还
+               if($return == 1){
+                    Share::returnPassJoinMoney($uid,$v['money'],$v['name']);
+               }
+               //修改对应的奖励发送状态
+               db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//参余状态
+           }
+           db('pass')->where('id',$v['id'])->update(['idEnd'=>1]);
        }
    }
 

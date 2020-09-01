@@ -748,6 +748,8 @@ class Share extends \think\Model
     /**
      * 用户收益记录
      * type  1-打卡 2-房间挑战 3-闯关
+     * objectId  对应的活动id
+     * joinId   对应报名记录id
      */
     public static function rewardRecord($uid,$money,$objectId,$type,$joinId=0){
         $params = [];
@@ -1206,5 +1208,52 @@ class Share extends \think\Model
         //余额变化记录
         $remark = $type==4?'邀请新人奖励':'参加活动挑战奖励-'.$objectStr;
         self::userMoneyRecord($uid,$money,$remark,1,5);
+    }
+    /**
+     * 闯关
+     * 每日凌晨奖励结算
+     */
+    public static function sendPassRewardNew($uid,$rewardMoney,$pass,$joinId){
+        $user = db('member')->where('id',$uid)->find();
+        if($user){
+            if($rewardMoney){
+                $addMoney = $user['money'] + $rewardMoney;
+                $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+                if($res){
+                    //余额记录添加
+                    self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'],1,3);
+                    //收益记录
+                    self::userMoneyGet($uid,$rewardMoney,3);
+                    //收益明细记录
+                    self::rewardRecord($uid,$rewardMoney,$pass['id'],3,$joinId);
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    /**
+     * 闯关
+     * 每日凌晨结算
+     * 本金退还
+     */
+    public static function returnPassJoinMoney($uid,$joinMoney,$passName){
+        $user = db('member')->where('id',$uid)->find();
+        if($user){
+            if($joinMoney){
+                $addMoney = $user['money'] + $joinMoney;
+                $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+                if($res){
+                    //余额记录添加
+                    self::userMoneyRecord($uid,$joinMoney,'闯关活动挑战本金退还-'.$passName,1,3);
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
