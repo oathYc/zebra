@@ -7,105 +7,115 @@
     <link rel="shortcut icon" href="favicon.ico">
     <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
     <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="__CSS__/plugins/bootstrap-table/bootstrap-table.min.css" rel="stylesheet">
     <link href="__CSS__/animate.min.css" rel="stylesheet">
-    <link href="__JS__/layui/css/layui.css" rel="stylesheet">
     <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
 </head>
 <body class="gray-bg">
 <div class="wrapper wrapper-content animated fadeInRight">
-    <div class="row">
-        <div class="col-sm-8">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>帮助中心</h5>
-                </div>
-                <div class="ibox-content">
-                    <form class="form-horizontal m-t layui-form" id="commentForm" method="post" action="{:url('system/help')}">
-                        <input type="hidden" name="id" value="{$info['id']}" />
-
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">内容：</label>
-                            <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="content" required="" aria-required="true" style="width: 400px;height: 150px;resize:none">{$info['content']}</textarea>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="col-sm-4 col-sm-offset-6">
-                                <button class="btn btn-primary" type="submit">提交</button>
-                            </div>
-                        </div>
-                    </form>
+    <!-- Panel Other -->
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>帮助中心</h5>
+        </div>
+        <div class="ibox-content">
+            <div class="ibox-title">
+                <h5>帮助列表</h5>
+                <a href="/admin/system/editHelp" class="btn btn-primary" style="float: right;position: relative;top: -9px;">添加</a>
+            </div>
+            <!--搜索框开始-->
+            <!--搜索框结束-->
+            <div class="example-wrap">
+                <div class="example">
+                    <table id="cusTable">
+                        <thead>
+                        <th data-field="id">ID</th>
+                        <th data-field="title">标题</th>
+                        <th data-field="content">内容</th>
+                        <th data-field="createTime">创建时间</th>
+                        <th data-field="operate">操作</th>
+                        </thead>
+                    </table>
                 </div>
             </div>
-
+            <!-- End Example Pagination -->
         </div>
     </div>
 </div>
+<!-- End Panel Other -->
 <script src="__JS__/jquery.min.js?v=2.1.4"></script>
 <script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
 <script src="__JS__/content.min.js?v=1.0.0"></script>
-<script src="__JS__/plugins/validate/jquery.validate.min.js"></script>
-<script src="__JS__/plugins/validate/messages_zh.min.js"></script>
+<script src="__JS__/plugins/bootstrap-table/bootstrap-table.min.js"></script>
+<script src="__JS__/plugins/bootstrap-table/bootstrap-table-mobile.min.js"></script>
+<script src="__JS__/plugins/bootstrap-table/locale/bootstrap-table-zh-CN.min.js"></script>
 <script src="__JS__/plugins/layer/layer.min.js"></script>
-<script src="__JS__/layui/layui.js"></script>
-<script src="__JS__/jquery.form.js"></script>
 <script type="text/javascript">
-
-    layui.use(['form', 'upload'], function(){
-        var form = layui.form;
-    });
-
-    var index = '';
-    function showStart(){
-        index = layer.load(0, {shade: false});
-        return true;
-    }
-
-    function showSuccess(res){
-
-        layer.ready(function(){
-            layer.close(index);
-            if(1 == res.code){
-                layer.alert(res.msg, {title: '友情提示', icon: 1, closeBtn: 0}, function(){
-                    window.location.href = res.data;
-                });
-            }else if(111 == res.code){
-                window.location.reload();
-            }else{
-                layer.msg(res.msg, {anim: 6});
+    function initTable() {
+        //先销毁表格
+        $('#cusTable').bootstrapTable('destroy');
+        //初始化表格,动态从服务器加载数据
+        $("#cusTable").bootstrapTable({
+            method: "get",  //使用get请求到服务器获取数据
+            url: "{:url('system/help')}", //获取数据的地址
+            striped: true,  //表格显示条纹
+            pagination: true, //启动分页
+            pageSize: 10,  //每页显示的记录数
+            pageNumber:1, //当前第几页
+            pageList: [5, 10, 15, 20, 25],  //记录数可选列表
+            sidePagination: "server", //表示服务端请求
+            paginationFirstText: "首页",
+            paginationPreText: "上一页",
+            paginationNextText: "下一页",
+            paginationLastText: "尾页",
+            queryParamsType : "undefined",
+            queryParams: function queryParams(params) {   //设置查询参数
+                var param = {
+                    pageNumber: params.pageNumber,
+                    pageSize: params.pageSize,
+                    searchText:$('#username').val()
+                };
+                return param;
+            },
+            onLoadSuccess: function(res){  //加载成功时执行
+                if(111 == res.code){
+                    window.location.reload();
+                }
+                layer.msg("加载成功", {time : 1000});
+            },
+            onLoadError: function(){  //加载失败时执行
+                layer.msg("加载数据失败");
             }
         });
     }
 
-    $(document).ready(function(){
-        // 添加管理员
-        var options = {
-            beforeSubmit:showStart,
-            success:showSuccess
-        };
+    $(document).ready(function () {
+        //调用函数，初始化表格
+        initTable();
 
-        $('#commentForm').submit(function(){
-            $(this).ajaxSubmit(options);
-            return false;
-        });
+        //当点击查询按钮的时候执行
+        $("#search").bind("click", initTable);
     });
 
-    // 表单验证
-    $.validator.setDefaults({
-        highlight: function(e) {
-            $(e).closest(".form-group").removeClass("has-success").addClass("has-error")
-        },
-        success: function(e) {
-            e.closest(".form-group").removeClass("has-error").addClass("has-success")
-        },
-        errorElement: "span",
-        errorPlacement: function(e, r) {
-            e.appendTo(r.is(":radio") || r.is(":checkbox") ? r.parent().parent().parent() : r.parent())
-        },
-        errorClass: "help-block m-b-none",
-        validClass: "help-block m-b-none"
-    });
+    function delHelp(id){
+        layer.confirm('确认删除此活动?', {icon: 3, title:'提示'}, function(index){
+            //do something
+            $.getJSON("{:url('system/delHelp')}", {'id' : id}, function(res){
+                if(1 == res.code){
+                    layer.alert(res.msg, {title: '友情提示', icon: 1, closeBtn: 0}, function(){
+                        initTable();
+                    });
+                }else if(111 == res.code){
+                    window.location.reload();
+                }else{
+                    layer.alert(res.msg, {title: '友情提示', icon: 2});
+                }
+            });
 
+            layer.close(index);
+        })
+
+    }
 </script>
 </body>
 </html>
