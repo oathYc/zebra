@@ -18,7 +18,7 @@ class Task extends Controller
     * 房间挑战
     * 活动开始判断
     * 开始时间判断
-    * 每5分钟扫描一次
+    * 每2分钟扫描一次
     * 提前五分钟开启活动
     */
    public function roomBeginCheck(){
@@ -28,7 +28,7 @@ class Task extends Controller
        $now = time();//当前时间戳
        foreach($room as $k => $v){
            $beginTime = $v['beginTime'];//活动第一次开始签到时间
-           $roomBegin = $beginTime - 600;//提前五分钟开始时间
+           $roomBegin = $beginTime - 120;//提前2分钟开始时间
            if($now >=($roomBegin)){//活动已经开始
                db('room_create')->where('id',$v['id'])->update(['status'=>1]);//修改状态为活动中
            }
