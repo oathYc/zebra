@@ -931,6 +931,10 @@ class Api extends Controller
         }
         //判断当前打卡天数及状态
         Share::checkClockInStatus($uid,$hadSign,$clock);
+        $hadSign = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clockId,'status'=>1])->find();
+        if(!$hadSign){
+            Share::jsonData(0,'','你还没有报名参加该打卡活动！');
+        }
         //打卡时间
         $beginTime = $clock['beginTime'];
         $endTime = $clock['endTime'];
