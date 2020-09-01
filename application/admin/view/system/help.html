@@ -98,7 +98,7 @@
     });
 
     function delHelp(id){
-        layer.confirm('确认删除此活动?', {icon: 3, title:'提示'}, function(index){
+        layer.confirm('确认删除此内容?', {icon: 3, title:'提示'}, function(index){
             //do something
             $.getJSON("{:url('system/delHelp')}", {'id' : id}, function(res){
                 if(1 == res.code){
