@@ -802,6 +802,9 @@ class Api extends Controller
         $clock['currJoinNum'] = $currJoinNum?$currJoinNum:0;
         //是否报名
         $isJoin = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'status'=>1])->find();//是否当前参与中
+        //判断当前打卡天数及状态
+        Share::checkClockInStatus($uid,$isJoin,$clock);
+        $isJoin = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clock['id'],'status'=>1])->find();//是否当前参与中
         if($isJoin){
             $clock['currJoin'] = 1;
             $clock['joinTime'] = $isJoin['createTime'];
