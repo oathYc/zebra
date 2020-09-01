@@ -901,7 +901,13 @@ class Api extends Controller
             Share::jsonData(0,'','该活动不存在');
         }
         //判断当前是否已经报名
-        $hadSign = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->find();
+        $hadSign = db('clock_in_join')->where(['uid'=>$uid,'clockInId'=>$clockId,'status'=>1])->find();
+        //判断今天是否已打卡
+        $today = date('Y-m-d');
+        $todaySign = db('clock_in_sign')->where(['uid'=>$uid,'clockInId'=>$clockId,'joinId'=>$hadSign['id'],'date'=>$today])->find();
+        if($todaySign){
+            Share::jsonData(0,'','今日已打卡，请勿重复操作');
+        }
         if(!$hadSign){
             Share::jsonData(0,'','你还没有报名参加该打卡活动！');
         }
