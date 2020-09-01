@@ -837,6 +837,20 @@ class Api extends Controller
     }
     /**
      * 打卡活动
+     * 打卡失败
+     */
+    public function clockFail(){
+        $joinId = input('joinId');
+        $uid= $this->uid;
+        $res = db('clock_in_join')->where(['id'=>$joinId,'uid'=>$uid])->update(['status'=>0]);
+        if($res){
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','失败');
+        }
+    }
+    /**
+     * 打卡活动
      * 活动报名
      */
     public function clockInJoin(){
