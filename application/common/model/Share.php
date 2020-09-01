@@ -784,7 +784,7 @@ class Share extends \think\Model
                 'money'=>$money,
                 'createTime'=>$time,
             ];
-            $res = db('room_reward')->insert($params);
+            $res = db('pass_reward')->insert($params);
         }else{
             return false;
         }
@@ -1230,6 +1230,9 @@ class Share extends \think\Model
                 }else{
                     return false;
                 }
+            }else{//0元奖励也要记录
+                //余额记录添加
+                self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'],1,3);
             }
         }
         return true;

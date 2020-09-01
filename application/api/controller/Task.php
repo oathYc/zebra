@@ -103,7 +103,11 @@ class Task extends Controller
                 //失败金奖励金额
                $failMoney = $challengeFail*$v['money']*($v['reward']/100);
                //每人奖励金额
-               $rewardMoney = $failMoney/$challengeSuccess;
+               if($failMoney){
+                   $rewardMoney = $failMoney/$challengeSuccess;
+               }else{
+                    $rewardMoney = 0;
+               }
            }elseif($rewardType == 2){
                $rewardMoney = $v['reward'];
            }else{
@@ -130,7 +134,7 @@ class Task extends Controller
                //修改对应的奖励发送状态
                db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//参余状态
            }
-           db('pass')->where('id',$v['id'])->update(['idEnd'=>1]);
+           db('pass')->where('id',$v['id'])->update(['isEnd'=>1]);
        }
    }
 
