@@ -1006,12 +1006,8 @@ class Api extends Controller
      * 1-关于我们 2-帮助中心 3-免责申明
      */
     public function helpMsg(){
-        $content = db('system')->where('type',2)->find();
-        $arr[] = [
-            'title'=>$content['content'],
-            'content'=>$content['content']
-        ];
-        Share::jsonData(1,$arr);
+        $content = db('system')->where('type',2)->select();
+        Share::jsonData(1,$content);
     }
     /**
      * 免责申明

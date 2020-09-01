@@ -85,7 +85,7 @@ class System extends Base
         $operate .= '<a href="javascript:delHelp(' . $id . ')"><button type="button" class="btn btn-danger btn-sm">';
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
-        $operate .= '<a href="/admin/clock/editHelp?id='.$id.'">';
+        $operate .= '<a href="/admin/system/editHelp?id='.$id.'">';
         $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 编辑</button></a>';
 
         return $operate;
