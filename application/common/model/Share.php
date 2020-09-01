@@ -544,8 +544,11 @@ class Share extends \think\Model
                     if($signNum >= $days){//已连续打满打卡天数
                         db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>2,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
                     }
-                }else{//当天没打卡  参与失败 修改状态
-                    db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//失败
+                }else{//改天没有打卡记录
+                    if($targetDay != $today){//不是今天
+                        db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
+                    }
+
                 }
             }
         }
