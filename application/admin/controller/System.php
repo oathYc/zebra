@@ -66,7 +66,7 @@ class System extends Base
             foreach ($result as $key => $vo) {
 
                 // 生成操作按钮
-                $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
+                $result[$key]['operate'] = $this->makeBtn($vo['id']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
 
             }
