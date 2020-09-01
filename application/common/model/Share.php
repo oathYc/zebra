@@ -560,7 +560,7 @@ class Share extends \think\Model
         if($clock['rewardType'] == 1){//固定金额
             $money = $clock['reward'];
         }else{//百分比
-            $money = $joinMoney * $clock['reward'];
+            $money = $joinMoney * ($clock['reward']/100);
         }
         //金额规范  分
         $money = self::getDecimalMoney($money);
