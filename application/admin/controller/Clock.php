@@ -115,9 +115,54 @@ class Clock extends Base
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
         $operate .= '<a href="/admin/clock/detailClock?id='.$id.'">';
-        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 详情</button></a>';
+        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 活动详情</button></a>';
+        $operate .= '<a href="/admin/clock/detailSign?id='.$id.'">';
+        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 打卡详情</button></a>';
 
         return $operate;
+    }
+    //今日打卡详情
+    public function detailSign(){
+        $id = input('id');
+            if (request()->isAjax()) {
+
+                $param = input('param.');
+
+                $limit = $param['pageSize'];
+                $offset = ($param['pageNumber'] - 1) * $limit;
+
+                // 打卡时间，参加金额，奖励金额，已打卡天数
+                $today = date('Y-m-d');
+                $where = ['clockInId'=>$id,'date'=>$today];
+
+                $result = db('clock_in_sign')->where($where)->limit($offset, $limit)->order('createTime', 'desc')->select();
+                foreach ($result as $key => $vo) {
+                    // 优化显示头像
+                    $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                    //用户信息
+                    $user = db('member')->where('id',$vo['uid'])->find();
+                    //参加金额
+                    $joinMoney  = db('clock_in_join')->where(['uid'=>$vo['uid'],'id'=>$vo['joinId']])->find()['joinMoney'];
+                    //奖励金额
+                    $rewardMoney = db('clock_reward')->where(['uid'=>$vo['uid'],'joinId'=>$vo['joinId'],'clockInId'=>$vo['clockInId'],'date'=>$today])->find()['money'];
+                    //已打卡次数
+                    $hadSign = db('clock_in_sign')->where(['uid'=>$vo['uid'],'joinId'=>$vo['joinId'],'clockInId'=>$vo['clockInId']])->count();
+                    $result[$key]['nickname'] = $user['nickname'];
+                    $result[$key]['joinMoney'] = $joinMoney;
+                    $result[$key]['rewardMoney'] = $rewardMoney;
+                    $result[$key]['hadSign'] = $hadSign;
+                    //活动信息
+                    $clock = db('clock_in')->where('id',$id)->find();
+                    $result[$key]['clockName'] = $clock['name'];
+                }
+                $return['total'] = db('clock_in')->count();  //总数据
+                $return['rows'] = $result;
+
+                return json($return);
+
+            }
+            $this->assign('id',$id);
+        return $this->fetch();
     }
     //状态修改
     public function editStatus(){

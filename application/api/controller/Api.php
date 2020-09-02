@@ -521,7 +521,7 @@ class Api extends Controller
         $page = input('page',1);
         $pageSize = input('pageSize',10);
         $where = [
-            'status'=>0,//报名中
+            'status'=>['in',[0,1]],// 0-报名中 1-活动中
         ];
 //        if($pattern){
 //            $where['pattern'] = $pattern;
