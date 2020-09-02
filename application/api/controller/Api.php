@@ -1445,8 +1445,8 @@ class Api extends Controller
         $update = [
             'signStatus'=>$status
         ];
-        if($status ==1 ){//继续挑战
-            $update['status'] = 1;
+        if($status ==1 ){//停止挑战
+            $update['status'] = 1; //参加状态  0-参与中 1-已完成 2-未完成
         }
         $res = db('pass_join')->where('id',$joinId)->update($update);
         if($res){
