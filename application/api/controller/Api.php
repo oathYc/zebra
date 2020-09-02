@@ -1333,7 +1333,7 @@ class Api extends Controller
             }
             $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
             $signData = $signData?$signData:[];
-            $pass['signStatus'] = $isJoin['signStatus'];
+            $pass['signStatus'] = $join['signStatus'];
         }
         $pass['isJoin'] = $isJoin;
         $pass['signData'] = $signData;

@@ -154,8 +154,7 @@ class Clock extends Base
                     //活动信息
                     $clock = db('clock_in')->where('id',$id)->find();
                     $result[$key]['clockName'] = $clock['name'];
-                }
-                $return['total'] = db('clock_in')->count();  //总数据
+                } $result = db('clock_in_sign')->where($where)->count();
                 $return['rows'] = $result;
 
                 return json($return);
