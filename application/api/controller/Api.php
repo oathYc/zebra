@@ -782,6 +782,9 @@ class Api extends Controller
             //打卡报名金额获取
             $prices =db('clock_in_price')->where('clockInId',$v['id'])->order('price','asc')->select();
             $data[$k]['prices'] = $prices;
+            //参与金额
+            $joinMoney = db('clock_in_join')->where(['clockInId'=>$v['id'],'status'=>['>',0]])->sum('joinMoney');
+            $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
         }
         Share::jsonData(1,$data);
     }
