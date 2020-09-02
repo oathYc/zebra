@@ -1017,14 +1017,14 @@ class Share extends \think\Model
             $signEndTime = date('Y-m-d H:i:s',$signEnd);
             //获取当前轮数
             $hadSignMax = db('pass_sign')->where(['uid'=>$uid,'passId'=>$pass['id'],'joinId'=>$join['id'],'status'=>1])->order('number','desc')->find();
-            $number  = $hadSignMax['number'];
-            if($number >=$pass['number']){
-                if($join['status'] != 1){
+            $currNumber  = $hadSignMax['number'];
+            if($currNumber >=$number){//大于等于挑战栾树
+                if($join['status'] != 1){//参加状态  0-参与中 1-已完成 2-未完成
                     db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                 }
                 Share::jsonData(0,'','已经挑战完成');
             }
-            $newNumber = $number + 1;
+            $newNumber = $currNumber + 1;
             $sign = [
                 'uid'=>$uid,
                 'passId'=>$pass['id'],
