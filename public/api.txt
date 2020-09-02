@@ -1,0 +1,375 @@
+
+接口域名  http://cg.aoranjianzhong.com/api/api/
+接口方式  post
+接口返回  code 0=失败 1=成功 100=未登录 101=登录失效   -1=token没传 -2=token错误 -3=token不是该用户的  999=token过期
+         data   返回数据
+         message    对应的信心描述
+接口要求  token验证  除了[wxlogin register getCode] 几个接口外
+         其余接口都需要传递 accessToken（getToken接口返回的accessToken值） 参数进行token验证
+         放在header请求头里面传递
+
+接口名称    余额充值-微信支付宝支付
+接口路径    rechargePay
+接口参数    money               充值金额
+            type                1-微信 2-支付宝 默认1
+返回参数
+
+
+接口名称    微信授权登录
+接口路径    wxLogin
+接口参数    nickname            昵称
+            openid              opneid
+            unionid
+            headimgurl          头像
+            inviterCode         邀请人的邀请码
+            phone               电话号码
+返回参数     成功后自动登录 返回用户信息
+
+接口名称    获取验证码
+接口路径    getCode
+接口参数    phone            电话号码 请求后code传请1234  当前没接短信接口 写死的
+返回参数
+
+接口名称    注册
+接口路径    register
+接口参数    phone            电话号码
+           password         密码
+           code             验证码
+           surePass         确认密码
+           inviterCode       邀请人的邀请码
+返回参数
+
+接口名称    获取token
+接口路径    getToken
+接口参数
+返回参数
+
+
+接口名称    图片上传
+接口路径    uploadImg
+接口参数    file            文件对象
+           type           上传对象 1-头像 2-商品图片
+返回参数    src             图片地址 相对
+
+接口名称    文件上传
+接口路径    uploadFile
+接口参数    file            文件对象
+           type           上传对象 1-头像 2-商品图片
+返回参数    src             文件地址 相对
+
+接口名称    个人信息获取
+接口路径    myMessage
+接口参数
+返回参数
+
+接口名称    个人信息修改
+接口路径    messageEdit
+接口参数    nickname            昵称
+            sex                 性别
+            real_name           真实姓名
+            card                身份证号
+            avatar              头像地址
+返回参数
+
+接口名称    房间挑战-房间类型
+接口路径    roomType
+接口参数
+返回参数    type                1-保底 2-普通
+            minMoney            最低金额 单位元
+            maxMoney            最高金额
+            rule                规则说明
+            percent             失败金百分比奖励
+
+接口名称    房间挑战-创建房间
+接口路径    roomCreate
+接口参数    type                1-保底 2-普通
+            number              人数限制  0-不限制 默认是0
+            name                房间名称
+            desc                房间描述
+            money               报名金额
+            beginDate           开始时间  2020-09-02
+            day                 活动周期 单位天
+            signBegin           首次签到开始时间 12:00
+            signEnd              首次签到结束是阿金 13:00
+            signNum             签到次数  1或者2 默认1
+            secondBegin         二次签到开始时间  signNum为2必传  15:00
+            secondEnd           二次签到结束时间  signNum为2时必传 16:00
+返回参数
+
+接口名称    房间挑战-挑战列表
+接口路径    roomList
+接口参数    type            默认0 0-所有 1-保底 2-普通
+            page            页数 默认1
+            pageSize        每页数量 默认10
+返回参数    isJoin              0-当前未报名 1-已报名
+            joinNum             报名人数
+
+接口名称    房间挑战-房间详情
+接口路径    roomDetail
+接口参数    roomId              房间id
+返回参数    status              状态 0-报名中   1-活动中 2-活动结束
+            isJoin              0-当前未报名 1-已报名
+            joinMoney           报名金额
+            isSign              已打卡次数 0 1 2（当挑战是二次签到的时候可能是2）
+            joinNum             报名人数
+
+接口名称    房间挑战-报名参加
+接口路径    roomJoin
+接口参数    roomId              房间id
+返回参数
+
+接口名称    房间挑战-打卡
+接口路径    roomSign
+接口参数    roomId              房间id
+返回参数
+
+接口名称    房间挑战-我创建的房间
+接口路径    myRoom
+接口参数    type              默认0 0-所有 1-保底 2-普通
+            status             默认99  99-全部  0-报名中   1-活动中 2-活动结束
+返回参数    joinNumber              报名人数
+            joinMoney               报名金额
+
+接口名称    房间挑战-我的参与
+接口路径    myRoomJoin
+接口参数    status                  0-全部 1-参与中 2-已失败 3-已完成 默认0
+            page                    页数 默认1
+            pageSize                每页数量 默认10
+返回参数
+
+接口名称    房间挑战-我的打卡记录
+接口路径    myRoomSign
+接口参数    page                    页数 默认1
+            pageSize                每页数量 默认10
+返回参数    signNum                 挑战打卡次数  1-一次 2-两次 根据显示打卡时间
+            roomName                房间挑战名称
+
+接口名称    打卡活动-打卡列表
+接口路径    clockInList
+接口参数
+返回参数    currJoinNum                 报名人数
+            currJoin                    是否报名 1-已报名 0-未报名
+            status                      1-启用 0-关闭
+            image                       封面图
+            background                  背景图
+            rule                        挑战规则
+            days                        挑战天数
+            rewardType                  奖励类型 1-固定金额 2-百分比
+            reward                      奖励值 对应rewardType
+            prices                      报名金额数据 数组
+
+接口名称    打卡活动-打卡详情
+接口路径    clockDetail
+接口参数    clockInId                   打卡活动id
+返回参数    currJoinNum                 报名人数
+            currJoin                    是否报名 1-已报名 0-未报名
+            status                      1-启用 0-关闭
+            joinMoney                   报名金额
+            yesterdayMoney              昨日收益金额
+            prices                      报名金额数据 数组
+            todaySign                   今日签到  0-为签到 1-已签到
+            hadSign                     已签到次数
+
+
+接口名称    打卡活动-打卡报名
+接口路径    clockInJoin
+接口参数    clockInId                   打卡活动id
+            joinMoney                   报名金额  报名金额数组内的金额
+返回参数
+
+接口名称    打卡活动-打卡签到
+接口路径    clockInSign
+接口参数    clockInId                   打卡活动id
+返回参数
+
+接口名称    打卡活动-我的参与
+接口路径    myClockList
+接口参数    page                   页数 默认1
+            pageSize                每页数量 默认10
+返回参数    signData                签到数据
+            clock                   活动数据
+            status                  状态  0-失败 1-参与中 2-已完成
+
+接口名称    打卡活动-打卡签到记录
+接口路径    clockRecord
+接口参数    clockInId                   打卡活动id
+            page                    页数 默认1
+            pageSize                每页数量 默认10
+返回参数
+
+接口名称    关于我们
+接口路径    aboutUs
+接口参数
+返回参数
+
+接口名称    帮助中心
+接口路径    helpMsg
+接口参数
+返回参数
+
+接口名称    免责申明
+接口路径    disclaimer
+接口参数
+返回参数
+
+接口名称    添加邀请人
+接口路径    addInviter
+接口参数    inviterCode             邀请人的邀请码
+返回参数
+
+
+接口名称    我的邀请
+接口路径    myInvite
+接口参数
+返回参数
+
+接口名称    排行榜-打卡排行
+接口路径    clockInRanking
+接口参数
+返回参数    ranking             排行榜
+            own                 自身排行榜信息
+            mySite              等于0时未上榜
+            myMoney             收益金额
+
+接口名称    排行榜-房间挑战排行
+接口路径    roomRanking
+接口参数
+返回参数
+
+接口名称    排行榜-闯关排行
+接口路径    passRanking
+接口参数
+返回参数
+
+接口名称    排行榜-习惯打卡排行
+接口路径    habitRanking
+接口参数
+返回参数
+
+接口名称    排行榜-邀请排行
+接口路径    inviteRanking
+接口参数
+返回参数
+
+接口名称    闯关-闯关活动
+接口路径    passList
+接口参数
+返回参数    money           报名金额
+           joinMoney        当前活动已报名的金额总数
+           isJoin           是否参加 0-未参加 1-已参加
+           joinNum          报名人数
+            prices                      报名金额数据 数组
+
+接口名称    闯关-闯关详情
+接口路径    passDetail
+接口参数    passId          闯关活动id
+返回参数    money           报名金额
+           joinMoney        当前活动已报名的金额总数
+           isJoin           是否参加 0-未参加 1-已参加
+           joinNum          报名人数
+           signData         签到挑战数据
+           passEndTime      活动结束时间
+           number           活动期数
+           beginTime        报名开始时间
+           endTime          报名结束时间
+           status           0-下架 1-活动中
+           hadSign          当前签到轮数
+           nextSignBegin     下次签到开始时间
+           nextSignEnd      下次签到结束时间
+           signData.status   签到状态 0-未签到 1-已签到
+           signData.number         第几轮签到挑战
+           signData.signTimeBegin  签到开始时间
+           signData.signTimeEnd     签到结束时间
+           signData.signTime         用户签到时间
+            prices                      报名金额数据 数组
+            signStatus                  参与签到状态 0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+            todaySign                   今日打卡  0-未打卡 1-已打卡
+
+接口名称    闯关-闯关报名
+接口路径    passJoin
+接口参数    passId          闯关活动id
+            joinMoney       报名金额 报名列表内的
+返回参数
+
+接口名称    闯关-闯关签到
+接口路径    passSign
+接口参数    passId          闯关活动id
+返回参数
+
+接口名称    闯关-状态修改（停止、继续挑战）
+接口路径    passSignStatus
+接口参数    status          1-停止 2-继续挑战  默认1
+            passId          闯关id
+            joinId          报名id
+返回参数
+
+接口名称    闯关-我的闯关
+接口路径    myPass
+接口参数    status          99-全部  0-参与中 1-已完成 2-未完成 默认99
+返回参数    status          0-参与中 1-已完成 2-未完成
+            joinTime        报名时间
+            joinMoney        报名金额
+            endTime          挑战结束时间
+            pass            活动信息集合
+
+接口名称    闯关-我的签到
+接口路径    myPassSign
+接口参数    page                页数 默认1
+            pageSize           每页数量 默认10
+返回参数     signTime            签到时间
+            signTimeBegin       签到开始时间
+            signTimeEnd         签到结束时间
+            number              第几轮签到
+
+接口名称    分享有奖
+接口路径    shareReward
+接口参数
+返回参数     signNum              签到次数
+            moneyGet             累计收益
+            joinDay              加入天数
+
+接口名称    我的习惯卷记录
+接口路径    myMoneyRecord
+接口参数    page                    页数 默认1
+           pageSize                 每页数量 默认10
+           moneyType                去处 0-充值 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
+返回参数    type                        1-新增 2-减少
+           money                        当前余额
+
+接口名称    我的收益
+接口路径    myMoneyAdd
+接口参数    page                    页数 默认1
+           pageSize                 每页数量 默认10
+           moneyType                收益类型 1-打卡 2-房间挑战 3-闯关 99-全部 默认99
+返回参数    money                        当前余额
+           historyProfit            历史收益
+
+接口名称    金额体现-实名认证信息
+接口路径    returnCheck
+接口参数
+返回参数    real_name               真实姓名
+            card                    身份证号
+            check                   审核状态 0-未提交实名认证资料 1-平台审核中 2-审核通过 3-审核失败  审核通过才可进行提现申请
+
+接口名称    金额体现-实名认证信息提交
+接口路径    realNameApply
+接口参数    realName            真实姓名
+            card                身份证号
+返回参数
+
+接口名称    金额体现-提现申请
+接口路径    returnApply
+接口参数    money               提现金额
+           type                提现类型 1-微信 2-支付宝 默认1
+           phone            提现手机号  支付宝提现必填
+返回参数
+
+接口名称    金额体现-提现记录
+接口路径    myReturn
+接口参数    page                    页数 默认1
+           pageSize                 每页数量 默认10
+           status                   默认99  99-全部 0-提现中 1-已提现
+返回参数    createTime                  申请时间
+            returnTime                  提现时间
+
+
