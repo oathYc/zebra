@@ -827,7 +827,7 @@ class Api extends Controller
             $clock['joinId'] = 0;
         }
         //参与金额
-        $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
+        $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>['>',0]])->sum('joinMoney');
         $clock['joinMoney'] = $joinMoney?$joinMoney:0;
         //昨日收益金额
         $clock['yesterdayMoney'] = Share::getYesterdayMoneyByClock($uid,$id,$isJoin['id']);
