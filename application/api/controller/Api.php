@@ -1331,7 +1331,11 @@ class Api extends Controller
                 //获取最新一轮的打卡轮数
                 $hadSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>1])->order('number','desc')->find()['number'];
             }
-            $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
+            if($isJoin ==1){
+                $signData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','asc')->select();
+            }else{
+                $signData = [];
+            }
             $signData = $signData?$signData:[];
             $pass['signStatus'] = $join['signStatus'];
             $pass['joinId'] = $join['id'];
