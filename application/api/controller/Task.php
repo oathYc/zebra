@@ -63,6 +63,7 @@ class Task extends Controller
     * 闯关活动
     * 活动奖励结算
     * 每天八点五分
+    * http://cg.aoranjianzhong.com/api/task/passRewardSend
     */
    public function passRewardSend(){
        //获取今天八点结束挑战的活动
@@ -103,7 +104,7 @@ class Task extends Controller
                 //失败金奖励金额
                $failMoney = $challengeFail*$v['money']*($v['reward']/100);
                //每人奖励金额
-               if($failMoney){
+               if($failMoney && $challengeSuccess){
                    $rewardMoney = $failMoney/$challengeSuccess;
                }else{
                     $rewardMoney = 0;
