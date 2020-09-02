@@ -1009,12 +1009,6 @@ class Share extends \think\Model
 
         }else{
             //计算获取新一轮的打卡时间
-            //开始时间
-            $beginTime = time();//当前时间开始  根据时间间隔计算新一轮的签到时间
-            $signBegin = $beginTime  + 60*$randMinute;
-            $signEnd = $signBegin + 60*$signMinutes -1;
-            $signBeginTime = date('Y-m-d H:i:s',$signBegin);
-            $signEndTime = date('Y-m-d H:i:s',$signEnd);
             //获取当前轮数
             $hadSignMax = db('pass_sign')->where(['uid'=>$uid,'passId'=>$pass['id'],'joinId'=>$join['id'],'status'=>1])->order('number','desc')->find();
             $currNumber  = $hadSignMax['number'];
@@ -1025,6 +1019,14 @@ class Share extends \think\Model
                 Share::jsonData(0,'','已经挑战完成');
             }
             $newNumber = $currNumber + 1;
+            //开始时间
+            $beginTime = strtotime($join['joinTime']);
+            $signBegin = $beginTime + 60*($currNumber*$blankMinute) + 60*$randMinute;//当前时间开始  根据时间间隔计算单轮的签到时间
+//            $signBegin = $beginTime  + 60*$randMinute;
+            $signEnd = $signBegin + 60*$signMinutes -1;
+            $signBeginTime = date('Y-m-d H:i:s',$signBegin);
+            $signEndTime = date('Y-m-d H:i:s',$signEnd);
+
             $sign = [
                 'uid'=>$uid,
                 'passId'=>$pass['id'],
