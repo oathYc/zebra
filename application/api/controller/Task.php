@@ -19,7 +19,8 @@ class Task extends Controller
     * 活动开始判断
     * 开始时间判断
     * 每2分钟扫描一次
-    * 提前五分钟开启活动
+    * 提前2分钟开启活动
+    * http://cg.aoranjianzhong.com/api/task/roomBeginCheck
     */
    public function roomBeginCheck(){
         $date = date('Y-m-d');
@@ -38,7 +39,8 @@ class Task extends Controller
     * 房间挑战
     * 活动奖励发放
     * 结束判断
-    * 每晚23:59:50扫描执行
+    * 每晚23:59:58扫描执行
+    * http://cg.aoranjianzhong.com/api/task/roomEndCheck
     */
    public function roomEndCheck(){
         $nowTime = time();//当前时间
