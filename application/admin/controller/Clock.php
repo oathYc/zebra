@@ -38,6 +38,17 @@ class Clock extends Base
                     $pricesArr[] = $v['price'];
                 }
                 $result[$key]['moneys'] = implode('、',$pricesArr);
+                //当前打卡人数 当前参与金额，失败金额，发放奖励总金额
+                $clockNumber = db('clock_in_join')->where(['clockInId'=>$vo['id'],'status'=>['>',0]])->count();
+                $joinMoney = db('clock_in_join')->where(['clockInId'=>$vo['id'],'status'=>['>',0]])->sum('joinMoney');
+                $failMoney = db('clock_in_join')->where(['clockInId'=>$vo['id'],'status'=>0])->sum('joinMoney');
+                $sendMoney = db('clock_reward')->where(['clockInId'=>$vo['id']])->sum('money');
+                $result[$key]['clockNumber'] = $clockNumber?$clockNumber:0;
+                $result[$key]['joinMoney'] = $joinMoney?$joinMoney:0;
+                $result[$key]['failMoney'] = $failMoney?$failMoney:0;
+                $result[$key]['sendMoney'] = $sendMoney?$sendMoney:0;
+
+
             }
             $return['total'] = db('clock_in')->count();  //总数据
             $return['rows'] = $result;
