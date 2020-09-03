@@ -1352,6 +1352,7 @@ class Api extends Controller
         //报名价格获取
         $prices = db('pass_price')->where('passId',$pass['id'])->order('price','asc')->select();
         $pass['prices'] = $prices;
+        $pass['nowTime'] = time();
         Share::jsonData(1,$pass);
     }
 
