@@ -60,6 +60,22 @@ class Task extends Controller
             }
         }
    }
+    /**
+     * 处理活动报名的状态
+     * 判断用户的参与情况
+     * 每晚23:59:58扫描执行
+     * http://cg.aoranjianzhong.com/api/task/checkUserJoin
+     */
+    public function checkUserJoin(){
+        $today = date('Y-m-d');
+        //打卡活动
+        self::checkClockJoin($today);
+        //闯关
+        self::checkPassJoin();
+        //房间挑战
+        self::checkRoomJoin($today);
+
+    }
 
    /**
     * 闯关活动
@@ -191,6 +207,72 @@ class Task extends Controller
            }
        }
        return 0;
+   }
+
+   /**
+    * 判断用户打卡参与状态
+    */
+   public static function checkClockJoin($today){
+       //状态  0-失败 1-参与中 2-已完成
+       $joinData = db('clock_in_join')->where(['status'=>1])->select();
+       foreach($joinData as $k => $v){
+           //判断当前是不是已经挑战失败
+            $todaySign = db('clock_in_sign')->where(['uid'=>$v['uid'],'joinId'=>$v['id'],'clockInId'=>$v['clockInId'],'date'=>$today])->find();
+            if(!$todaySign){//当天未签到  挑战失败
+                db('clock_in_join')->where('id',$v['id'])->update(['status'=>0]);
+            }
+       }
+   }
+   /**
+    * 判断用户闯关参与状态
+    */
+   public static function checkPassJoin(){
+        //状态 参加状态  0-参与中 1-已完成 2-未完成
+       $joinData = db('pass_join')->where(['status'=>0])->select();
+       foreach($joinData as $k => $v){
+           //签到状态 signStatus 参与签到状态 0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+           if($v['signStatus'] == 2){//判断最近一轮签到是否未签到且过签到结束时间
+               $noSign = db('pass_sign')->where(['uid'=>$v['uid'],'passId'=>$v[
+                   'passId'],'joinId'=>$v['id'],'status'=>0])->find();
+               $now = date('Y-m-d H:i:s');
+               if($noSign && $now > $noSign['signTimeEnd']){ //有待签到且已过签到结束时间
+                   db('pass_join')->where('id',$v['id'])->update(['status'=>2]);
+
+               }
+           }
+       }
+   }
+   /**
+    * 判断用户房间挑战参与状态
+    */
+   public static function checkRoomJoin($today){
+       //1-参与中 2-已失败 3-已完成
+        $joinData = db('room_join')->where(['status'=>1])->select();
+        $now = time();//当前时间
+        $dayTime = strtotime(date('Y-m-d'));
+        foreach($joinData as $k => $v){
+            $sign = db('sign')->where(['uid'=>$v['uid'],'roomId'=>$v['roomId'],'date'=>$today])->find();
+            $room = db('room_create')->where('id',$v['roomId'])->find();
+            if(!$room){
+                db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+            }else{
+                if(!$sign){//打卡失败
+                    db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                }else{
+                    $signNumber = $room['signNum'];
+                    $firstSignEnd = $dayTime + $room['signEnd']*60 +59;//第一次签到结束时间
+                    //判断打卡时间
+                    if($sign['firstSign'] != 1 && $now > $firstSignEnd){
+                        db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                    }elseif($signNumber == 2 && $sign['firstSign'] ==1 && $sign['secondSign'] != 1){
+                        $secondSignEnd = $dayTime + $room['secondEnd']*60 + 59;
+                        if($now > $secondSignEnd){
+                            db('room_join')->where('id',$v['id'])->update(['status'=>2]);
+                        }
+                    }
+                }
+            }
+        }
    }
 
 }
