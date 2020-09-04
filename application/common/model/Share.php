@@ -172,10 +172,10 @@ class Share extends \think\Model
         }
     }
     /**
-     * 用户创建房间
+     * 房间挑战
      * 扣除指定的费用
      */
-    public static function reduceRoomMoney($uid,$money,$name=''){
+    public static function reduceRoomMoney($uid,$money,$name='',$create=1){
         $user = db('member')->where('id',$uid)->find();
         if(!$user){
             self::jsonData(0,'','没有该用户');
@@ -188,7 +188,8 @@ class Share extends \think\Model
         $res = db('member')->where('id',$uid)->update(['money'=>$reduce]);
         if($res){
             //记录余额使用记录
-            self::userMoneyRecord($uid,$money,'参与房间挑战支付挑战费用-'.$name,2,2);
+            $str = $create==1?'创建':'参与';
+            self::userMoneyRecord($uid,$money,$str.'房间挑战支付挑战费用-'.$name,2,2);
         }else{
             self::jsonData(0,'','扣除费用失败，请重试');
         }
@@ -268,13 +269,16 @@ class Share extends \think\Model
     }
     /**
      * 添加自己发起的房间挑战报名
+     * type 1-保底 2-普通
      */
-    public static function addRoomChallenge($uid,$roomId){
+    public static function addRoomChallenge($uid,$roomId,$joinMoney,$type=1){
         $params = [
             'uid'=>$uid,
             'roomId'=>$roomId,
             'createTime'=>time(),
-            'type'=>1,//1-房间挑战
+            'type'=>$type,//1-保底 2-普通
+            'joinMoney'=>$joinMoney,
+
         ];
         db('room_join')->insert($params);
     }
@@ -297,7 +301,7 @@ class Share extends \think\Model
             if($status > $currStatus){//修改状态应该大于当前房间状态
                 db('room_create')->where(['id'=>$roomId])->update(['status'=>$status]);
                 //退还参赛者的本金
-                self::returnUserApplyMoney($roomId);
+//                self::returnUserApplyMoney($roomId);
             }
         }
     }
@@ -376,14 +380,20 @@ class Share extends \think\Model
         $todayTime = strtotime($date);
         $nowTime = time();//当前时间
         //获取用户的当天打卡记录
-        $sign = self::getMemberSignMsg($uid,$room['id'],$date,1);//1-房间挑战
+        $sign = self::getMemberSignMsg($uid,$room['id'],$date,$signNum);//1-房间挑战
         //签到参数
         $params = [];
         //判断是否在第一次打卡时间段内
         $firstTimeBegin = $todayTime + 60*$room['signBegin'];//开始签到时间
         $firstTimeEnd = $todayTime + 60*$room['signEnd'] + 59;//结束签到时间
         if($signNum == 1){//只设置一次签到
-            if($nowTime < $firstTimeBegin || $nowTime > $firstTimeEnd){
+            if($nowTime < $firstTimeBegin){
+                Share::jsonData(0,'','还没到签到时间，不能进行签到！');
+            }elseif($nowTime > $firstTimeEnd){
+                if($sign['firstSign'] != 1){//1-参与中 2-已失败 3-已完成
+                    db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id']])->update(['status'=>2]);
+                    Share::jsonData(0,'','已过签到时间，你已挑战失败!');
+                }
                 Share::jsonData(0,'','还没到签到时间，不能进行签到！');
             }else{//判断是否已经签到  首次签到
                 if($sign['firstSign'] == 1 && $sign['firstSignTime']){
@@ -402,7 +412,13 @@ class Share extends \think\Model
             if($nowTime < $firstTimeBegin){
                 Share::jsonData(0,'','还没到签到时间，不能进行签到！');
             }elseif( $nowTime > $firstTimeEnd){//判断第二次签到时间
-                if($nowTime < $secondBeginTime || $nowTime > $secondEndTime){
+                if($nowTime < $secondBeginTime){
+                    Share::jsonData(0,'','还没到二次签到时间，不能进行签到！');
+                }elseif( $nowTime > $secondEndTime){//已过第二次签到时间
+                    if($sign['secondSign'] != 1){//1-参与中 2-已失败 3-已完成
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id']])->update(['status'=>2]);
+                        Share::jsonData(0,'','已过二次签到时间，你已挑战失败!');
+                    }
                     Share::jsonData(0,'','还没到签到时间，不能进行签到！');
                 }else{//判断二次是否已签到
                     if($sign['secondSign'] == 1 && $sign['secondSignTime']){
@@ -411,7 +427,7 @@ class Share extends \think\Model
                         //判断第一次签到是否成功
                         if($sign['firstSign'] != 1){
                             //修改参与状态
-                            db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id'],'type'=>1])->update(['status'=>2]);//挑战失败
+                            db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id']])->update(['status'=>2]);//挑战失败
                             self::jsonData(0,'','你已挑战失败，签到无效！（今日首次签到失败）');
                         }
                         //判断当前用户的参与状态
@@ -447,12 +463,14 @@ class Share extends \think\Model
      */
     public static function checkUserJoinStatus($uid,$room){
         $roomId = $room['id'];
-        $join = db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id'],'type'=>1])->find();
+        $join = db('room_join')->where(['uid'=>$uid,'roomId'=>$room['id']])->find();
         if(!$join){
             Share::jsonData(0,'','您还没有报名该活动！');
         }
-        if($join['status'] != 1){//不是参与中状态
+        if($join['status'] == 2){//不是参与中状态 1-参与中 2-已失败 3-已完成
             Share::jsonData(0,'','您已经挑战失败了，不能再继续签到了！');
+        }elseIf($join['status'] == 3){
+            Share::jsonData(0,'','您已经挑战成功了，无需继续签到了！');
         }else{//判断当前用户今天之前是否有断签的记录
             $begin = $room['beginDate'];
             $beginTime = strtotime($begin);
@@ -471,7 +489,7 @@ class Share extends \think\Model
             for($i=0;$i<$days;$i++){
                 $signDate = date('Y-m-d',($beginTime + $i*86400));
                 if($signDate < $today){//签到时间小于今天
-                    $sign = db('sign')->where(['date'=>$signDate,'uid'=>$uid,'roomId'=>$room['id'],'type'=>1])->find();
+                    $sign = db('sign')->where(['date'=>$signDate,'uid'=>$uid,'roomId'=>$room['id']])->find();
                     if($sign['firstSign'] == 1){//已签到
                         if($signNum != 1){//二次签到模式
                             if($sign['secondSign'] != 1){//未签到
@@ -498,10 +516,9 @@ class Share extends \think\Model
      * 不存在则实例化
      * type 1-房间挑战
      */
-    public static function getMemberSignMsg($uid,$roomId,$date='',$type=1){
+    public static function getMemberSignMsg($uid,$roomId,$date='',$signNum=1){
         $date = $date?$date:date('Y-m-d');
         $where = [
-            'type'=>1,
             'uid'=>$uid,
             'date'=>$date,
             'roomId'=>$roomId,
@@ -512,7 +529,7 @@ class Share extends \think\Model
                 'uid'=>$uid,
                 'roomId'=>$roomId,
                 'date'=>$date,
-                'type'=>$type,
+                'signNum'=>$signNum,
                 'createTime'=>time(),
             ];
             db('sign')->insert($params);
@@ -1271,5 +1288,87 @@ class Share extends \think\Model
             }
         }
         return true;
+    }
+    /**
+     * 房间挑战
+     * 记录房间挑战的报名费信息
+     */
+    public static function saveRoomJoinMoney($roomId,$joinMoney){
+        $insert = [];
+        $time = time();
+        foreach($joinMoney as $k => $v){
+            $insert[] = [
+                'roomId'=>$roomId,
+                'price'=>$v,
+                'createTime'=>$time,
+            ];
+        }
+        db('room_price')->insertAll($insert);
+    }
+    /**
+     * 房间挑战
+     * 检查挑战状态
+     */
+    public static function checkJoinStatus($uid,$roomId,$signNum){
+        $room = db('room_create')->where('id',$roomId)->find();
+        $now = time();
+        $date = $room['beginDate'];//开始日期
+        $today = date('Y-m-d');//今天
+        $days = $room['day'];//活动周期
+        $todayTime = strtotime($today);
+        $dateTime = strtotime($date);
+        //计算相差天数
+        $reduceDay = ($todayTime - $dateTime)/86400;
+        if($reduceDay > $days && $room['status'] != 2){
+            db('room_create')->where('id',$roomId)->update(['status'=>2]);//活动结束
+        }
+        for($i = 0 ;$i<=$reduceDay;$i++){
+            $targetDay = date('Y-m-d',($dateTime+$i*86400));
+            //获取当天的签到数据
+            $signData = db('sign')->where(['roomId'=>$roomId,'uid'=>$uid,'date'=>$targetDay])->find();
+            if($targetDay < $today){//今天之前
+                if(!$signData){//没有签到数据
+                    db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                    break;
+                }
+                if($signData['firstSign'] == 1){//已签到
+                    if($signNum != 1){//二次签到模式
+                        if($signData['secondSign'] != 1){//未签到
+                            db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                            break;
+                        }
+                    }
+                }else{//第一次没有签到
+                    db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                    break;
+                }
+            }else{//今天
+                $targetDayTime = strtotime($targetDay);
+                $firstTimeBegin = $targetDayTime + 60*$room['signBegin'];//第一次签到时间
+                $firstTimeEnd = $targetDayTime + 60*$room['signEnd']  + 59;//第一次签到结束时间
+                if($signNum == 1 && $now > $firstTimeEnd){
+                    if(!$signData){//没有签到数据
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                        break;
+                    }elseif($signData && $signData['firstSign'] != 1){//第一次没有签到
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                        break;
+                    }
+                }elseif($signNum == 2){
+                    $secondTimeBegin = $targetDayTime + 60*($room['secondBegin']);//第二次签到开始时间
+                    $secondTimeEnd = $targetDayTime + 60*$room['secondEnd'] + 59;//第二次签到结束时间
+                    if(!$signData){
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                        break;
+                    }elseif($now > $firstTimeEnd && $signData['firstSign'] != 1){
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                        break;
+                    }elseif($now > $secondTimeEnd && $signData['secondSign'] != 1){
+                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

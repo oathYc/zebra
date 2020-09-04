@@ -75,22 +75,19 @@
 接口路径    roomType
 接口参数
 返回参数    type                1-保底 2-普通
-            minMoney            最低金额 单位元
-            maxMoney            最高金额
-            rule                规则说明
-            percent             失败金百分比奖励
+            percent             平台抽去比例
 
 接口名称    房间挑战-创建房间
 接口路径    roomCreate
-接口参数    type                1-保底 2-普通
-            number              人数限制  0-不限制 默认是0
+接口参数    type                1-保底 2-普通  默认1
             name                房间名称
             desc                房间描述
-            money               报名金额
+            joinMoney           报名金额 数组  [100,200,300]
+            money               房主的报名金额  金额必须在joinMoney数组里面
             beginDate           开始时间  2020-09-02
             day                 活动周期 单位天
             signBegin           首次签到开始时间 12:00
-            signEnd              首次签到结束是阿金 13:00
+            signEnd              首次签到结束时间 13:00
             signNum             签到次数  1或者2 默认1
             secondBegin         二次签到开始时间  signNum为2必传  15:00
             secondEnd           二次签到结束时间  signNum为2时必传 16:00
@@ -102,20 +99,29 @@
             page            页数 默认1
             pageSize        每页数量 默认10
 返回参数    isJoin              0-当前未报名 1-已报名
-            joinNum             报名人数
+            joinNum             报名人数、
+            nickname             房主昵称
+            avatar              房主头像
+            joinData            报名信息
+            joinMoney           报名金额
 
 接口名称    房间挑战-房间详情
 接口路径    roomDetail
 接口参数    roomId              房间id
-返回参数    status              状态 0-报名中   1-活动中 2-活动结束
+返回参数    status              房间状态 0-报名中   1-活动中 2-活动结束
             isJoin              0-当前未报名 1-已报名
             joinMoney           报名金额
             isSign              已打卡次数 0 1 2（当挑战是二次签到的时候可能是2）
             joinNum             报名人数
+            joinTime            报名时间
+            joinStatus          报名挑战状态  1-参与中 2-已失败 3-已完成
+            joinData            报名信息
+            prices              报名费数组信息
 
 接口名称    房间挑战-报名参加
 接口路径    roomJoin
 接口参数    roomId              房间id
+            joinMoney           报名金额
 返回参数
 
 接口名称    房间挑战-打卡
@@ -135,7 +141,11 @@
 接口参数    status                  0-全部 1-参与中 2-已失败 3-已完成 默认0
             page                    页数 默认1
             pageSize                每页数量 默认10
-返回参数
+返回参数    roomerNickname          房主昵称
+            roomerAvatar            房主头像
+            room                    房间信息
+            joinNumber              报名人数
+            joinMoney               报名金额
 
 接口名称    房间挑战-我的打卡记录
 接口路径    myRoomSign
@@ -143,6 +153,7 @@
             pageSize                每页数量 默认10
 返回参数    signNum                 挑战打卡次数  1-一次 2-两次 根据显示打卡时间
             roomName                房间挑战名称
+            room                    房间信息
 
 接口名称    打卡活动-打卡列表
 接口路径    clockInList

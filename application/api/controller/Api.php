@@ -417,12 +417,10 @@ class Api extends Controller
     public function roomCreate(){
         $uid = $this->uid;
         $params['type'] = input('type',1);//1-保底房间 2-普通房间
-//        $params['pattern'] = input('pattern',1);//项目模式  1-每日奖励失败金  2-平分模式
-        $number = input('number',0);//默认不限制 0-不限制  限制的话必须大于2
-//        $params['sign'] = input('sign',1);//1-一键签到 2-发圈签到
         $params['name'] = input('name');
         $params['desc'] = input('desc');//房间描述
-        $params['money'] = input('money');//活动金额
+        $joinMoney = input('joinMoney',[]);//设置的报名金额  数组
+        $params['money'] = input('money');//活动金额  自己的报名费  创建费
         $params['beginDate'] = input('beginDate','');//开始时间
         $params['day'] = input('day',1);//天数 周期
         $signBegin = input('signBegin');//签到开始时间
@@ -453,38 +451,41 @@ class Api extends Controller
             $params['secondBeginStr'] = $secondBegin;
             $params['secondEndStr'] = $secondEnd;
         }
-        if($number && $number < 2){
-            Share::jsonData(0,'','报名人数必须大于1');
+        if(!$joinMoney || !is_array($joinMoney)){
+            Share::jsonData(0,'','请设置报名费金额');
         }
         Share::checkEmptyParams($params);
-        $params['number'] = $number;
+        if(!in_array($params['money'],$joinMoney)){
+            Share::jsonData(0,'','请您自己选择正确的报名费');
+        }
         $params['beginTimeStr'] = $signBegin;
         $params['endTimeStr'] = $signEnd;
         $params['sign'] = 1;//1-一键签到 2-发圈签到
         //判断该房间名是否已存在（报名中和活动中）  禁止房间名一样
+        //状态  状态 0-报名中   1-活动中 2-活动结束
         $had = db('room_create')->where(['name'=>$params['name'],'status'=>['in',[0,1]]])->find();
         if($had){
             Share::jsonData(0,'','当前房间名已存在，请重试');
         }
-        if($params['type'] == 1 ){//保底房间
-            $minMoney = Share::getlowest(1);//1-最低金额 2-最高金额
-            $maxMoney = Share::getLowest(2);
-            if($params['money'] < $minMoney){
-                Share::jsonData(0,'','保底房间的最低金额不能小于'.$minMoney);
-            }
-            if($params['money'] > $maxMoney){
-                Share::jsonData(0,'','保底房间的最高金额不能大于'.$maxMoney);
-            }
-        }else{//普通房间
-            $minMoney = Share::getCommon(1);
-            $maxMoney = Share::getCommon(2);
-            if($params['money'] < $minMoney){
-                Share::jsonData(0,'','普通房间的最低金额不能小于'.$minMoney);
-            }
-            if($params['money'] > $maxMoney){
-                Share::jsonData(0,'','普通房间的最高金额不能大于'.$maxMoney);
-            }
-        }
+//        if($params['type'] == 1 ){//保底房间
+//            $minMoney = Share::getlowest(1);//1-最低金额 2-最高金额
+//            $maxMoney = Share::getLowest(2);
+//            if($params['money'] < $minMoney){
+//                Share::jsonData(0,'','保底房间的最低金额不能小于'.$minMoney);
+//            }
+//            if($params['money'] > $maxMoney){
+//                Share::jsonData(0,'','保底房间的最高金额不能大于'.$maxMoney);
+//            }
+//        }else{//普通房间
+//            $minMoney = Share::getCommon(1);
+//            $maxMoney = Share::getCommon(2);
+//            if($params['money'] < $minMoney){
+//                Share::jsonData(0,'','普通房间的最低金额不能小于'.$minMoney);
+//            }
+//            if($params['money'] > $maxMoney){
+//                Share::jsonData(0,'','普通房间的最高金额不能大于'.$maxMoney);
+//            }
+//        }
         $now = strtotime(date('Y-m-d H:i:s'));//当前分钟的时间戳
         $today = strtotime(date('Y-m-d'));//当天的时间戳
         $beginTime  = strtotime($params['beginDate']);//活动开始时间
@@ -492,20 +493,23 @@ class Api extends Controller
             Share::jsonData(0,'','活动开始日期不能小于今天');
         }
         $signBeginTime = $beginTime + $params['signBegin']*60;//第一天的活动签到开始时间
-        if($signBeginTime < $now){
-            Share::jsonData(0,'','首次签到开始时间必须大于当前时间！');
+        $endJoinTime = $signBeginTime - 600;//签到开始十分钟前才能可以报名
+        if($endJoinTime < $now){
+            Share::jsonData(0,'','活动开始十分钟前才能报名，请设置合理的开始时间（首次签到时间）！');
         }
         $params['beginTime'] = $signBeginTime;//首次签到开始时间  时间戳
         $params['createTime'] = time();
         $params['uid'] = $uid;
         $params['status'] = 0;//状态 0-报名中   1-活动中 2-活动结束
         //创建房间费用扣除
-        Share::reduceRoomMoney($uid,$params['money'],$params['name']);
+        Share::reduceRoomMoney($uid,$params['money'],$params['name'],1);
         $res = db('room_create')->insert($params);
         if($res){
             $roomId = db('room_create')->getLastInsID();
             //添加自己的报名信息
-            Share::addRoomChallenge($uid,$roomId);
+            Share::addRoomChallenge($uid,$roomId,$params['money'],$params['type']);
+            //记录对应的房间报名费信息
+            Share::saveRoomJoinMoney($roomId,$joinMoney);
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','创建失败，请重试！');
@@ -518,16 +522,12 @@ class Api extends Controller
      */
     public function roomList(){
         $uid = $this->uid;
-//        $pattern = input('pattern',0);//项目模式 0-全部  1-每日奖励金瓜分 2-平分模式
         $type = input('type',0);//0-所有 1-保底 2-普通
         $page = input('page',1);
         $pageSize = input('pageSize',10);
         $where = [
-            'status'=>['in',[0,1]],// 0-报名中 1-活动中
+            'status'=>['in',[0,1]],// 0-报名中 1-活动中 2-活动结束
         ];
-//        if($pattern){
-//            $where['pattern'] = $pattern;
-//        }
         if($type){
             $where['type'] = $type;
         }
@@ -541,6 +541,9 @@ class Api extends Controller
             //报名人数
             $joinCount = db('room_join')->where('roomId',$v['id'])->count();
             $data[$k]['joinNum'] = intval($joinCount);
+            //报名金额
+            $joinMoney  = db('room_join')->where('roomId',$v['id'])->sum('joinMoney');
+            $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
             //是否已经报名
             $isJoin = db('room_join')->where(['roomId'=>$v['id'],'uid'=>$uid])->find();
             if($isJoin){
@@ -570,28 +573,37 @@ class Api extends Controller
             Share::jsonData(0,'','该挑战房间不存在！');
         }
         $room['room_type'] = db('room_type')->where('type',$room['type'])->find();
-        //当前报名金额
+        //当前报名人数
         $joinCount = db('room_join')->where('roomId',$roomId)->count();
         $joinCount = $joinCount?$joinCount:0;
-        $joinMoney = $joinCount * $room['money'];
-        $room['joinMoney'] = $joinMoney;
+        $room['joinNum'] = $joinCount;
+        //报名金额
+        $joinMoney = db('room_join')->where('roomId',$roomId)->sum('joinMoney');
+        $room['joinMoney'] = $joinMoney?$joinMoney:0;
         //是否已经报名
         $isJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
         if($isJoin){
-            $room['joinData'] = $isJoin;
             $room['joinTime'] = $isJoin['createTime'];
             $room['isJoin'] = 1;
-            $isSign = Share::getTodayRoomSign($uid,$roomId,$room['signNum']);
+            $isSign = Share::getTodayRoomSign($uid,$roomId,$room['signNum']);//今日打卡次数
+            if($isJoin['status'] == 1){//1-参与中 2-已失败 3-已完成
+                $success = Share::checkJoinStatus($uid,$roomId,$room['signNum']);//参与状态
+            }
+            $isJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
+            $room['joinData'] = $isJoin;
+            $room['joinStatus'] = $isJoin['status'];
         }else{
             $room['isJoin'] = 0;
             $room['joinData'] = [];
             $isSign = 0;//0-未打卡 1-已打卡
         }
-        $room['joinNum'] = $joinCount;
         //已打卡次数
         $room['isSign'] = $isSign;
         //昨日收益金额
-        $room['yesterdayMoney'] = Share::getYesterdayMoneyByRoom($uid,$roomId);
+//        $room['yesterdayMoney'] = Share::getYesterdayMoneyByRoom($uid,$roomId);
+        $room['yesterdayMoney'] = 0;
+        //报名费
+        $room['prices'] = db('room_price')->where('roomId',$roomId)->order('price','desc')->select();
         Share::jsonData(1,$room);
     }
     /**
@@ -601,38 +613,41 @@ class Api extends Controller
     public function roomJoin(){
         $uid = $this->uid;
         $roomId = input('roomId',0);//房间id
+        $joinMoney = input('joinMoney');//报名金额
         Share::checkEmptyParams(['roomId'=>$roomId]);
         $room = db('room_create')->where('id',$roomId)->find();
         if(!$room){
             Share::jsonData(0,'','没有该房间信息！');
         }
-        Share::checkRoomStatus($room);//检查房间活动状态
         if($room['status'] != 0){//报名中
             Share::jsonData(0,'','该房间挑战不是报名中，不能报名！');
         }
-        //判断自己是否已经报名
-        $hadJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid,'type'=>1])->find();
-        if($hadJoin){
-            Share::jsonData(0,'','你已经报过过该房间挑战，请勿重复参加！');
+        //开始十分钟前才可报名
+        $now = time();
+        $beginTime = $room['beginTime'] - 600;
+        if($now >= $beginTime){
+            Share::jsonData(0,'','活动开始十分钟前才能报名，当前时间已过最晚报名时间！');
         }
-        if($room['number'] > 1){//有人数限制
-            //获取已报名人数
-            $roomJoin = Share::getRoomJoinNumber($roomId,1);//1-房间挑战
-            if($roomJoin >= $room['number']){
-                //修改房间状态
-                Share::updateRoomStatus($roomId,1);// 0-报名中   1-活动中 2-活动结束
-                Share::jsonData(0,'','当前报名人数已满，不能报名！');
-            }
+        //判断自己是否已经报名
+        $hadJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
+        if($hadJoin){
+            Share::jsonData(0,'','你已经参加该房间挑战，请勿重复参加！');
+        }
+        //报名费判断
+        $hadMoney = db('room_price')->where(['roomId'=>$roomId,'price'=>$joinMoney])->find();
+        if(!$hadMoney){
+            Share::jsonData(0,'','没有该报名费，请选择正确的报名金额');
         }
         //扣除报名费用
-        Share::reduceRoomMoney($uid,$room['money'],$room['name']);
+        Share::reduceRoomMoney($uid,$room['money'],$room['name'],2);
         //记录挑战报名信息
         $params = [
             'uid'=>$uid,
             'roomId'=>$roomId,
             'createTime'=>time(),
-            'type'=>1,//1-房间挑战
+            'type'=>$room['type'],//1-保底 2-普通
             'status'=>1,//1-参与中 2-已失败 3-已完成
+            'joinMoney'=>$joinMoney,
         ];
         $res = db('room_join')->insert($params);
         if($res){
@@ -666,7 +681,13 @@ class Api extends Controller
         //判断自己是否已报名
         $hadJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
         if(!$hadJoin){
-            Share::jsonData(0,'','你还没有报名参加该房间挑战活动，不可进行签到！');
+            Share::jsonData(0,'','你还没有参加该房间挑战活动，不可进行签到！');
+        }
+        if($hadJoin['status'] == 2){
+            Share::jsonData(0,'','您已挑战失败，签到无效');
+        }
+        if($hadJoin['status'] == 3){
+            Share::jsonData(0,'','您已挑战完成，签到无效');
         }
         //签到判断
         Share::roomSign($uid,$room);
@@ -699,9 +720,10 @@ class Api extends Controller
         $data = db('room_create')->where($where)->select();
         foreach($data as $k=> $v){
             //报名金额
-            $number = db('room_join')->where(['roomId'=>$v['id'],'type'=>1])->count();
-            $data[$k]['joinMoney'] = $v['money']*$number;
-            $data[$k]['joinNumber'] = $number;
+            $number = db('room_join')->where(['roomId'=>$v['id']])->count();
+            $joinMoney = db('room_join')->where(['roomId'=>$v['id']])->sum('joinMoney');
+            $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
+            $data[$k]['joinNumber'] = $number?$number:0;
         }
         Share::jsonData(1,$data);
     }
@@ -732,6 +754,11 @@ class Api extends Controller
             $room['roomerNickname'] = $user['nickname'];
             $room['roomerAvatar'] = $user['avatar'];
             $data[$k]['room'] = $room;
+            //报名金额
+            $number = db('room_join')->where(['roomId'=>$v['roomId']])->count();
+            $joinMoney = db('room_join')->where(['roomId'=>$v['roomId']])->sum('joinMoney');
+            $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
+            $data[$k]['joinNumber'] = $number?$number:0;
         }
         $return = [
             'total'=>$total,
@@ -752,8 +779,8 @@ class Api extends Controller
         $data = db('sign')->where('uid',$uid)->order('id','desc')->limit($offset,$pageSize)->select();
         foreach($data as $k => $v){
             $room = db('room_create')->where('id',$v['roomId'])->find();
-            $data[$k]['roomName'] = $room['name'];
-            $data[$k]['signNum'] = $room['signNum'];
+            $data[$k]['room'] = $room?$room:[];
+            $data[$k]['roomName'] = isset($room['name'])?$room['name']:'房间已被删除';
         }
         $return = [
             'total'=>$total,
