@@ -165,7 +165,7 @@ class Api extends Controller
      * 获取验证码
      */
     public function getCode(){
-        $phone = input('post.phone');
+        $phone = input('phone');
         Share::checkEmptyParams(['phone'=>$phone]);
         if(strlen($phone) != 11){
             Share::jsonData(0,'','手机号码长度有误');
