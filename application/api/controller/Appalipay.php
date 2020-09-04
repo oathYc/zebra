@@ -77,21 +77,21 @@ class Appalipay extends Controller
 
 	}
 	public static function notify(){
+
         $data = $_POST;
-        $jsondata = json_encode($data);
-        file_put_contents("./uploads/alipay_notify.txt",$jsondata.'-支付回调：'.PHP_EOL,FILE_APPEND);
+        file_put_contents("./uploads/alipay_notify.txt",json_encode($data).'-支付回调：'.PHP_EOL,FILE_APPEND);
 
 		$c = new \AopClient;
 		$c->alipayrsaPublicKey = self::PUBLICKEY;
         
-		$result = $c->rsaCheckV1($_POST,$c->alipayrsaPublicKey,$_POST['sign_type']);
-
+//		$result = $c->rsaCheckV1($data,$c->alipayrsaPublicKey,$data['sign_type']);
 		$signstr="";
 
-		if($result && $_POST['trade_status']=="TRADE_SUCCESS")
+		if($_POST['trade_status']=="TRADE_SUCCESS")
 		{
             $out_trade_no = $_POST['out_trade_no'];
-            $rechargeOrder = db('money_recharge')->where("orderNo",$out_trade_no)->find();
+            $payMoney = $_POST['buyer_pay_amount'];
+            $rechargeOrder = db('money_recharge')->where(["orderNo"=>$out_trade_no,'money'=>$payMoney])->find();
             if($rechargeOrder['status'] ==0){
                 $res = db('money_recharge')->where('orderNo',$out_trade_no)->update(['status'=>1,'payTime'=>time()]);
                 $uid = $rechargeOrder['uid'];
