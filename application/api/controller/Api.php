@@ -179,7 +179,9 @@ class Api extends Controller
 //        $sms = new Sms();
 //        $sms->smsSendCode($phone,$code);
         session($phone,$codeArr);
-        $data = [];
+        $data = [
+            'phone'=>$phone,
+        ];
         Share::jsonData(1,$data,'success');
     }
 
