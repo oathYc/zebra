@@ -983,16 +983,17 @@ class Share extends \think\Model
         $time = time();
         //挑战时长
         $hour = $pass['hour'];
-        $minute = $hour*60;
+        //最小分钟数
+        $minMinute = $pass['min']*60;
+        $maxMinute = $pass['max']*60;
         //签到次数
         $number = $pass['challenge'];
         //计算每轮签到的时间间隔
-        $blankMinute = floor($minute/$number);
-        $randMinute = rand(1,$blankMinute);//随机时间段
+        $randMinute = rand($minMinute,$maxMinute);//随机时间段
         if($first ==1){//报名进入 生成第一次的
             //开始时间
             $beginTime = strtotime($join['joinTime']);
-            $signBegin = $beginTime  + 60*$randMinute;
+            $signBegin = $beginTime  + $randMinute*60 ;//报名时间加随机时间段
             $signEnd = $signBegin + 60*$signMinutes -1;
             $signBeginTime = date('Y-m-d H:i:s',$signBegin);
             $signEndTime = date('Y-m-d H:i:s',$signEnd);
@@ -1019,10 +1020,9 @@ class Share extends \think\Model
                 Share::jsonData(0,'','已经挑战完成');
             }
             $newNumber = $currNumber + 1;
-            //开始时间
-            $beginTime = strtotime($join['joinTime']);
-            $signBegin = $beginTime + 60*($currNumber*$blankMinute) + 60*$randMinute;//当前时间开始  根据时间间隔计算单轮的签到时间
-//            $signBegin = $beginTime  + 60*$randMinute;
+            //当前继续的时间为开始时间
+            $beginTime = time();
+            $signBegin = $beginTime +  60*$randMinute;//当前时间开始  根据时间间隔计算单轮的签到时间
             $signEnd = $signBegin + 60*$signMinutes -1;
             $signBeginTime = date('Y-m-d H:i:s',$signBegin);
             $signEndTime = date('Y-m-d H:i:s',$signEnd);

@@ -37,6 +37,7 @@ class Pass extends Base
                 foreach($prices as $v){
                     $pricesArr[] = $v['price'];
                 }
+                $result[$key]['minMax'] = $vo['min'].'-'.$vo['max'];
                 $result[$key]['moneys'] = implode('、',$pricesArr);
             }
             $return['total'] = db('pass')->count();  //总数据
@@ -57,8 +58,14 @@ class Pass extends Base
             if($param['endTime'] <= $param['beginTime']){
                 return json(['code' => -1, 'data' => '', 'msg' => '打卡结束时间必须大于开始时间！']);
             }
-            if(!$param['hour']){
-                $param['hour'] = '2.5';
+//            if(!$param['hour']){
+//                $param['hour'] = '2.5';
+//            }
+            if(!$param['min'] || !$param['max']){
+                return json(['code'=>-1,'data'=>'','msg'=>'最小和最大签到时间都必须填写']);
+            }
+            if($param['min'] >= $param['max']){
+                return json(['code'=>-1,'data'=>'','msg'=>'最大签到时间必须大于最小签到时间']);
             }
             if($param['challenge'] < 1){
                 return json(['code' => -1, 'data' => '', 'msg' => '挑战轮数必须大于1']);
