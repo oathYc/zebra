@@ -24,10 +24,11 @@
         }
 
         .moneyInput{
-            position: relative;
-            left: 193px;
-            display: inline-block;
-            top: -34px;
+            /*position: relative;*/
+            /*left: 193px;*/
+            /*display: inline-block;*/
+            /*top: -34px;*/
+            margin-left: 8px;
         }
     </style>
 </head>
@@ -62,9 +63,9 @@
                         </div>
                         <div class="form-group"  id="moneyParent">
                             <label class="col-sm-3 control-label">报名金额：</label>
-                            <div class="input-group col-sm-3">
-                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="报名价格">
-                                <buttom class="btn btn-primary moneyInput"  onclick="addMoney()" >添加</buttom>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="报名价格" style="width: 150px">
+                                <span class="btn btn-primary moneyInput"  onclick="addMoney()" >添加</span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -298,9 +299,9 @@
     }
     function addMoney(){
         var str = '';
-        str += '<div class="input-group col-sm-3 layui-col-md-offset3 moneyDiv">\n' +
-            '                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\\d]/g,\'\')" placeholder="报名价格">\n' +
-            '                                <a class="btn  btn-primary moneyInput" href="#" onclick="deleteMoney(this)" >删除</a>\n' +
+        str += '<div class="input-group col-sm-4 layui-col-md-offset3 moneyDiv">\n' +
+            '                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\\d]/g,\'\')" placeholder="报名价格" style="width: 150px;">\n' +
+            '                                <span class="btn  btn-primary moneyInput" href="#" onclick="deleteMoney(this)" >删除</span>\n' +
             '                            </div>';
         $('#moneyParent').append(str);
     }
