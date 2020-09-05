@@ -361,8 +361,8 @@ class Share extends \think\Model
         $now = time();
         $beginTime = $room['beginTime'];//活动首次签到时间
         $roomEndTime = strtotime($room['beginDate']) + 86400*$room['day'] -1;//活动结束时间
-        if( ($beginTime < $now ) && ($now < $roomEndTime)){//开始挑战 且未结束
-            $status = 1;//活动报名中
+        if( (($beginTime-600) < $now ) && ($now < $roomEndTime)){//开始挑战 且未结束
+            $status = 1;//活动中
         }elseif($now > $roomEndTime){//活动已经结束
             $status  = 2;
         }else{
