@@ -419,7 +419,7 @@ class Api extends Controller
         $params['type'] = input('type',1);//1-保底房间 2-普通房间
         $params['name'] = input('name');
         $params['desc'] = input('desc');//房间描述
-        $joinMoney = input('joinMoney',[]);//设置的报名金额  数组
+        $joinMoney = input('joinMoney/a',[]);//设置的报名金额  数组
         $params['money'] = input('money');//活动金额  自己的报名费  创建费
         $params['beginDate'] = input('beginDate','');//开始时间
         $params['day'] = input('day',1);//天数 周期
