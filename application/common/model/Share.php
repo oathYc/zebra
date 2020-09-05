@@ -272,13 +272,18 @@ class Share extends \think\Model
      * type 1-保底 2-普通
      */
     public static function addRoomChallenge($uid,$roomId,$joinMoney,$type=1){
+        if($type ==1){//1-参与中 2-已失败 3-已完成
+            $status = 3;
+        }else{
+            $status = 1;
+        }
         $params = [
             'uid'=>$uid,
             'roomId'=>$roomId,
             'createTime'=>time(),
             'type'=>$type,//1-保底 2-普通
             'joinMoney'=>$joinMoney,
-
+            'status'=>$status
         ];
         db('room_join')->insert($params);
     }
