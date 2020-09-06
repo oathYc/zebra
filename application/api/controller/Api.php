@@ -493,7 +493,8 @@ class Api extends Controller
             Share::jsonData(0,'','活动开始日期不能小于今天');
         }
         $signBeginTime = $beginTime + $params['signBegin']*60;//第一天的活动签到开始时间
-        $endJoinTime = $signBeginTime - 600;//签到开始十分钟前才能可以报名
+        $roomTime = Share::ROOMTIME;
+        $endJoinTime = $signBeginTime - $roomTime;//签到开始十分钟前才能可以报名
         if($endJoinTime < $now){
             Share::jsonData(0,'','活动开始十分钟前才能报名，请设置合理的开始时间（首次签到时间）！');
         }
@@ -624,7 +625,8 @@ class Api extends Controller
         }
         //开始十分钟前才可报名
         $now = time();
-        $beginTime = $room['beginTime'] - 600;
+        $roomTime = Share::ROOMTIME;
+        $beginTime = $room['beginTime'] - $roomTime;
         if($now >= $beginTime){
             Share::jsonData(0,'','活动开始十分钟前才能报名，当前时间已过最晚报名时间！');
         }

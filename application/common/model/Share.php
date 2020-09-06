@@ -13,6 +13,7 @@ class Share extends \think\Model
     const COMMONMAX = 100000;
     const LOWESTMIN = 10;
     const LOWESTMAX = 100000;
+    const ROOMTIME = 60;
     /**
      * @param int $code
      * @param array $data
@@ -359,9 +360,10 @@ class Share extends \think\Model
      */
     public static function checkRoomStatus(&$room){
         $now = time();
+        $roomTime = self::ROOMTIME;
         $beginTime = $room['beginTime'];//活动首次签到时间
         $roomEndTime = strtotime($room['beginDate']) + 86400*$room['day'] -1;//活动结束时间
-        if( (($beginTime-600) < $now ) && ($now < $roomEndTime)){//开始挑战 且未结束
+        if( (($beginTime-$roomTime) < $now ) && ($now < $roomEndTime)){//开始挑战 且未结束
             $status = 1;//活动中
         }elseif($now > $roomEndTime){//活动已经结束
             $status  = 2;
