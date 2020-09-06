@@ -1365,8 +1365,10 @@ class Share extends \think\Model
                     $secondTimeBegin = $targetDayTime + 60*($room['secondBegin']);//第二次签到开始时间
                     $secondTimeEnd = $targetDayTime + 60*$room['secondEnd'] + 59;//第二次签到结束时间
                     if(!$signData){
-                        db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
-                        break;
+                        if($now > $firstTimeEnd){//已过第一次签到时间
+                            db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
+                            break;
+                        }
                     }elseif($now > $firstTimeEnd && $signData['firstSign'] != 1){
                         db('room_join')->where(['uid'=>$uid,'roomId'=>$roomId])->update(['status'=>2]);//修改为失败状态
                         break;
