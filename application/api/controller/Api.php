@@ -90,54 +90,29 @@ class Api extends Controller
         if($headimg=='')$headimg ='/uploads/avatar/mr.jpg';
         Share::checkEmptyParams(['openid'=>$openid,'nickname'=>$name]);
         $user = db('member')->where('openid',$openid)->find();
-        if(!$user){//新增
+        $user1 = db('member')->where('unionid',$unionid)->find();
+        if(!$user && !$user1){//新增
             $inviteCode = Share::getInviteCode();
-            //判断是否有相同电话码号的已注册用户
-            $code = 0;
-            if($phone){
-                $hadPhone = db('member')->where(['phone'=>$phone])->find();
-                if($hadPhone && !$hadPhone['openid']){//电话号码注册过但为绑定微信账号
-                    $code = 1;
-                    $params = [
-                        'password'=>md5($password),
-                        'real_pass'=>$password,
-                        'username'=>$name,
-                        'nickname'=>$name,
-                        'openid'=>$openid,
-                        'unionid'=>$unionid,
-                        'avatar'=>$headimg,
-                        'inviteCode'=>$inviteCode,
-//                        'inviterCode'=>isset($inviteCode)?$inviteCode:'',
-                    ];
-                    $res = db('member')->where('id',$hadPhone['id'])->update($params);
-                }
-            }
-            if($code != 1){
-                $params = [
-                    'phone'=>$phone,
-                    'password'=>md5($password),
-                    'real_pass'=>$password,
-                    'username'=>$name,
-                    'nickname'=>$name,
-                    'createTime'=>time(),
-                    'money'=>0,
-                    'openid'=>$openid,
-                    'unionid'=>$unionid,
-                    'avatar'=>$headimg,
-                    'inviteCode'=>$inviteCode,
-                ];
-                $res = db('member')->insert($params);
-//                if($inviterCode){
-//                    $uid = db('member')->where(['openid'=>$openid])->find()['id'];
-                    //邀请奖励
-//                    Share::shareReward($uid,0,'',4);
-//                }
-            }
+            $params = [
+                'phone'=>$phone,
+                'password'=>md5($password),
+                'real_pass'=>$password,
+                'username'=>$name,
+                'nickname'=>$name,
+                'createTime'=>time(),
+                'money'=>0,
+                'openid'=>$openid,
+                'unionid'=>$unionid,
+                'avatar'=>$headimg,
+                'inviteCode'=>$inviteCode,
+            ];
+            $res = db('member')->insert($params);
         }else{//修改
             $params = [
                 'phone'=>$phone,
                 'nickname'=>$name,
                 'unionid'=>$unionid,
+                'openid'=>$openid,
 //                'avatar'=>$headimg,
                 'updateTime'=>time(),
             ];
