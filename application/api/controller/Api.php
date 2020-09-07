@@ -117,7 +117,11 @@ class Api extends Controller
 //                'avatar'=>$headimg,
                 'updateTime'=>time(),
             ];
-            $res = db('member')->where('openid',$openid)->update($params);
+            if($user){
+                $res = db('member')->where('openid',$openid)->update($params);
+            }else{
+                $res = db('member')->where('unionid',$unionid)->update($params);
+            }
         }
         if($res){//登录成功
             $user = db('member')->where('openid',$openid)->find();
