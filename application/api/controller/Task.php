@@ -29,7 +29,8 @@ class Task extends Controller
        $now = time();//当前时间戳
        foreach($room as $k => $v){
            $beginTime = $v['beginTime'];//活动第一次开始签到时间
-           $roomBegin = $beginTime - 120;//提前2分钟开始时间
+           $roomTime = Share::ROOMTIME;
+           $roomBegin = $beginTime - $roomTime;//提前2分钟开始时间
            if($now >=($roomBegin)){//活动已经开始
                db('room_create')->where('id',$v['id'])->update(['status'=>1]);//修改状态为活动中
            }
