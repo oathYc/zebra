@@ -6,7 +6,7 @@
  * time 16:22
  */
 
-namespace app\api\home;
+namespace app\api\controller;
 
 
 use think\Controller;
@@ -14,13 +14,14 @@ use think\Controller;
 class Share extends Controller
 {
 
-    protected $appid = 'wx096fc982aa120537'; // appid
-    protected $secret = "e49a9bb540e449963eaf47c986a9a79a";
+    protected $appid = 'wxec1c0894849624f3'; // appid
+    protected $secret = "9d3162d792699ad270d64d7994d98c2b";
+    protected  $host = 'http://cgyq.hualin688.com';
 
     public function index(){
         $inviterCode = input('inviterCode');
         $hostUrl = config('hostUrl');
-        $redirect_uri = urlencode ($hostUrl.'/api/share/getapp?inviterCode='.$inviterCode);
+        $redirect_uri = urlencode ($this->host.'/api/share/getapp?inviterCode='.$inviterCode);
 
         $url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=".$this->appid."&redirect_uri=$redirect_uri&response_type=code&scope=snsapi_userinfo&inviterCode=".$inviterCode."#wechat_redirect";
 
@@ -79,7 +80,7 @@ class Share extends Controller
             }
 
         }
-        $hostUrl = config('hostUrl');
+        $hostUrl = $this->host;
         $this->redirect($hostUrl);
         exit();
     }

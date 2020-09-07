@@ -8,6 +8,7 @@ namespace app\api\controller;
 use app\api\model\Identity;
 use app\api\model\Member;
 use app\common\model\Share;
+use extend\PinYin;
 use think\Controller;
 use think\Db;
 use think\Request;
@@ -19,7 +20,7 @@ header("Access-Control-Allow-Origin:*");
 class Api extends Controller
 {
     public  $noCheck = [
-        'register','login','gettoken','wxnotify','wxlogin','alinotify','getcode'
+        'register','login','gettoken','wxnotify','wxlogin','alinotify','getcode','doexcel'
     ];//跳过登录token验证
     public $uid;
     const PAY = 0;
@@ -1775,6 +1776,57 @@ class Api extends Controller
             'data'=>$data,
         ];
         Share::jsonData(1,$return);
+    }
+
+    /**
+     * 读取excel
+     */
+    public function doExcel(){
+        //引入类库
+        include "./../extend/PHPExcel-1.8/Classes/PHPExcel/IOFactory.php";
+        include_once "./../extend/PinYin.php";
+
+//elsx文件路径
+        $inputFileName = "./excel.xlsx";
+
+        date_default_timezone_set('PRC');
+// 读取excel文件
+        try {
+            $inputFileType = \PHPExcel_IOFactory::identify($inputFileName);
+            $objReader = \PHPExcel_IOFactory::createReader($inputFileType);
+            $objPHPExcel = $objReader->load($inputFileName);
+        } catch(\Exception $e) {
+
+        }
+
+// 确定要读取的sheet，什么是sheet，看excel的右下角，真的不懂去百度吧
+        $sheet = $objPHPExcel->getSheet(0);
+        $highestRow = $sheet->getHighestRow();
+        $highestColumn = $sheet->getHighestColumn();
+
+// 获取excel文件的数据，$row=2代表从第二行开始获取数据
+        $insertAll = [];
+        $createDate = date('Y-m-d H:i:s');
+        $status = 1;//0-删除 1-正常
+        for ($row = 2; $row <= $highestRow; $row++){
+            //数组信息  0-章节编码  1-例子的中文名称 2-是否为有效码
+            $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+            $rowData = $rowData[0];
+//这里得到的rowData都是一行的数据，得到数据后自行处理，我们这里只打出来看看效果
+            if((count($rowData) >=3 ) && ($rowData[2] == '是')){
+                //获取对应的中文名字的首字母拼音
+                $pinyin = PinYin::instance()->pinyin($rowData[1],'first');
+                $insertAll[] = [
+                    'chapter'=>$rowData[0],
+                    'name'=>$rowData[1],
+                    'pinyin'=>$pinyin,
+                    'created_at'=>$createDate,
+                    'status'=>$status,
+                ];
+            }
+        }
+        db('diagnosis_content')->insertAll($insertAll);
+        die('success');
     }
 
 }
