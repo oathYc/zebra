@@ -1817,7 +1817,12 @@ class Api extends Controller
             $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
             $rowData = $rowData[0];
 //这里得到的rowData都是一行的数据，得到数据后自行处理，我们这里只打出来看看效果
-            if((count($rowData) >=3 ) && ($rowData[2] == '是')){
+            if((count($rowData) >=3 )){
+                if($rowData[2] == '是'){
+                    $validCode = 1;
+                }else{
+                    $validCode = 0;
+                }
                 //获取对应的中文名字的首字母拼音
                 $pinyin = PinYin::instance()->pinyin($rowData[1],'first');
                 $insertAll[] = [
@@ -1826,6 +1831,7 @@ class Api extends Controller
                     'pinyin'=>$pinyin,
                     'created_at'=>$createDate,
                     'status'=>$status,
+                    'valid_code'=>$validCode,
                 ];
             }
         }
