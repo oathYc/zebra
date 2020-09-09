@@ -1785,7 +1785,7 @@ class Api extends Controller
     /**
      * 读取excel
      */
-    public function doExcel(){
+    public function doExcel1(){
         //引入类库
         include "./../extend/PHPExcel-1.8/Classes/PHPExcel/IOFactory.php";
         include_once "./../extend/PinYin.php";
@@ -1837,6 +1837,18 @@ class Api extends Controller
         }
         db('diagnosis_content')->insertAll($insertAll);
         die('success');
+    }
+    /**
+     * 测试转换
+     */
+    public function doExcel(){
+        var_dump(preg_match('//','ddd'));die;
+        include_once "./../extend/PinYin.php";
+//        $str = "O'nyong-nyong热";
+//        $str = "节肢动物媒介的病毒性发热，病毒未特指";
+        $str = "埃博拉病毒病，病毒未特指";
+        $res = PinYin::instance()->pinyin($str,'first','/，/');
+        var_dump($res);
     }
 
 }

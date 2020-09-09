@@ -146,9 +146,9 @@ class Member extends Base
         $info = db('member')->where('id', $id)->find();
         if($info){
 
-            $info['workerStatus'] = $this->identityCheck($info['worker']);
-            $info['bossStatus'] = $this->identityCheck($info['boss']);
-            $info['driverStatus'] = $this->identityCheck($info['driver']);
+//            $info['workerStatus'] = $this->identityCheck($info['worker']);
+//            $info['bossStatus'] = $this->identityCheck($info['boss']);
+//            $info['driverStatus'] = $this->identityCheck($info['driver']);
         }else{
             $info = [];
         }
