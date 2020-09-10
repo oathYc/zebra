@@ -82,23 +82,21 @@ class Task extends Controller
    /**
     * 闯关活动
     * 活动奖励结算
-    * 每天八点五分
+    * 每天八点一分
     * http://cg.aoranjianzhong.com/api/task/passRewardSend
     */
    public function passRewardSend(){
        //获取今天八点结束挑战的活动
        $date = date('Y-m-d');
-       $beginTime = $date.' 00:00:00';//今日凌晨
+       $yesterDay = date('Y-m-d',(strtotime($date)-86400));
+       $beginTime = $yesterDay.' 08:00:00';//昨天八点
        //八点五分时间
-       $endTime = $date.' 08:05:00';
-       $pass = db('pass')->where(['isEnd'=>0,'passEndTime'=>['<=',$endTime]])->select();
+       $endTime = $date.' 08:00:10';
+       $pass = db('pass')->where(['isEnd'=>0])->select();
+
        foreach($pass as $k => $v){
-           //判断当前状态 状态 0-下线 1-活动中
-           if($v['status'] == 1){
-               db('pass')->where('id',$v['id'])->update(['status'=>0]);
-           }
-           //获取所有报名信息
-           $allJoin = db('pass_join')->where(['passId'=>$v['id']])->select();
+           //获取所有报名信息 （昨天八点到今天八点的报名数据）
+           $allJoin = db('pass_join')->where(['passId'=>$v['id'],'joinTime'=>['>=',$beginTime],'joinTime'=>['<=',$endTime],'isReward'=>0])->select();
            $userSign = [];//用户签到信息
            $totalChallenge = count($allJoin);//挑战人数
            $challengeSuccess = 0;//挑战成功人数
@@ -156,6 +154,10 @@ class Task extends Controller
                db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//参余状态
            }
            db('pass')->where('id',$v['id'])->update(['isEnd'=>1]);
+           //判断当前状态 状态 0-下线 1-活动中
+           if($v['status'] == 1 && $v['passEndTime'] >= $endTime){//活动中但是已到结束时间
+               db('pass')->where('id',$v['id'])->update(['status'=>0,'isEnd'=>1]);
+           }
        }
    }
 
