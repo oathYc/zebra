@@ -153,7 +153,6 @@ class Task extends Controller
                //修改对应的奖励发送状态
                db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//参余状态
            }
-           db('pass')->where('id',$v['id'])->update(['isEnd'=>1]);
            //判断当前状态 状态 0-下线 1-活动中
            if($v['status'] == 1 && $v['passEndTime'] >= $endTime){//活动中但是已到结束时间
                db('pass')->where('id',$v['id'])->update(['status'=>0,'isEnd'=>1]);
