@@ -6,9 +6,9 @@
 
 class Appwxpay extends Controller
 {
-    const APPID = 'wxaa22c85e9c1350e6';//wxfc89d0b322f96cc8
-    const MCHID = '1601114191';//1524220761
-    const KEY = '2cc505c44553cd657fb32759c1db9e60';//70921929a63a8cc192d1c45e0fc6037a
+    const APPID = 'wxec196ca61616173c';//wxfc89d0b322f96cc8
+    const MCHID = '1602479152';//1524220761
+    const KEY = 'c5e7f94cc73bd8983b1d96e7a49f9c02';//70921929a63a8cc192d1c45e0fc6037a
 
 	public static function recharge($uid,$money) {
 
