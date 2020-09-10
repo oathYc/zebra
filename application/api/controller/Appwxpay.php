@@ -6,9 +6,9 @@
 
 class Appwxpay extends Controller
 {
-    const APPID = 'wxaa22c85e9c1350e6';//wxfc89d0b322f96cc8
-    const MCHID = '1601114191';//1524220761
-    const KEY = '2cc505c44553cd657fb32759c1db9e60';//70921929a63a8cc192d1c45e0fc6037a
+    const APPID = 'wxec196ca61616173c';//wxec196ca61616173c
+    const MCHID = '1602479152';//1602479152
+    const KEY = '28b9f167e4e3ea093ef43b39d165a796';//28b9f167e4e3ea093ef43b39d165a796
 	public static function recharge($uid,$money) {
 
 	    //--********************** author:loveAKY 修改支付参数 date:2020-7-18 18:16
