@@ -81,10 +81,10 @@ class Pass extends Base
             if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
                 $param['reward'] = 100;
             }
-            $has = db('pass')->field('id')->where('number', $param['number'])->find();
-            if(!empty($has)){
-                return json(['code' => -1, 'data' => '', 'msg' => '该闯关活动（期数相同）已经存在']);
-            };
+//            $has = db('pass')->field('id')->where('number', $param['number'])->find();
+//            if(!empty($has)){
+//                return json(['code' => -1, 'data' => '', 'msg' => '该闯关活动（期数相同）已经存在']);
+//            };
             try{
 //                $signTime = $param['signTime'];
                 unset($param['signTime']);
@@ -106,7 +106,7 @@ class Pass extends Base
             }catch(\Exception $e){
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
-            $passId = db('pass')->where('number',$param['number'])->find()['id'];
+            $passId = db('pass')->getLastInsID();
             //记录闯关签到时间
 //            foreach($signTime as $k => $v){
 //                $signTime[$k] = $v?$v:3;//默认三分钟
