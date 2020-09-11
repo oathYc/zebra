@@ -92,11 +92,15 @@ class Task extends Controller
        $beginTime = $yesterDay.' 08:00:00';//昨天八点
        //八点五分时间
        $endTime = $date.' 08:00:10';
-       $pass = db('pass')->where(['isEnd'=>0])->select();
+       $pass = db('pass')->select();
 
        foreach($pass as $k => $v){
            //获取所有报名信息 （昨天八点到今天八点的报名数据）
-           $allJoin = db('pass_join')->where(['passId'=>$v['id'],'joinTime'=>['>=',$beginTime],'joinTime'=>['<=',$endTime],'isReward'=>0])->select();
+           //获取要结算的活动期数
+           $beginTime = strtotime(date("Y-m-d",$v['createTime']));
+           $todayTime = strtotime($date);
+           $number = floor(($todayTime-$beginTime)/86400);
+           $allJoin = db('pass_join')->where(['passId'=>$v['id'],'number'=>$number,'isReward'=>0])->select();
            $userSign = [];//用户签到信息
            $totalChallenge = count($allJoin);//挑战人数
            $challengeSuccess = 0;//挑战成功人数
@@ -145,18 +149,18 @@ class Task extends Controller
                    $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
                }
                //奖励发放
-               Share::sendPassRewardNew($uid,$userMoney,$v,$joinId);
+               Share::sendPassRewardNew($uid,$userMoney,$v,$joinId,$number);
                //本金退还
                if($return == 1){
                     Share::returnPassJoinMoney($uid,$v['money'],$v['name']);
                }
                //修改对应的奖励发送状态
-               db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//参余状态
+               db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//奖励状态
            }
            //判断当前状态 状态 0-下线 1-活动中
-           if($v['status'] == 1 && $v['passEndTime'] >= $endTime){//活动中但是已到结束时间
-               db('pass')->where('id',$v['id'])->update(['status'=>0,'isEnd'=>1]);
-           }
+//           if($v['status'] == 1){//活动中但是已到结束时间
+//               db('pass')->where('id',$v['id'])->update(['status'=>0,'isEnd'=>1]);
+//           }
        }
    }
 

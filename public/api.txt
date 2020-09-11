@@ -267,9 +267,11 @@
 接口参数
 返回参数    money           报名金额
            joinMoney        当前活动已报名的金额总数
-           isJoin           是否参加 0-未参加 1-已参加
+           isJoin           当前是否参加 0-未参加 1-已参加
            joinNum          报名人数
             prices                      报名金额数据 数组
+            joinHistory         本期活动参与记录
+            joinHistory.status   参加状态  0-参与中 1-已完成 2-未完成  按最新参与顺序排序 第一条为最新一条参与数据
 
 接口名称    闯关-闯关详情
 接口路径    passDetail

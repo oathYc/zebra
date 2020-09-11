@@ -848,19 +848,32 @@ class Share extends \think\Model
     /**
      *检查用户的闯关参与状态
      * 已过闯关时间
+     * 参加状态  0-参与中 1-已完成 2-未完成
      */
     public static function checkPassStatus($uid,$passId,$joinId){
         $pass = db('pass')->where('id',$passId)->find();
         $join = db('pass_join')->where('id',$joinId)->find();
         $total = db('pass_sign')->where(['uid'=>$uid,'joinId'=>$joinId,'passId'=>$passId,'status'=>1])->count();
+        $number = self::getPassNumber($pass);//获取当前活动期数
         if($pass['challenge'] == $total){//挑战成功
             db('pass_join')->where('id',$joinId)->update(['status'=>1]);
-            if($join['isReward'] != 1){//发放奖励
-                self::sendPassReward($uid,$pass,$joinId);
-                db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);
-            }
         }else{
-            db('pass_join')->where('id',$joinId)->update(['status'=>2]);
+            //判断当前挑战状态
+            //判断是否有未签到记录  0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+            if($join['signStatus'] == 1){
+                //停止挑战 修改状态
+                db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+            }elseif($join['signStatus'] == 2){//下一轮
+                //判断是否挑战失败
+                $now = date('Y-m-d H:i:s');
+                $noSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','desc')->find();
+                if($noSign['status'] ==0){//当前未签到
+                    //判断是否挑战失败
+                    if($now > $noSign['signTimeEnd']){//已挑战失败 修改状态
+                        db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
+                    }
+                }
+            }
         }
     }
     /**
@@ -1250,7 +1263,7 @@ class Share extends \think\Model
      * 闯关
      * 每日凌晨奖励结算
      */
-    public static function sendPassRewardNew($uid,$rewardMoney,$pass,$joinId){
+    public static function sendPassRewardNew($uid,$rewardMoney,$pass,$joinId,$number=1){
         $user = db('member')->where('id',$uid)->find();
         if($user){
             if($rewardMoney){
@@ -1258,7 +1271,7 @@ class Share extends \think\Model
                 $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
                 if($res){
                     //余额记录添加
-                    self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'],1,3);
+                    self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'].'第'.$number.'期',1,3);
                     //收益记录
                     self::userMoneyGet($uid,$rewardMoney,3);
                     //收益明细记录
@@ -1269,7 +1282,7 @@ class Share extends \think\Model
                 }
             }else{//0元奖励也要记录
                 //余额记录添加
-                self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'],1,3);
+                self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'].'第'.$number.'期',1,3);
             }
         }
         return true;
@@ -1379,5 +1392,29 @@ class Share extends \think\Model
                 }
             }
         }
+    }
+    /**
+     * 获取闯关期数
+     */
+    public static function getPassNumber($pass){
+        $beginDate  = date("Y-m-d",$pass['createTime']);//开始日期
+        $beginTime = strtotime($beginDate);
+        $today = date('Y-m-d');//今天ed日期
+        if($today == $beginDate){
+            $number=1;//第一期
+        }else{
+            $now  = time();
+            //出去日期获取时分秒
+            $days= floor(($now - $beginTime)/86400);
+            $reduceSecond = $now - 86400*$days;//相差的秒数
+            $compareTime = 3600*8;//八小时
+            if($compareTime <= $reduceSecond){
+                //凌晨八小时之前，算前一天的期数
+                $number = $days;
+            }else{
+                $number = $days+ 1;//新的一期了
+            }
+        }
+        return $number;
     }
 }

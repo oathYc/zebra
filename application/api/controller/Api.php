@@ -1256,30 +1256,36 @@ class Api extends Controller
         Share::closePassEnd();
         $data = db('pass')->where('status',1)->order('number','desc')->select();
         foreach($data as $k => $v){
+            $number = Share::getPassNumber($v);//当前期数
             //报名人数
-            $hadJoin = db('pass_join')->where(['passId'=>$v['id']])->group('uid')->count();
+            $hadJoin = db('pass_join')->where(['passId'=>$v['id'],'number'=>$number])->group('uid')->count();
             $data[$k]['joinNum'] = $hadJoin?$hadJoin:0;
             //报名金额
-            $joinMoney = db('pass_join')->where('passId',$v['id'])->sum('joinMoney');
+            $joinMoney = db('pass_join')->where(['passId'=>$v['id'],'number'=>$number])->sum('joinMoney');
             $data[$k]['joinMoney'] = $joinMoney?$joinMoney:0;
-            //是否报名
-            $join = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$v['id']])->find();
+            //是否报名 参加状态  0-参与中 1-已完成 2-未完成
+            $join = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$v['id'],'status'=>0])->find();
             if(!$join){
                 $isJoin = 0;//0-当前未参加  1-已参加
-            }else{//判断是否已过结束时间
-                $now = date('Y-m-d H:i:s');
-                if($now > $join['endTime']){
-                    //判断打卡状态
-                    Share::checkPassStatus($uid,$v['id'],$join['id']);
-                    $isJoin = 0;
-                }else{
+            }else{
+                //判断当前打卡状态
+                Share::checkPassStatus($uid,$v['id'],$join['id']);
+                $join = db('pass_join')->where('id',$join['id'])->find();
+                if($join['status'] == 0){
                     $isJoin = 1;
+                }else{
+                    $isJoin = 0;
                 }
             }
             $data[$k]['isJoin'] = $isJoin;
             //报名价格获取
             $prices = db('pass_price')->where('passId',$v['id'])->order('price','asc')->select();
             $data[$k]['prices'] = $prices;
+            //获取当前期数
+            $data[$k]['number'] = $number;
+            //获取本期启动的历史参与情况
+            $joinHistory = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$v['id']])->order('id','desc')->select();
+            $data[$k]['joinHistory'] = $joinHistory;
         }
         Share::jsonData(1,$data);
     }
@@ -1295,18 +1301,18 @@ class Api extends Controller
         if(!$pass){
             Share::jsonData(0,'','没有该闯关活动！');
         }
+        $number = Share::getPassNumber($pass);;//当前期数
         //报名人数
-        $hadJoin = db('pass_join')->where(['passId'=>$passId])->group('uid')->count();
+        $hadJoin = db('pass_join')->where(['passId'=>$passId,'number'=>$number])->group('uid')->count();
         $pass['joinNum'] = $hadJoin?$hadJoin:0;
         //报名金额
-        $joinMoney = db('pass_join')->where('passId',$passId)->sum('joinMoney');
+        $joinMoney = db('pass_join')->where(['passId'=>$passId,'number'=>$number])->sum('joinMoney');
         $pass['joinMoney'] = $joinMoney?$joinMoney:0;
-        //是否报名
-        $join = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
+        //当前是否报名  0-参与中 1-已完成 2-未完成
+        $join = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
         $hadSign = 0;//当前打卡轮数
         $nextBegin = '';//下一轮签到开始时间
         $nextEnd = '';//下一轮签到结束时间
-        $todaySign = 0;
         if(!$join){
             $isJoin = 0;//0-当前未参加  1-已参加
             $signData = [];
@@ -1316,13 +1322,11 @@ class Api extends Controller
                 //停止挑战 修改状态
                 db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                 $isJoin = 0;
-                $todaySign = 0;
             }elseif($join['signStatus'] == 2){
                 //判断是否挑战失败
                 $now = date('Y-m-d H:i:s');
                 $noSign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id']])->order('number','desc')->find();
                 if($noSign['status'] ==0){//当前未签到
-                    $todaySign = 0;
                     //判断是否挑战失败
                     if($now > $noSign['signTimeEnd']){//已挑战失败 修改状态
                         db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
@@ -1333,7 +1337,6 @@ class Api extends Controller
                         $isJoin = 1;
                     }
                 }else{//今日已签到
-                    $todaySign = 1;//0-今日未签到 1-今日已签到
                     $isJoin = 1;
                 }
                 //获取最新一轮的打卡轮数
@@ -1359,11 +1362,11 @@ class Api extends Controller
         $pass['hadSign'] = $hadSign?$hadSign:0;
         $pass['nextSignBegin'] = $nextBegin;
         $pass['nextSignEnd'] = $nextEnd;
-        $pass['todaySign'] = $todaySign;
         //报名价格获取
         $prices = db('pass_price')->where('passId',$pass['id'])->order('price','asc')->select();
         $pass['prices'] = $prices;
         $pass['nowTime'] = time();
+        $pass['number'] = $number;
         Share::jsonData(1,$pass);
     }
 
@@ -1383,10 +1386,6 @@ class Api extends Controller
         if($pass['status'] != 1){
             Share::jsonData(0,'','该闯关活动已下线！');
         }
-        $date = date('Y-m-d H:i:s');
-        if($pass['passEndTime'] <= $date){
-            Share::jsonData(0,'','该活动已结束');
-        }
         //判断是否在报名时间内
         Share::checkPassJoinTime($pass);
         //判断是否有该报名价格
@@ -1394,21 +1393,20 @@ class Api extends Controller
         if(!$hadMoney){
             Share::jsonData(0,'','没有该报名价格');
         }
+        //获取当前期数
+        $number = Share::getPassNumber($pass);
         //检查是否已经报名
         $now = date('Y-m-d H:i:s');
         $time = strtotime($now);
-        $hadJoin = db('pass_join')->where(['uid'=>$uid,'status'=>0,'passId'=>$passId])->find();
+        $hadJoin = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
         if($hadJoin){//已参加且未结束
-            Share::jsonData(0,'','你当前已经参加了该闯关活动(闯关中)，不可重复参加！');
+            //检查参与状态
+            Share::checkPassStatus($uid,$passId,$hadJoin['id']);
+            $currJoin  = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
+            if($currJoin){
+                Share::jsonData(0,'','你当前已经参加了本期闯关活动(闯关中)，不可重复参加！');
+            }
         }
-//        elseif($hadJoin && $hadJoin['endTime'] < $now){//已参加且已结束  判断状态修改
-//            Share::checkPassStatus($uid,$passId,$hadJoin['id']);
-//        }
-        //获取报名结束时间
-        $hour = $pass['hour'];
-        $second = $hour*3600;
-        $endSecond = $time + $second;
-        $endTime = date('Y-m-d H:i:s',$endSecond);
         //添加报名
         $params = [
             'uid'=>$uid,
@@ -1417,7 +1415,6 @@ class Api extends Controller
             'joinMoney'=>$joinMoney,
             'status'=>0,//参加状态  0-参与中 1-已完成 2-未完成
             'createTime'=>$time,
-            'endTime'=>$endTime,
             'isReward'=>0,
             'signStatus'=>2,//0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
         ];
@@ -1430,7 +1427,7 @@ class Api extends Controller
             Share::createUserPassSignNew($uid,$pass,$join);
 
             //邀请人信息记录
-            $objectStr = '闯关挑战（'.$pass['name'].'）';
+            $objectStr = '闯关挑战（'.$pass['name'].'第'.$number.'期）';
             Share::shareReward($uid,$passId,$objectStr,3);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1,'','报名成功');
         }else{
@@ -1447,7 +1444,9 @@ class Api extends Controller
         $passId = input('passId');
         $joinId = input('joinId');
         Share::checkEmptyParams(['passId'=>$passId,'joinId'=>$joinId]);
-        $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'status'=>0,'id'=>$joinId])->find();
+        $pass = db('pass')->where('id',$passId)->find();
+        $number = Share::getPassNumber($pass);
+        $join = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>0,'id'=>$joinId])->find();
         if(!$join){
             Share::jsonData(0,'','您还没有挑战中的活动，不能进行该操作');
         }
@@ -1494,9 +1493,10 @@ class Api extends Controller
 //        if($pass['status'] != 1){
 //            Share::jsonData(0,'','当前闯关活动已下线');
 //        }
+        $number = Share::getPassNumber($pass);
         $nowTime = date('Y-m-d H:i:s');//当前时间
         //获取报名信息
-        $join = db('pass_join')->where(['uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
+        $join = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
         if(!$join){
             Share::jsonData(0,'','你当前还没有报名该闯关活动！');
         }
@@ -1508,9 +1508,9 @@ class Api extends Controller
             Share::jsonData(0,'','当前活动已停止，请重新报名参加');
         }
         //判断当前签到次数是否已达到
-        $hadSignNumber = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>1])->group('number')->count();
+        $hadSignNumber = db('pass_sign')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>1])->group('number')->count();
         if($hadSignNumber >= $pass['challenge']){
-            db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+            db('pass_join')->where('id',$join['id'])->update(['status'=>1,'signStatus'=>0]);
             Share::jsonData(0,'','您已完成挑战');
         }
         //获取当前未打卡记录
@@ -1564,6 +1564,7 @@ class Api extends Controller
         $data = db('pass_join')->where($where)->limit($offset,$pageSize)->order('joinTime','desc')->select();
         foreach($data as $k => $v){
             $pass = db('pass')->where('id',$v['passId'])->find();
+            $pass['number'] = $v['number'];
             $data[$k]['pass'] = $pass;
         }
         $return = [
