@@ -21,7 +21,7 @@ class Pass extends Base
 
             $where = [];
 
-            $result = db('pass')->where($where)->limit($offset, $limit)->order('number', 'desc')->select();
+            $result = db('pass')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
             foreach ($result as $key => $vo) {
                 // 优化显示头像
                 $statusStr  = $vo['status']== 1?'启用':'关闭';
@@ -40,7 +40,7 @@ class Pass extends Base
                 $result[$key]['minMax'] = $vo['min'].'-'.$vo['max'];
                 $result[$key]['moneys'] = implode('、',$pricesArr);
             }
-            $return['total'] = db('pass')->count();  //总数据
+            $return['total'] = db('pass')->where($where)->count();  //总数据
             $return['rows'] = $result;
 
             return json($return);
@@ -224,7 +224,7 @@ class Pass extends Base
                 $user = db('member')->where('id',$vo['uid'])->find();
                 $result[$key]['nickname'] = $user['nickname'];
             }
-            $return['total'] = db('pass_join')->count();  //总数据
+            $return['total'] = db('pass_join')->where($where)->count();  //总数据
             $return['rows'] = $result;
             return json($return);
 
