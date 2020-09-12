@@ -1253,7 +1253,7 @@ class Api extends Controller
      */
     public function  passList(){
         $uid = $this->uid;//关闭结束的闯关活动
-        Share::closePassEnd();
+//        Share::closePassEnd();
         $data = db('pass')->where('status',1)->order('number','desc')->select();
         foreach($data as $k => $v){
             $number = Share::getPassNumber($v);//当前期数
