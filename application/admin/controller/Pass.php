@@ -56,7 +56,7 @@ class Pass extends Base
             $param['beginTime'] = Share::getMinute($param['beginTimeStr']);
             $param['endTime'] = Share::getMinute($param['endTimeStr']);
             if($param['endTime'] <= $param['beginTime']){
-                return json(['code' => -1, 'data' => '', 'msg' => '报名结束时间必须大于开始时间！']);
+                return json(['code' => -1, 'data' => '', 'msg' => '禁止报名结束时间必须大于开始时间！']);
             }
 //            if(!$param['hour']){
 //                $param['hour'] = '2.5';

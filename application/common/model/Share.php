@@ -929,8 +929,8 @@ class Share extends \think\Model
     public static function checkPassJoinTime($pass){
         $currTime = date("H:i");
         $currMinute = self::getMinute($currTime);
-        if($currMinute < $pass['beginTime'] || $currMinute > $pass['endTime']){
-            Share::jsonData(0,'','该闯关活动只能在'.$pass['beginTimeStr'].'-'.$pass['endTimeStr'].'时间段内报名！');
+        if($currMinute >= $pass['beginTime'] && $currMinute <= $pass['endTime']){
+            Share::jsonData(0,'','该闯关活动只能在'.$pass['beginTimeStr'].'-'.$pass['endTimeStr'].'时间段之外才可报名！');
         }
     }
     /**
