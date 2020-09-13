@@ -1367,6 +1367,13 @@ class Api extends Controller
         $pass['prices'] = $prices;
         $pass['nowTime'] = time();
         $pass['number'] = $number;
+        $hadSuccess = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>1])->find();
+        if($hadSuccess){
+            $isSuccess = 1;//已经成功挑战过
+        }else{
+            $isSuccess = 0;
+        }
+        $pass['isSuccess'] = $isSuccess;
         Share::jsonData(1,$pass);
     }
 
@@ -1398,6 +1405,10 @@ class Api extends Controller
         //检查是否已经报名
         $now = date('Y-m-d H:i:s');
         $time = strtotime($now);
+        $hadSuccess = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>1])->find();
+        if($hadSuccess){
+            Share::jsonData(0,'','本期活动你已经挑战成功，不能再次参加！');
+        }
         $hadJoin = db('pass_join')->where(['number'=>$number,'uid'=>$uid,'passId'=>$passId,'status'=>0])->find();
         if($hadJoin){//已参加且未结束
             //检查参与状态
@@ -1406,6 +1417,7 @@ class Api extends Controller
             if($currJoin){
                 Share::jsonData(0,'','你当前已经参加了本期闯关活动(闯关中)，不可重复参加！');
             }
+
         }
         //添加报名
         $params = [
@@ -1718,6 +1730,7 @@ class Api extends Controller
         $type = input('type',1);//1-微信 2-支付宝
         $phone = input('phone','');//提现手机号  支付宝必填
         Share::checkEmptyParams(['money'=>$money]);
+        $type = 1;
         if($type ==2 && !$phone){
             Share::jsonData(0,'','请填写支付宝提现手机号');
         }
