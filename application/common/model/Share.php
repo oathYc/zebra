@@ -1283,6 +1283,8 @@ class Share extends \think\Model
             }else{//0元奖励也要记录
                 //余额记录添加
                 self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'].'第'.$number.'期',1,3);
+                //收益明细记录
+                self::rewardRecord($uid,$rewardMoney,$pass['id'],3,$joinId);
             }
         }
         return true;
