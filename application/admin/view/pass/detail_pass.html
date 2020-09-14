@@ -20,12 +20,12 @@
                     <h5>闯关活动详情</h5>
                 </div>
                 <div class="ibox-content">
-                    <form class="form-horizontal m-t layui-form" id="commentForm" method="" >
-
+                    <form class="form-horizontal m-t layui-form" id="commentForm" action="{:url('pass/detailPass')}" method="post">
+                        <input type="hidden" value="{$info['id']}" name="id" />
                         <div class="form-group">
                             <label class="col-sm-3 control-label">闯关名称：</label>
                             <div class="input-group col-sm-4">
-                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true" value="{$info['name']}">
+                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true" value="{$info['name']}" readonly>
                             </div>
                         </div>
 <!--                        <div class="form-group">-->
@@ -37,53 +37,53 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">闯关描述：</label>
                             <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="desc" required="true" id="desc" >{$info['desc']}</textarea>
+                                <textarea class="form-control" readonly name="desc" required="true" id="desc" >{$info['desc']}</textarea>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">最小签到：</label>
                             <div class="input-group col-sm-4">
-                                <input  type="text" class="form-control" name="hour" required="true" aria-required="true" value="{$info['min']}小时">
+                                <input  type="text" class="form-control" name="hour" required="true" aria-required="true" value="{$info['min']}小时" readonly>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">最大签到：</label>
                             <div class="input-group col-sm-4">
-                                <input  type="text" class="form-control" name="hour" required="true" aria-required="true" value="{$info['max']}小时">
+                                <input  type="text" class="form-control" name="hour" required="true" aria-required="true" value="{$info['max']}小时" readonly>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">闯关金额：</label>
                             <div class="input-group col-sm-4">
-                                <textarea id="maxMoney" type="text" class="form-control" name="maxMoney" required="true" aria-required="true">{$info['moneys']}</textarea>
+                                <textarea readonly id="maxMoney" type="text" class="form-control" name="maxMoney" required="true" aria-required="true">{$info['moneys']}</textarea>
                             </div>
                         </div>
                         <div class="form-group layui-form-item">
                             <label class="col-sm-3 control-label">奖励类型：</label>
-                            <div class="input-group">
-                                <input {if 1 eq $info['rewardType']} checked {/if} type="radio" name="rewardType" value="1" title="失败金额百分比" />
-                                <input type="radio" name="rewardType" value="2" title="固定金额" {if 2 eq $info['rewardType']} checked {/if}  />
-                                <input type="radio" name="rewardType" value="3" title="报名费用百分比" {if 3 eq $info['rewardType']} checked {/if}  />
+                            <div class="input-group" >
+                                <input disabled  {if 1 eq $info['rewardType']} checked {/if} type="radio" name="rewardType" value="1" title="失败金额百分比"   />
+                                <input disabled type="radio" name="rewardType" value="2" title="固定金额" {if 2 eq $info['rewardType']} checked {/if}  />
+                                <input disabled type="radio" name="rewardType" value="3" title="报名费用百分比" {if 3 eq $info['rewardType']} checked {/if}  />
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">奖励值：</label>
                             <div class="input-group col-sm-4">
-                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" value="{$info['reward']}">
+                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" value="{$info['reward']}" readonly>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">禁止报名时间：</label>
                             <div class="input-group ">
-                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off" value="{$info['beginTimeStr']}">
+                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off" value="{$info['beginTimeStr']}" readonly>
 <!--                                <span style="position: relative;margin-left: -119px;" >到</span>-->
-                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off" value="{$info['endTimeStr']}">
+                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off" value="{$info['endTimeStr']}" readonly>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">活动状态：</label>
                             <div class="input-group col-sm-4">
-                                <input id="statusStr" type="text" class="form-control" name="sort" required="" value="{$info['statusStr']}">
+                                <input id="statusStr" type="text" class="form-control" name="sort" required="" value="{$info['statusStr']}" readonly>
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
@@ -104,12 +104,12 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">奖励规则：</label>
                             <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="rule" >{$info['rule']}"</textarea>
+                                <textarea class="form-control" name="rule" >{$info['rule']}</textarea>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="col-sm-4 col-sm-offset-6">
-                                <a class="btn-primary btn" href="Javascript:history.go(-1)">返回</a>
+                                <button class="btn btn-primary" type="submit">提交</button>
                             </div>
                         </div>
                     </form>

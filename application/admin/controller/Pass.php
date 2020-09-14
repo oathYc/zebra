@@ -142,7 +142,7 @@ class Pass extends Base
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
         $operate .= '<a href="/admin/pass/detailPass?id='.$id.'">';
-        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 详情</button></a>';
+        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 修改规则</button></a>';
 
         return $operate;
     }
@@ -161,6 +161,20 @@ class Pass extends Base
     //打卡活动详情
     public function detailPass(){
         $id = input('id');
+        if(request()->isPost()){
+            $rule = input('rule');
+            if(!$rule){
+                return json(['code' => -1, 'data' => '', 'msg' => '规则不能为空']);
+            }
+            $res = db('pass')->where('id',$id)->update(['rule'=>$rule]);
+            if($res){
+
+                return json(['code' => 1, 'data' => '', 'msg' => '修改成功']);
+            }else{
+
+                return json(['code' => -1, 'data' => '', 'msg' => '修改规则失败']);
+            }
+        }
         $info = db('pass')->where('id',$id)->find();
         if($info['image']){
             $info['image'] = '<img src="' . $info['image'] . '" width="40px" height="40px">';;
