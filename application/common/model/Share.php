@@ -1401,16 +1401,16 @@ class Share extends \think\Model
     public static function getPassNumber($pass){
         $beginDate  = date("Y-m-d",$pass['createTime']);//开始日期
         $beginTime = strtotime($beginDate);
-        $today = date('Y-m-d');//今天ed日期
+        $today = date('Y-m-d');//今天日期
         if($today == $beginDate){
             $number=1;//第一期
         }else{
             $now  = time();
             //出去日期获取时分秒
             $days= floor(($now - $beginTime)/86400);
-            $reduceSecond = $now - 86400*$days;//相差的秒数
+            $reduceSecond = $now - 86400*$days -$beginTime;//相差的秒数
             $compareTime = 3600*8;//八小时
-            if($compareTime <= $reduceSecond){
+            if($compareTime > $reduceSecond){
                 //凌晨八小时之前，算前一天的期数
                 $number = $days;
             }else{
