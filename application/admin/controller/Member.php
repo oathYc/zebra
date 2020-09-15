@@ -348,6 +348,10 @@ class Member extends Base
             $param = input('param.');
             $uid = $param['id'];
             $money = $param['money'];
+            $user = db('member')->where('id',$uid)->find();
+            if($user['money'] >= $money){
+                return json(['code'=>-1,'data'=>'','msg'=>'修改余额不能小于用户当前余额']);
+            }
             $res = db('member')->where('id',$uid)->update(['money'=>$money]);
             if($res){
                 return json(['code'=>1,'data'=>'','msg'=>'操作成功']);
