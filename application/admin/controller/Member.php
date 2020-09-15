@@ -34,8 +34,9 @@ class Member extends Base
                 // 优化显示头像
                 $result[$key]['avatar'] = '<img src="' . $vo['avatar'] . '" width="40px" height="40px">';
                 // 生成操作按钮
-                $result[$key]['operate'] = $this->makeBtn($vo['id']);
+                $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                $result[$key]['statusStr'] = $vo['status']==1?'活跃':'冻结';
             }
 
             $return['total'] = db('member')->count();  //总数据
@@ -111,8 +112,9 @@ class Member extends Base
 
 
     // 生成按钮
-    private function makeBtn ($id)
+    private function makeBtn ($id,$status)
     {
+        $statusStr = $status==1?'冻结':'解冻';
         $operate = '';
 //        $operate .= '<a href="/admin/member/detailUser?id='.$id.'">';
 //        $operate .= '<button type="button" class="btn btn-primary btn-sm"><i class="fa fa-paste"></i> 编辑</button></a> ';
@@ -122,7 +124,9 @@ class Member extends Base
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
         $operate .= '<a href="/admin/member/detailUser?id='.$id.'">';
-        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 详情</button></a>';
+        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 详情</button></a> ' ;
+        $operate .= '<a href="javascript:userStatus(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
+        $operate .= '<i class="fa fa-trash-o"></i> '.$statusStr.'</button></a> ';
 
         return $operate;
     }
@@ -169,6 +173,21 @@ class Member extends Base
             }
 
             return json(['code' => 1, 'data' => '', 'msg' => '删除客用户成功']);
+        }
+    }
+    // 冻结
+    public function userStatus()
+    {
+        if (request()->isAjax()) {
+            $id = input('param.id/d');
+            $status = input('status');
+            try {
+                db('member')->where('id', $id)->update(['status'=>$status]);
+            } catch (\Exception $e) {
+                return json(['code' => -1, 'data' => '', 'msg' => $e->getMessage()]);
+            }
+
+            return json(['code' => 1, 'data' => '', 'msg' => '操作成功']);
         }
     }
     // 用户提现记录

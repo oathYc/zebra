@@ -118,8 +118,14 @@ class Api extends Controller
                 'updateTime'=>time(),
             ];
             if($user){
+                if($user['status'] != 1){
+                    Share::jsonData(0,'','您的账号已被平台冻结，请联系平台解冻再登录');
+                }
                 $res = db('member')->where('openid',$openid)->update($params);
             }else{
+                if($user1['status'] != 1){
+                    Share::jsonData(0,'','您的账号已被平台冻结，请联系平台解冻再登录');
+                }
                 $res = db('member')->where('unionid',$unionid)->update($params);
             }
         }

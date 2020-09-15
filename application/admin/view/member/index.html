@@ -40,6 +40,7 @@
                         <th data-field="id">用户ID</th>
                         <th data-field="username">用户名称</th>
                         <th data-field="nickname">用户昵称</th>
+                        <th data-field="statusStr">状态</th>
                         <th data-field="phone">用户电话</th>
                         <th data-field="money">用户余额</th>
                         <th data-field="avatar">用户头像</th>
@@ -115,6 +116,26 @@
         layer.confirm('确认删除此用户?', {icon: 3, title:'提示'}, function(index){
             //do something
             $.getJSON("{:url('member/delUser')}", {'id' : id}, function(res){
+                if(1 == res.code){
+                    layer.alert(res.msg, {title: '友情提示', icon: 1, closeBtn: 0}, function(){
+                        initTable();
+                    });
+                }else if(111 == res.code){
+                    window.location.reload();
+                }else{
+                    layer.alert(res.msg, {title: '友情提示', icon: 2});
+                }
+            });
+
+            layer.close(index);
+        })
+
+    }
+
+    function userStatus(id,status){
+        layer.confirm('确认进行此操作?', {icon: 3, title:'提示'}, function(index){
+            //do something
+            $.getJSON("{:url('member/userStatus')}", {'id' : id,status:status}, function(res){
                 if(1 == res.code){
                     layer.alert(res.msg, {title: '友情提示', icon: 1, closeBtn: 0}, function(){
                         initTable();
