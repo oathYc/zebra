@@ -368,11 +368,14 @@ class Member extends Base
             $uid = $param['id'];
             $money = $param['money'];
             $user = db('member')->where('id',$uid)->find();
-            if($user['money'] >= $money){
-                return json(['code'=>-1,'data'=>'','msg'=>'修改余额不能小于用户当前余额']);
+            if(0  >= $money){
+                return json(['code'=>-1,'data'=>'','msg'=>'添加金额不能小于0']);
             }
-            $res = db('member')->where('id',$uid)->update(['money'=>$money]);
+            $addMoney = $user['money'] + $money;
+            $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
             if($res){
+                //记录永不余额
+                Share::userMoneyRecord($uid,$money,'后台余额添加',1,0);
                 return json(['code'=>1,'data'=>'','msg'=>'操作成功']);
             }else{
                 return json(['code'=>-1,'data'=>'','msg'=>'操作失败']);

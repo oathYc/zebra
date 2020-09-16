@@ -1600,8 +1600,8 @@ class Api extends Controller
         $page = input('page',1);
         $pageSize = input('pageSize',10);
         $offset = $pageSize*($page-1);
-        $total = db('pass_sign')->where(['uid'=>$uid,'status'=>1])->count();
-        $data = db('pass_sign')->where(['uid'=>$uid,'status'=>1])->limit($offset,$pageSize)->order('signTime','desc')->select();
+        $total = db('pass_sign')->where(['uid'=>$uid])->count();
+        $data = db('pass_sign')->where(['uid'=>$uid])->limit($offset,$pageSize)->order('createTime','desc')->select();
         foreach($data as $k => $v){
             $pass = db('pass')->where('id',$v['passId'])->find();
             $data[$k]['pass'] = $pass?$pass:[];

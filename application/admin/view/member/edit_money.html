@@ -41,9 +41,15 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">用户余额：</label>
+                            <label class="col-sm-3 control-label">用户当前余额：</label>
                             <div class="input-group col-sm-4">
-                                <input  type="text" class="form-control" name="money"  placeholder="" value="{$info['money']}">
+                                <input  type="text" class="form-control" name=""  placeholder="" value="{$info['money']}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">添加余额：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="money"  placeholder="" value="{$info['money']}" onkeyup = "value=value.replace(/[^.\d]/g,'')">
                             </div>
                         </div>
 
