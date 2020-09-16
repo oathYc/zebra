@@ -1605,6 +1605,8 @@ class Api extends Controller
         foreach($data as $k => $v){
             $pass = db('pass')->where('id',$v['passId'])->find();
             $data[$k]['pass'] = $pass?$pass:[];
+            $join = db('pass_join')->where('id',$v['joinId'])->find();
+            $data[$k]['joinNumber'] = $join['number'];
         }
         $return = [
             'total'=>$total,
