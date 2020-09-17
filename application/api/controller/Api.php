@@ -1435,6 +1435,7 @@ class Api extends Controller
             'createTime'=>$time,
             'isReward'=>0,
             'signStatus'=>2,//0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+            'number'=>$number
         ];
         //扣除用户报名费用
         Share::reducePassJoinMoney($uid,$joinMoney,$pass);
