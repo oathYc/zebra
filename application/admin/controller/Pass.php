@@ -53,6 +53,7 @@ class Pass extends Base
         if(request()->isPost()){
             $param = input('post.');
             unset($param['file']);
+            $id = $param['id'];
             $param['beginTime'] = Share::getMinute($param['beginTimeStr']);
             $param['endTime'] = Share::getMinute($param['endTimeStr']);
             if($param['endTime'] <= $param['beginTime']){
@@ -76,7 +77,6 @@ class Pass extends Base
             }
             unset($param['moneys']);
             $param['money'] = $moneys[0];
-            $param['createTime'] = time();
 
             if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
                 $param['reward'] = 100;
@@ -88,7 +88,13 @@ class Pass extends Base
             try{
 //                $signTime = $param['signTime'];
                 unset($param['signTime']);
-                db('pass')->insert($param);
+                unset($param['id']);
+                if($id){
+                    db('pass')->where('id',$id)->update($param);
+                }else{
+                    $param['createTime'] = time();
+                    db('pass')->insert($param);
+                }
                 $passId = db('pass')->where('name',$param['name'])->find()['id'];
                 //记录打卡报名金额
                 $time = time();
@@ -101,6 +107,7 @@ class Pass extends Base
                     ];
                 }
                 if($moneyArr){
+                    db('pass_price')->where('passId',$passId)->delete();
                     db('pass_price')->insertAll($moneyArr);
                 }
             }catch(\Exception $e){
@@ -142,7 +149,7 @@ class Pass extends Base
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
         $operate .= '<a href="/admin/pass/detailPass?id='.$id.'">';
-        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 修改规则</button></a>';
+        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 修改</button></a>';
 
         return $operate;
     }
@@ -177,20 +184,24 @@ class Pass extends Base
         }
         $info = db('pass')->where('id',$id)->find();
         if($info['image']){
-            $info['image'] = '<img src="' . $info['image'] . '" width="40px" height="40px">';;
+            $info['imageStr'] = '<img src="' . $info['image'] . '" width="40px" height="40px">';;
         }else{
-            $info['image'] = '';
+            $info['imageStr'] = '';
         }
         if($info['background']){
-            $info['background'] = '<img src="' . $info['background'] . '" width="40px" height="40px">';;
+            $info['backgroundStr'] = '<img src="' . $info['background'] . '" width="40px" height="40px">';;
         }else{
-            $info['background'] = '';
+            $info['backgroundStr'] = '';
         }
         $info['statusStr'] = $info['status'] == 1?'启用':'关闭';
         $info['signTime'] = db('pass_time')->where(['passId'=>$info['id']])->find();
         //获取报名金额
         //打卡价格
         $prices = db('pass_price')->where('passId',$info['id'])->order('price','asc')->select();
+        if(!$prices){
+            $prices[0]['price'] = 0;
+        }
+        $info['pricesArr'] = $prices;
         $pricesArr = [];
         foreach($prices as $v){
             $pricesArr[] = $v['price'];
