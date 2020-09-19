@@ -32,9 +32,9 @@ class Api extends Controller
         $action = Request::instance()->action();
         if(!in_array($action,$this->noCheck)){
             self::checkUid();
-            $accessToken = isset($_SERVER['HTTP_ACCESSTOKEN'])?$_SERVER['HTTP_ACCESSTOKEN']:'';
-            $uid = session('uid');
-            Token::checkAccessToken($accessToken,$uid);
+//            $accessToken = isset($_SERVER['HTTP_ACCESSTOKEN'])?$_SERVER['HTTP_ACCESSTOKEN']:'';
+//            $uid = session('uid');
+//            Token::checkAccessToken($accessToken,$uid);
         }
     }
     protected  function checkUid(){
