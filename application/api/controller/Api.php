@@ -42,13 +42,13 @@ class Api extends Controller
         if(!$uid){
             Share::jsonData(100,'','你还没登录');
         }
-        $loginTime = session('login');
-        $now = time();
-        $expire = 7200;
-        if(($loginTime + $expire) < $now ){
-            session(null);//销毁所有登录信息
-            Share::jsonData(101,'','登录失效，请重新登录！');
-        }
+//        $loginTime = session('login');
+//        $now = time();
+//        $expire = 7200;
+//        if(($loginTime + $expire) < $now ){
+//            session(null);//销毁所有登录信息
+//            Share::jsonData(101,'','登录失效，请重新登录！');
+//        }
         $this->uid = $uid;
     }
 
