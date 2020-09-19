@@ -1604,10 +1604,15 @@ class Api extends Controller
         $total = db('pass_sign')->where(['uid'=>$uid])->count();
         $data = db('pass_sign')->where(['uid'=>$uid])->limit($offset,$pageSize)->order('createTime','desc')->select();
         foreach($data as $k => $v){
-            $pass = db('pass')->where('id',$v['passId'])->find();
-            $data[$k]['pass'] = $pass?$pass:[];
             $join = db('pass_join')->where('id',$v['joinId'])->find();
             $data[$k]['joinNumber'] = $join['number'];
+            $pass = db('pass')->where('id',$v['passId'])->find();
+            if($pass){
+                $pass['number'] = $join['number'];
+            }else{
+                $pass = [];
+            }
+            $data[$k]['pass'] = $pass?$pass:[];
         }
         $return = [
             'total'=>$total,
