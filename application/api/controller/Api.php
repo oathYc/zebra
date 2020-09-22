@@ -1534,8 +1534,9 @@ class Api extends Controller
         }
         //获取当前未打卡记录
         $sign = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$join['id'],'status'=>0])->order('number','desc')->find();
-        if(!$sign){
-            Share::jsonData(0,'','没有打卡信息！');
+        if(!$sign){//修改签到状态
+            db('pass_join')->where('id',$join['id'])->update(['signStatus'=>0]);
+            Share::jsonData(0,'','当前没有待打卡信息！');
         }
         if($nowTime < $sign['signTimeBegin'] ){
             Share::jsonData(0,'','还没有到打卡时间，请稍后尝试');
