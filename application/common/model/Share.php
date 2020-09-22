@@ -1419,4 +1419,18 @@ class Share extends \think\Model
         }
         return $number;
     }
+    /**
+     * 检查闯关签到时间
+     * 如果当前签到时间在禁止报名时间端内  签到成功后即停止后续挑战
+     * 签到成功及挑战成功
+     * 不管是否挑战轮数都完成
+     */
+    public static function checkSignTime($pass,$joinId){
+        $now = date('H:i:s');
+        $beginTime = $pass['beginTimeStr'].":00";
+        $endTime = $pass['endTimeStr'].':59';
+        if($now > $beginTime && $now <= $endTime){
+            db('pass_join')->where('id',$joinId)->update(['status'=>1]);
+        }
+    }
 }
