@@ -814,7 +814,7 @@ class Share extends \think\Model
             $params = [
                 'uid'=>$uid,
                 'passId'=>$objectId,
-                'joinId'=>$objectId,
+                'joinId'=>$joinId,
                 'date'=>$date,
                 'money'=>$money,
                 'createTime'=>$time,

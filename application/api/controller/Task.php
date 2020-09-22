@@ -114,6 +114,7 @@ class Task extends Controller
                    'signNumber'=>$signNumber,
                    'moneyReturn'=>$moneyReturn,//1—退本金 0-不退
                    'joinId'=>$p['id'],
+                   'joinMoney'=>$p['joinMoney'],
                ];
                if($moneyReturn ==1){//退本金即挑战成功
                    $challengeSuccess += 1;
@@ -134,9 +135,11 @@ class Task extends Controller
            }elseif($rewardType == 2){
                $rewardMoney = $v['reward'];
            }else{
-               $rewardMoney = $v['money'] * ($v['reward']/100);
+               $rewardMoney = 0;
+//               $rewardMoney = $v['money'] * ($v['reward']/100);
            }
            $rewardMoney = Share::getDecimalMoney($rewardMoney);
+
            //奖励发放
            foreach($userSign as $t => $val){
                $challengeNumber = $val['signNumber'];
@@ -145,7 +148,10 @@ class Task extends Controller
                $joinId = $val['joinId'];
                if($rewardType == 1){
                    $userMoney = $rewardMoney;
+               }elseif($rewardType == 2){
+                   $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
                }else{
+                   $rewardMoney = $val['joinMoney'] * ($v['reward']/100);
                    $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
                }
                //奖励发放
