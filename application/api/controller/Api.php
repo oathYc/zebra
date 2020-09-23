@@ -1558,7 +1558,7 @@ class Api extends Controller
 //                db('pass_join')->where('id',$join['id'])->update(['isReward'=>1]);
             }
             //是否在未报名时间段内 是的话签到成功及挑战结束
-            Share::checkSignTime($pass,join['id']);
+            Share::checkSignTime($pass,$join['id']);
             //修改签到状态
             db('pass_join')->where('id',$join['id'])->update(['signStatus'=>0]);
             Share::jsonData(1);
