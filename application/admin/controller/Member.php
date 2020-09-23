@@ -88,8 +88,57 @@ class Member extends Base
             1=>'打卡挑战',
             2=>'房间挑战',
             3=>'闯关挑战',
+            4=>'余额提现',
+        ];
+        $this->assign('types',$typeArr);
+        return $this->fetch();
+    }
+    // 用户余额记录
+    public function userMoney()
+    {
+        if (request()->isAjax()) {
+
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+
+            $where = [];
+            if ($param['type'] != 99) {
+                $where['moneyType'] = $param['type'];
+            }
+            if($param['id']){
+                $where['uid'] = $param['id'];
+            }
+
+            $result = db('user_money_record')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
+            foreach ($result as $key => $vo) {
+                $user = db('member')->where('id',$vo['uid'])->find();
+                // 优化显示头像
+                $result[$key]['avatar'] = '<img src="' . $user['avatar'] . '" width="40px" height="40px">';
+                $result[$key]['nickname'] = $user['nickname'];
+                // 生成操作按钮
+//                $result[$key]['operate'] = $this->makeBtn($vo['id']);
+                $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
+                $result[$key]['moneyTypeStr'] = self::getMoneyTypeStr($vo['moneyType']);
+                $result[$key]['typeStr'] = $vo['type']==1?'收入':'支出';
+            }
+
+            $return['total'] = db('user_money_record')->where($where)->count();  //总数据
+            $return['rows'] = $result;
+
+            return json($return);
+
+        }
+        $typeArr = [
+            0=>'余额充值',
+            1=>'打卡挑战',
+            2=>'房间挑战',
+            3=>'闯关挑战',
             4=>'余额体现',
         ];
+        $id = input('id');
+        $this->assign('id',$id);
         $this->assign('types',$typeArr);
         return $this->fetch();
     }
@@ -101,7 +150,7 @@ class Member extends Base
             1=>'打卡挑战',
             2=>'房间挑战',
             3=>'闯关挑战',
-            4=>'余额体现',
+            4=>'余额提现',
         ];
         if(isset($arr[$moneyType])){
             return $arr[$moneyType];
@@ -127,7 +176,8 @@ class Member extends Base
         $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 详情</button></a> ' ;
         $operate .= '<a href="javascript:userStatus(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
         $operate .= '<i class="fa fa-trash-o"></i> '.$statusStr.'</button></a> ';
-
+        $operate .= '<a href="/admin/member/userMoney?id='.$id.'">';
+        $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 余额记录</button></a> ' ;
         return $operate;
     }
 
