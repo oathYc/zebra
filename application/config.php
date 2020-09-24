@@ -56,8 +56,8 @@ return [
     'default_lang'      => 'zh-cn',
     // URL伪静态后缀
     'url_html_suffix'   => false,
-//    'session'=>[
-//        'expire'=>8640000,
-//    ]
+    'SESSION_OPTIONS'=>[
+        'expire'=>8640000,
+    ]
 
 ];
