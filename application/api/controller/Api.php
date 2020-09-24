@@ -1479,6 +1479,14 @@ class Api extends Controller
         if($status != 1 && $status != 2){
             Share::jsonData(0,'','修改状态不对');
         }
+        if($status == 2){//判断是否在禁止报名时间内 在的话只能选择停止结束
+            $now = date('H:i:s');
+            $beginTime = $pass['beginTimeStr'].":00";
+            $endTime = $pass['endTimeStr'].":59";
+            if($now >= $beginTime && $now <= $endTime){
+                Share::jsonData(0,'','您当前在活动禁止报名时间内只能选择停止挑战');
+            }
+        }
         $update = [
             'signStatus'=>$status
         ];
