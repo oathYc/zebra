@@ -1686,6 +1686,7 @@ class Api extends Controller
         $where = [
             'uid'=>$uid,
             'type'=>1,
+            'isReward'=>1,//1-奖励 0-不是奖励
         ];
         $arr = [1,2,3];
         if($type != 99 && in_array($type,$arr)){

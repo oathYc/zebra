@@ -100,6 +100,14 @@ class Task extends Controller
            $beginTime = strtotime(date("Y-m-d",$v['createTime']));
            $todayTime = strtotime($date);
            $number = floor(($todayTime-$beginTime)/86400);
+           if($number == 0){
+               $number = 1;//处理为第一期
+           }else{
+               $reduceSecond = $v['createTime'] - $beginTime;
+               if($reduceSecond < 3600*8){//在今天凌晨到八点之前创建的活动
+                   $number += 1;
+               }
+           }
            $allJoin = db('pass_join')->where(['passId'=>$v['id'],'number'=>$number,'isReward'=>0])->select();
            $userSign = [];//用户签到信息
            $totalChallenge = count($allJoin);//挑战人数
@@ -360,7 +368,7 @@ class Task extends Controller
            $addMoney = $user['money'] + $userMoney;
            db('member')->where('id',$v['uid'])->update(['money'=>$addMoney]);
            //余额记录添加
-           Share::userMoneyRecord($v['uid'],$userMoney,'房间挑战奖励发放-'.$room['name'],1,2);
+           Share::userMoneyRecord($v['uid'],$userMoney,'房间挑战奖励发放-'.$room['name'],1,2,1);
            //收益记录
            Share::userMoneyGet($v['uid'],$userMoney,2);
            Share::rewardRecord($v['uid'],$userMoney,$room['id'],2,$v['id']);
