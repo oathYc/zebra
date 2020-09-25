@@ -1252,13 +1252,13 @@ class Share extends \think\Model
         ];
         db('share_reward')->insert($insert);
         //记录邀请奖励收益
-        self::userMoneyGet($uid,$money,4);
+        self::userMoneyGet($sharerUid,$money,4);
         //余额增加
         $addMoney = $sharer['money'] + $money;
         db('member')->where('id',$sharer['id'])->update(['money'=>$addMoney]);
         //余额变化记录
         $remark = $type==4?'邀请新人奖励':'参加活动挑战奖励-'.$objectStr;
-        self::userMoneyRecord($uid,$money,$remark,1,5);
+        self::userMoneyRecord($sharerUid,$money,$remark,1,5);
     }
     /**
      * 闯关
