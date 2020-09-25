@@ -1614,7 +1614,7 @@ class Api extends Controller
         $offset = $pageSize*($page-1);
         $total = db('pass_sign')->where(['uid'=>$uid])->count();
         $data = db('pass_sign')->where(['uid'=>$uid])->limit($offset,$pageSize)->order('createTime','desc')->select();
-        foreach($data as $k => $v){
+        foreach($data as $k => $v){//打卡状态  0-未打卡 1-已打卡 2-打卡失败
             $join = db('pass_join')->where('id',$v['joinId'])->find();
             $data[$k]['joinNumber'] = $join['number'];
             $pass = db('pass')->where('id',$v['passId'])->find();
@@ -1624,6 +1624,13 @@ class Api extends Controller
                 $pass = [];
             }
             $data[$k]['pass'] = $pass?$pass:[];
+            if($v['status'] == 0){//判断是未打卡还是打卡失败
+                $now = date('Y-m-d H:i:s');
+                if($v['signTimeEnd'] < $now){
+                    $data[$k]['status'] = 2;//打卡失败
+                    db('pass_sign')->where('id',$v['id'])->update(['status'=>2]);
+                }
+            }
         }
         $return = [
             'total'=>$total,
