@@ -277,10 +277,15 @@ class Pass extends Base
 
             $limit = $param['pageSize'];
             $offset = ($param['pageNumber'] - 1) * $limit;
-
-            $where = [
-                'status'=>1,//获取已签到的
-            ];
+            $status = $param['status'];
+            $uid = $param['uid'];
+            $where = [];
+            if($status != 99){
+                $where['status'] = $status;
+            }
+            if($uid){
+                $where['uid'] = $uid;
+            }
 
             $result = db('pass_sign')->where($where)->limit($offset, $limit)->order('signTime', 'desc')->select();
             foreach ($result as $key => $vo) {
@@ -295,7 +300,10 @@ class Pass extends Base
                 //报名信息
                 $passJoin = db('pass_join')->where('id',$vo['joinId'])->find();
                 $result[$key]['joinTime'] = $passJoin['joinTime'];
-
+                $result[$key]['statusStr'] = self::getStatusStr($vo['status']);
+                //期数
+                $joinNumber = db('pass_join')->where('id',$vo['joinId'])->find()['number'];
+                $result[$key]['joinNumber'] = '第'.$joinNumber.'期'.$vo['number'].'轮';
                 //获取报名者信息
                 $user = db('member')->where('id',$vo['uid'])->find();
                 $result[$key]['nickname'] = $user['nickname'];
@@ -305,7 +313,29 @@ class Pass extends Base
             return json($return);
 
         }
+        //处理签到失败的数据
+        $now = date('Y-m-d H:i:s');
+        db('pass_sign')->where(['signTimeEnd'=>['<',$now],'status'=>0])->update(['status'=>1]);
+        $statusArr = [
+            0=>'待签到',
+            1=>'已签到',
+            2=>'签到失败'
+        ];
+        $this->assign('statusArr',$statusArr);
         return $this->fetch();
+    }
+    //签到状态
+    public static function getStatusStr($status){
+        $arr = [
+            0=>'待签到',
+            1=>'已签到',
+            2=>'签到失败'
+        ];
+        if(isset($arr[$status])){
+            return $arr[$status];
+        }else{
+            return '';
+        }
     }
     //排行榜
     public function ranking(){

@@ -1236,10 +1236,12 @@ class Share extends \think\Model
             return false;
         }
         $sharerUid = $sharer['id'];
-        //判断是否已经奖励过该类活动
-        $hadReward = db('share_reward')->where(['uid'=>$sharerUid,'shareUid'=>$uid,'type'=>$type])->find();
-        if($hadReward){
-            return false;
+        if($type != 4){
+            //判断是否已经奖励过该类活动
+            $hadReward = db('share_reward')->where(['uid'=>$sharerUid,'shareUid'=>$uid,'type'=>$type])->find();
+            if($hadReward){
+                return false;
+            }
         }
         $money = $type==4?8.8:3;//新人奖励8.8  参加活动奖励3元
         $insert = [

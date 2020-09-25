@@ -20,6 +20,27 @@
         </div>
         <div class="ibox-content">
             <!--搜索框开始-->
+            <form id='commentForm' role="form" method="post" class="form-inline pull-right">
+                <div class="content clearfix m-b">
+                    <div class="form-group">
+                        <label>签到状态：</label>
+                        <select class="form-control" id="status">
+                            <option value="0">全部</option>
+                            {foreach name="statusArr" item="val" key="ke"}
+                            <option value="{$ke}">{$val}</option>
+                            {/foreach}
+                        </select>
+                    </div>&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        <label>用户uid：</label>
+                        <input class="form-control" id="uid" />
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" type="button" style="margin-top:5px" id="search"><strong>搜 索</strong>
+                        </button>
+                    </div>
+                </div>
+            </form>
             <!--搜索框结束-->
             <div class="example-wrap">
                 <div class="example">
@@ -74,7 +95,8 @@
                 var param = {
                     pageNumber: params.pageNumber,
                     pageSize: params.pageSize,
-                    searchText:$('#username').val()
+                    status:$('#status').val(),
+                    uid:$('#uid').val(),
                 };
                 return param;
             },
