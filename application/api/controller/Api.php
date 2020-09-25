@@ -1479,6 +1479,14 @@ class Api extends Controller
         if($status != 1 && $status != 2){
             Share::jsonData(0,'','修改状态不对');
         }
+        if($status == 2){//判断是否在禁止报名时间内 在的话只能选择停止结束
+            $now = date('H:i:s');
+            $beginTime = $pass['beginTimeStr'].":00";
+            $endTime = $pass['endTimeStr'].":59";
+            if($now >= $beginTime && $now <= $endTime){
+                Share::jsonData(0,'','您当前在活动禁止报名时间内只能选择停止挑战');
+            }
+        }
         $update = [
             'signStatus'=>$status
         ];
@@ -1558,7 +1566,7 @@ class Api extends Controller
 //                db('pass_join')->where('id',$join['id'])->update(['isReward'=>1]);
             }
             //是否在未报名时间段内 是的话签到成功及挑战结束
-            Share::checkSignTime($pass,join['id']);
+            Share::checkSignTime($pass,$join['id']);
             //修改签到状态
             db('pass_join')->where('id',$join['id'])->update(['signStatus'=>0]);
             Share::jsonData(1);
@@ -1606,7 +1614,7 @@ class Api extends Controller
         $offset = $pageSize*($page-1);
         $total = db('pass_sign')->where(['uid'=>$uid])->count();
         $data = db('pass_sign')->where(['uid'=>$uid])->limit($offset,$pageSize)->order('createTime','desc')->select();
-        foreach($data as $k => $v){
+        foreach($data as $k => $v){//打卡状态  0-未打卡 1-已打卡 2-打卡失败
             $join = db('pass_join')->where('id',$v['joinId'])->find();
             $data[$k]['joinNumber'] = $join['number'];
             $pass = db('pass')->where('id',$v['passId'])->find();
@@ -1616,6 +1624,13 @@ class Api extends Controller
                 $pass = [];
             }
             $data[$k]['pass'] = $pass?$pass:[];
+            if($v['status'] == 0){//判断是未打卡还是打卡失败
+                $now = date('Y-m-d H:i:s');
+                if($v['signTimeEnd'] < $now){
+                    $data[$k]['status'] = 2;//打卡失败
+                    db('pass_sign')->where('id',$v['id'])->update(['status'=>2]);
+                }
+            }
         }
         $return = [
             'total'=>$total,
@@ -1686,6 +1701,7 @@ class Api extends Controller
         $where = [
             'uid'=>$uid,
             'type'=>1,
+            'isReward'=>1,//1-奖励 0-不是奖励
         ];
         $arr = [1,2,3];
         if($type != 99 && in_array($type,$arr)){

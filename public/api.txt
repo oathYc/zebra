@@ -334,6 +334,7 @@
             signTimeBegin       签到开始时间
             signTimeEnd         签到结束时间
             number              第几轮签到
+            status              0-未打卡 1-已打卡 2-打卡失败
 
 接口名称    分享有奖
 接口路径    shareReward

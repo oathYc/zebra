@@ -136,7 +136,7 @@ class Share extends \think\Model
      * type  1-新增 2-减少
      * $moneyType 0-充值 1-打卡 2-房间挑战 3-闯关 4-余额提现  5-下级用户奖励
      */
-    public static function userMoneyRecord($uid,$money,$remark,$type,$moneyType){
+    public static function userMoneyRecord($uid,$money,$remark,$type,$moneyType,$isReward=0){
         $params = [
             'uid'=>$uid,
             'money'=>$money,
@@ -144,6 +144,7 @@ class Share extends \think\Model
             'type'=>$type,
             'createTime'=>time(),
             'moneyType'=>$moneyType,
+            'isReward'=>$isReward
         ];
         db('user_money_record')->insert($params);
     }
@@ -604,7 +605,7 @@ class Share extends \think\Model
         $user = db('member')->where('id',$uid)->find();
         $addMoney = $user['money'] + $money;
         db('member')->where('id',$uid)->update(['money'=>$addMoney]);
-        self::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$clock['name'],1,1);
+        self::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$clock['name'],1,1,1);
         self::rewardRecord($uid,$money,$clock['id'],1,$join['id']);
         self::userMoneyGet($uid,$money,1);
     }
@@ -1271,7 +1272,7 @@ class Share extends \think\Model
                 $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
                 if($res){
                     //余额记录添加
-                    self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'].'第'.$number.'期',1,3);
+                    self::userMoneyRecord($uid,$rewardMoney,'闯关活动挑战奖励-'.$pass['name'].'第'.$number.'期',1,3,1);
                     //收益记录
                     self::userMoneyGet($uid,$rewardMoney,3);
                     //收益明细记录
