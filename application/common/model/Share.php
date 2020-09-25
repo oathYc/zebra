@@ -1227,7 +1227,7 @@ class Share extends \think\Model
     public static function shareReward($uid,$objectId,$objectStr,$type=4){
         //判断用户是有有邀请人
         $user = db('member')->where('id',$uid)->find();
-        if(!$user || $user['inviterCode']){
+        if(!$user || !$user['inviterCode']){
             return false;
         }
         $sharer = db('member')->where('inviteCode',$user['inviterCode'])->find();

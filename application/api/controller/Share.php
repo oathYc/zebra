@@ -75,7 +75,8 @@ class Share extends Controller
                     ];
                     db('member')->insert($params);
                     //邀请新人奖励
-                    \app\common\model\Share::shareReward($inviter['id'],'','邀请新人奖励',4);
+                    $user = db('member')->where('unionid',$unionid)->find();
+                    \app\common\model\Share::shareReward($user['id'],'','邀请新人奖励',4);
                 }
             }
 
