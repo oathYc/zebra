@@ -315,7 +315,7 @@ class Pass extends Base
         }
         //处理签到失败的数据
         $now = date('Y-m-d H:i:s');
-        db('pass_sign')->where(['signTimeEnd'=>['<',$now],'status'=>0])->update(['status'=>1]);
+        db('pass_sign')->where(['signTimeEnd'=>['<',$now],'status'=>0])->update(['status'=>2]);
         $statusArr = [
             0=>'待签到',
             1=>'已签到',
