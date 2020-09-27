@@ -563,6 +563,25 @@ class Api extends Controller
         //当前报名人数
         $joinCount = db('room_join')->where('roomId',$roomId)->count();
         $joinCount = $joinCount?$joinCount:0;
+        if($joinCount){
+            $userList = db('room_join')->where('roomId',$roomId)->select();
+            foreach($userList as $o => $p){
+                $user = db('member')->where('id',$p['uid'])->find();
+                if(!$user){
+                    $nickname = '';
+                    $avatar = '';
+                }else{
+                    $nickname = $user['nickname'];
+                    $avatar = $user['avatar'];
+                }
+                $userList[$o]['nickname'] = $nickname;
+                $userList[$o]['avatar'] = $avatar;
+                $userList[$o]['joinTime'] = date('Y-m-d H:i:s',$p['createTime']);
+            }
+        }else{
+            $userList = [];
+        }
+        $room['joinUserList'] = $userList;
         $room['joinNum'] = $joinCount;
         //报名金额
         $joinMoney = db('room_join')->where('roomId',$roomId)->sum('joinMoney');
