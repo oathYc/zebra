@@ -25,10 +25,8 @@ class Token extends Api
      * @param $clientInfo
      * @return int
      */
-    public static function setAccessToken ()
+    public static function setAccessToken ($uid)
     {
-//        $uid = session('uid');
-        $uid = $_SESSION['uid'];
         if(!$uid){
             Share::jsonData(0,'','请先登录');
         }
