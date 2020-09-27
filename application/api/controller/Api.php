@@ -38,7 +38,8 @@ class Api extends Controller
         }
     }
     protected  function checkUid(){
-        $uid = session('uid');
+//        $uid = session('uid');
+        $uid = $_SESSION['uid'];
         if(!$uid){
             Share::jsonData(100,'','你还没登录');
         }
@@ -132,8 +133,10 @@ class Api extends Controller
         if($res){//登录成功
             $user = db('member')->where('openid',$openid)->find();
             $uid = $user['id'];
-            session('uid',$uid);
-            session('login',time());
+//            session('uid',$uid);
+//            session('login',time());
+            $_SESSION['uid'] = $uid;
+            $_SESSION['login'] = time();
             //打卡次数
             $signNum = Share::getUserSignNum($uid);
             //累计收益
@@ -286,8 +289,10 @@ class Api extends Controller
         Share::checkEmptyParams(['phone'=>$phone,'password'=>$password]);
         $user = db('member')->where(['phone'=>$phone,'password'=>md5($password)])->find();
         if($user){
-            session('uid',$user['id']);
-            session('login',time());
+//            session('uid',$user['id']);
+//            session('login',time());
+            $_SESSION['uid'] = $user['id'];
+            $_SESSION['login'] = time();
             //记录用户登录
             self::saveUserLogin($user['id'],1);//1-账号登录 2-微信登录
             $token = Token::setAccessToken();
