@@ -25,7 +25,7 @@ class Token extends Api
      * @param $clientInfo
      * @return int
      */
-    public static function setAccessToken ($uid)
+    public static function setAccessToken ($uid=0)
     {
         if(!$uid){
             Share::jsonData(0,'','请先登录');

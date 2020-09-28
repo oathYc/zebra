@@ -40,7 +40,7 @@ class Api extends Controller
     }
     protected  function checkUid(){
 //        $uid = session('uid');
-        $uid = $_SESSION['uid'];
+        $uid = isset($_SESSION['uid'])?$_SESSION['uid']:0;
         if(!$uid){
             Share::jsonData(100,'','你还没登录');
         }
@@ -309,7 +309,7 @@ class Api extends Controller
      * 获取token
      */
     public function getToken(){
-        $uid = $_SESSION['uid'];
+        $uid = isset($_SESSION['uid'])?$_SESSION['uid']:0;
         Token::setAccessToken($uid);
     }
     /**
