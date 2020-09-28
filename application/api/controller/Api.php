@@ -10,6 +10,7 @@ use app\api\model\Member;
 use app\common\model\Share;
 use extend\PinYin;
 use think\Controller;
+use think\Cookie;
 use think\Db;
 use think\Request;
 use think\Session;
@@ -40,7 +41,13 @@ class Api extends Controller
     }
     protected  function checkUid(){
 //        $uid = session('uid');
-        $uid = isset($_SESSION['uid'])?$_SESSION['uid']:0;
+        $has = Cookie::has('uid');
+        if($has){
+            $uid = Cookie::get('ud');
+        }else{
+            $uid  = 0;
+        }
+//        $uid = isset($_SESSION['uid'])?$_SESSION['uid']:0;
         if(!$uid){
             Share::jsonData(100,'','你还没登录');
         }
@@ -136,8 +143,9 @@ class Api extends Controller
             $uid = $user['id'];
 //            session('uid',$uid);
 //            session('login',time());
-            $_SESSION['uid'] = $uid;
-            $_SESSION['login'] = time();
+//            $_SESSION['uid'] = $uid;
+//            $_SESSION['login'] = time();
+            Cookie::set('uid',$uid,8640000);
 //            var_dump($_SESSION['uid']);die;
             //打卡次数
             $signNum = Share::getUserSignNum($uid);
@@ -293,8 +301,9 @@ class Api extends Controller
         if($user){
 //            session('uid',$user['id']);
 //            session('login',time());
-            $_SESSION['uid'] = $user['id'];
-            $_SESSION['login'] = time();
+//            $_SESSION['uid'] = $user['id'];
+//            $_SESSION['login'] = time();
+            Cookie::set('uid',$user['id'],8640000);
             //记录用户登录
             self::saveUserLogin($user['id'],1);//1-账号登录 2-微信登录
             $token = Token::setAccessToken();
@@ -309,7 +318,13 @@ class Api extends Controller
      * 获取token
      */
     public function getToken(){
-        $uid = isset($_SESSION['uid'])?$_SESSION['uid']:0;
+        $has = Cookie::has('uid');
+        if($has){
+            $uid = Cookie::get('uid');
+        }else{
+            $uid = 0;
+        }
+//        $uid = isset($_SESSION['uid'])?$_SESSION['uid']:0;
         Token::setAccessToken($uid);
     }
     /**
