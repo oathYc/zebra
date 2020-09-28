@@ -43,7 +43,7 @@ class Api extends Controller
 //        $uid = session('uid');
         $has = Cookie::has('uid');
         if($has){
-            $uid = Cookie::get('ud');
+            $uid = Cookie::get('uid');
         }else{
             $uid  = 0;
         }
@@ -146,7 +146,7 @@ class Api extends Controller
 //            $_SESSION['uid'] = $uid;
 //            $_SESSION['login'] = time();
             Cookie::set('uid',$uid,8640000);
-//            var_dump($_SESSION['uid']);die;
+//            var_dump(Cookie::get('uid'));die;
             //打卡次数
             $signNum = Share::getUserSignNum($uid);
             //累计收益
