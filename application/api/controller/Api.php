@@ -595,7 +595,7 @@ class Api extends Controller
         $joinCount = db('room_join')->where('roomId',$roomId)->count();
         $joinCount = $joinCount?$joinCount:0;
         if($joinCount){
-            $userList = db('room_join')->where('roomId',$roomId)->select();
+            $userList = db('room_join')->where('roomId',$roomId)->order('createTime','desc')->select();
             foreach($userList as $o => $p){
                 $user = db('member')->where('id',$p['uid'])->find();
                 if(!$user){
@@ -896,9 +896,28 @@ class Api extends Controller
             $clock['hadSign'] = 0;//已签到次数
             $clock['joinId'] = 0;
         }
-        //参与金额
-        $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>['>',0]])->sum('joinMoney');
+        //参与金额 参与中的
+        $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
+        //参与人数
+        $joinData = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->order('createTime','desc')->select();
+        $joinNumber = count($joinData)?count($joinData):0;
+        $userList = $joinData?$joinData:[];
+        foreach($userList as $o => $p){
+            $user = db('member')->where('id',$p['uid'])->find();
+            if(!$user){
+                $nickname = '';
+                $avatar = '';
+            }else{
+                $nickname = $user['nickname'];
+                $avatar = $user['avatar'];
+            }
+            $userList[$o]['nickname'] = $nickname;
+            $userList[$o]['avatar'] = $avatar;
+            $userList[$o]['joinTime'] = date('Y-m-d H:i:s',$p['createTime']);
+        }
         $clock['joinMoney'] = $joinMoney?$joinMoney:0;
+        $clock['joinNumber'] = $joinNumber;
+        $clock['joinUserList'] = $userList;
         //昨日收益金额
         $clock['yesterdayMoney'] = Share::getYesterdayMoneyByClock($uid,$id,$isJoin['id']);
         //打卡报名金额获取

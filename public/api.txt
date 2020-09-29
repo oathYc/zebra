@@ -180,6 +180,8 @@
             prices                      报名金额数据 数组
             todaySign                   今日签到  0-为签到 1-已签到
             hadSign                     已签到次数
+            joinNumber                  当前参与人数
+            joinUserList                当前参与人数信息
 
 
 接口名称    打卡活动-打卡报名
