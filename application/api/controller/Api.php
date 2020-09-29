@@ -402,6 +402,14 @@ class Api extends Controller
         $signNum = Share::getUserSignNum($uid);
         //累计收益
         $moneyGet = Share::getUserMoneyGet($uid);
+        //版本信息获取
+        $version = db('system')->where('type',4)->find();
+        if($version){
+            $number = $version['content'];
+        }else{
+            $number = 0;
+        }
+        $user['version'] = $number;
         $user['signNum'] = $signNum;
         $user['moneyGet'] = $moneyGet;
         Share::jsonData(1,$user);
@@ -1951,7 +1959,9 @@ class Api extends Controller
 
         //elsx文件路径
         $inputFileName = "./qdexcel.xlsx";
-        $oldStr = '[{"group_id":1323,"promotion_second_channel_id":15129},{"group_id":1324,"promotion_second_channel_id":15179},{"group_id":1325,"promotion_second_channel_id":15180},{"group_id":1326,"promotion_second_channel_id":15184},{"group_id":1327,"promotion_second_channel_id":15185},{"group_id":1328,"promotion_second_channel_id":15186},{"group_id":1329,"promotion_second_channel_id":15187},{"group_id":1330,"promotion_second_channel_id":15216}]';
+        $oldStr = '[{"group_id":1323,"promotion_second_channel_id":15129},{"group_id":1324,"promotion_second_channel_id":15179}]';
+        $oldArr = json_decode($oldStr,true);
+        var_dump($oldArr);die;
         // 读取excel文件
         try {
             $inputFileType = \PHPExcel_IOFactory::identify($inputFileName);
@@ -1980,9 +1990,7 @@ class Api extends Controller
                 ];
             }
         }
-        $oldArr = json_decode($oldStr,true);
         var_dump(count($insertAll));
-        var_dump(count($oldArr));
         foreach($insertAll as $k =>$v){
             if(!in_array($v,$oldArr)){
                 $oldArr[] = $v;
