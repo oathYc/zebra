@@ -175,7 +175,7 @@ class Member extends Base
         $operate .= '<a href="/admin/member/detailUser?id='.$id.'">';
         $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 详情</button></a> ' ;
         $operate .= '<a href="javascript:userStatus(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
-        $operate .= '<i class="fa fa-trash-o"></i> '.$statusStr.'</button></a> ';
+        $operate .= '<i class="fa fa-paste"></i> '.$statusStr.'</button></a> ';
         $operate .= '<a href="/admin/member/userMoney?id='.$id.'">';
         $operate .= '<button type="button" class="btn btn-info btn-sm"><i class="fa fa-institution"></i> 余额记录</button></a> ' ;
         return $operate;
