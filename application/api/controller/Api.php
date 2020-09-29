@@ -1879,11 +1879,11 @@ class Api extends Controller
         include "./../extend/PHPExcel-1.8/Classes/PHPExcel/IOFactory.php";
         include_once "./../extend/PinYin.php";
 
-//elsx文件路径
+        //elsx文件路径
         $inputFileName = "./excel.xlsx";
 
         date_default_timezone_set('PRC');
-// 读取excel文件
+        // 读取excel文件
         try {
             $inputFileType = \PHPExcel_IOFactory::identify($inputFileName);
             $objReader = \PHPExcel_IOFactory::createReader($inputFileType);
@@ -1892,12 +1892,12 @@ class Api extends Controller
 
         }
 
-// 确定要读取的sheet，什么是sheet，看excel的右下角，真的不懂去百度吧
+        // 确定要读取的sheet，什么是sheet，看excel的右下角，真的不懂去百度吧
         $sheet = $objPHPExcel->getSheet(0);
         $highestRow = $sheet->getHighestRow();
         $highestColumn = $sheet->getHighestColumn();
 
-// 获取excel文件的数据，$row=2代表从第二行开始获取数据
+        // 获取excel文件的数据，$row=2代表从第二行开始获取数据
         $insertAll = [];
         $createDate = date('Y-m-d H:i:s');
         $status = 1;//0-删除 1-正常
@@ -1930,7 +1930,7 @@ class Api extends Controller
     /**
      * 测试转换
      */
-    public function doExcel(){
+    public function doExcel2(){
         var_dump(preg_match('//','ddd'));die;
         include_once "./../extend/PinYin.php";
 //        $str = "O'nyong-nyong热";
@@ -1938,6 +1938,58 @@ class Api extends Controller
         $str = "埃博拉病毒病，病毒未特指";
         $res = PinYin::instance()->pinyin($str,'first','/，/');
         var_dump($res);
+    }
+
+    /**
+     * excel读取
+     * 渠道小组数据获取
+     */
+    public function doExcel(){
+        //引入类库
+        include "./../extend/PHPExcel-1.8/Classes/PHPExcel/IOFactory.php";
+        include_once "./../extend/PinYin.php";
+
+        //elsx文件路径
+        $inputFileName = "./qdexcel.xlsx";
+        $oldStr = '[{"group_id":1323,"promotion_second_channel_id":15129},{"group_id":1324,"promotion_second_channel_id":15179},{"group_id":1325,"promotion_second_channel_id":15180},{"group_id":1326,"promotion_second_channel_id":15184},{"group_id":1327,"promotion_second_channel_id":15185},{"group_id":1328,"promotion_second_channel_id":15186},{"group_id":1329,"promotion_second_channel_id":15187},{"group_id":1330,"promotion_second_channel_id":15216}]';
+        // 读取excel文件
+        try {
+            $inputFileType = \PHPExcel_IOFactory::identify($inputFileName);
+            $objReader = \PHPExcel_IOFactory::createReader($inputFileType);
+            $objPHPExcel = $objReader->load($inputFileName);
+        } catch(\Exception $e) {
+
+        }
+
+        // 确定要读取的sheet，什么是sheet，看excel的右下角，真的不懂去百度吧
+        $sheet = $objPHPExcel->getSheet(0);
+        $highestRow = $sheet->getHighestRow();
+        $highestColumn = $sheet->getHighestColumn();
+
+        // 获取excel文件的数据，$row=2代表从第二行开始获取数据
+        $insertAll = [];
+        for ($row = 2; $row <= $highestRow; $row++){
+            //数组信息  0-章节编码  1-例子的中文名称 2-是否为有效码
+            $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+            $rowData = $rowData[0];
+//这里得到的rowData都是一行的数据，得到数据后自行处理，我们这里只打出来看看效果
+            if((count($rowData) >=4 )){
+                $insertAll[] = [
+                    'group_id'=>$rowData[0],
+                    'promotion_second_channel_id'=>$rowData[3],
+                ];
+            }
+        }
+        $oldArr = json_decode($oldStr,true);
+        var_dump(count($insertAll));
+        var_dump(count($oldArr));
+        foreach($insertAll as $k =>$v){
+            if(!in_array($v,$oldArr)){
+                $oldArr[] = $v;
+            }
+        }
+        var_dump(count($oldArr));
+        var_dump(json_encode($oldArr));
     }
 
 }

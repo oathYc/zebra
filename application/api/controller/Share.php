@@ -39,6 +39,9 @@ class Share extends Controller
         $oauth2Url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=".$this->appid."&secret=".$this->secret."&code=$code&grant_type=authorization_code";
         $oauth2 = $this->getJson($oauth2Url);
 
+        if(!isset($oauth2['access_token'])){
+            \app\common\model\Share::jsonData(0,'','服务器出错，请退出刷新重试');
+        }
         $access_token = $oauth2["access_token"];
 
         $openid = $oauth2['openid'];
@@ -47,6 +50,10 @@ class Share extends Controller
         $userinfo = $this->getJson($get_user_info_url);
 
         file_put_contents("./uploads/invite_user.txt",json_encode($userinfo).PHP_EOL,FILE_APPEND);
+
+        if(!isset($userinfo['unionid'])){
+            \app\common\model\Share::jsonData(0,'','服务器出错，请退出刷新重试');
+        }
 
         $unionid=$userinfo["unionid"];
 
