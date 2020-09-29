@@ -123,7 +123,7 @@ class Api extends Controller
                 'nickname'=>$name,
                 'unionid'=>$unionid,
                 'openid'=>$openid,
-//                'avatar'=>$headimg,
+                'avatar'=>$headimg,
                 'updateTime'=>time(),
             ];
             if($user){
