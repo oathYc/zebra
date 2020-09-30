@@ -1754,6 +1754,7 @@ class Api extends Controller
             'money'=>$user['money'],
             'total'=>$total,
             'data'=>$data,
+            'qrcode'=>$user['qrcode'],
         ];
         Share::jsonData(1,$return);
     }
@@ -1791,6 +1792,7 @@ class Api extends Controller
             'total'=>$total,
             'data'=>$data,
             'historyProfit'=>$totalAdd?$totalAdd:0,
+            'qrcode'=>$user['qrcode'],
         ];
         Share::jsonData(1,$return);
     }
@@ -1821,6 +1823,21 @@ class Api extends Controller
         Share::checkEmptyParams(['realName'=>$realName,'card'=>$card]);
         db('member')->where('id',$uid)->update(['real_name'=>$realName,'card'=>$card,'check'=>1]);
         Share::jsonData(1,'','提交成功');
+    }
+    /**
+     * 金额体现
+     * 体现二维码上传
+     */
+    public function qrcodeUpload(){
+        $qrcode = input('qrcode');
+        Share::checkEmptyParams(['qrcode'=>$qrcode]);
+        $uid = $this->uid;
+        $res = db('member')->where('id',$uid)->update(['updateTime'=>time(),'qrcode'=>$qrcode]);
+        if($res){
+            Share::jsonData(1);
+        }else{
+            Share::jsonData(0,'','上传失败，请稍后重试');
+        }
     }
     /**
      * 金额体现

@@ -1150,6 +1150,9 @@ class Share extends \think\Model
         if(!$user){
             self::jsonData(0,'','没有该用户');
         }
+        if(empty($user['qrcode'])){
+            self::jsonData(0,'','你还没有上传提现二维码，请先上传提现二维码。');
+        }
         $returnMoney = $money + $procedures;
         if($user['money'] < $returnMoney){
             self::jsonData(0,'','你的余额（'.$user['money'].'）不足');
