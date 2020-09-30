@@ -1850,9 +1850,9 @@ class Api extends Controller
         $phone = input('phone','');//提现手机号  支付宝必填
         Share::checkEmptyParams(['money'=>$money]);
         $type = 1;
-        if($type ==2 && !$phone){
-            Share::jsonData(0,'','请填写支付宝提现手机号');
-        }
+//        if($type ==2 && !$phone){
+//            Share::jsonData(0,'','请填写支付宝提现手机号');
+//        }
         if($phone){
             $isPhone = Share::isMobile($phone);
             if(!$isPhone){
