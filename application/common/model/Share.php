@@ -1476,7 +1476,7 @@ class Share extends \think\Model
         if(!$returnPercent){
             return 0;
         }
-        $content = $returnPercent['content'];
+        $content = $returnPercent['content']?:0;
         $return = ($content/100)*$money;
         $returnMoney = self::getDecimalMoney($return);
         return $returnMoney;

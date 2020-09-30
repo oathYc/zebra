@@ -305,9 +305,9 @@ class System extends Base
         if(request()->isPost()){
 
             $param = input('post.');
-            if(empty($param['content'])){
-                return json(['code' => -1, 'data' => '', 'msg' => '内容不能为空']);
-            }
+//            if(empty($param['content'])){
+//                return json(['code' => -1, 'data' => '', 'msg' => '内容不能为空']);
+//            }
             try{
                 $param['createTime'] = time();
                 $param['type'] = $type;
