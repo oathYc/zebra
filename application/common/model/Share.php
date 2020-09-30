@@ -1445,4 +1445,40 @@ class Share extends \think\Model
             db('pass_join')->where('id',$joinId)->update(['status'=>1]);
         }
     }
+    /**
+     * 检查是否在提现设置的时间段内
+     */
+    public static function checkReturnTime(){
+        $now = date('H:i');
+        $returnTime = db('system')->where('type',6)->find();
+        if($returnTime){
+            $times = explode('-',$returnTime['content']);
+            if(isset($times[0]) && $times[0] && isset($times[1]) && $times[1]){
+                if($now < $times[0] || $now > $times[1]){
+                    self::jsonData(0,'','你当前不在提现时间内（'.$returnTime['content'].'）');
+                }
+            }elseif(isset($times[0]) && $times[0]){
+                if($now < $times[0]){
+                    self::jsonData(0,'','提现时间必须在'.$times[0].'后');
+                }
+            }elseif(isset($times[1]) && $times[1]){
+                if($now > $times[1]){
+                    self::jsonData(0,'','提现时间必须在'.$times[1].'前');
+                }
+            }
+        }
+    }
+    /**
+     * 获取提现费用
+     */
+    public static function getReturnPercent($money){
+        $returnPercent = db('system')->where('type',7)->find();
+        if(!$returnPercent){
+            return 0;
+        }
+        $content = $returnPercent['content'];
+        $return = ($content/100)*$money;
+        $returnMoney = self::getDecimalMoney($return);
+        return $returnMoney;
+    }
 }

@@ -418,15 +418,25 @@ class Member extends Base
             $param = input('param.');
             $uid = $param['id'];
             $money = $param['money'];
+            $remark = $param['remark'];
             $user = db('member')->where('id',$uid)->find();
-            if(0  >= $money){
-                return json(['code'=>-1,'data'=>'','msg'=>'添加金额不能小于0']);
+            if(0  > $money){//减少金额
+                $reduceMoney = str_replace('-','',$money);
+                if($reduceMoney > $user['money']){
+                    Share::jsonData(0,'','减少金额不能小于用户当前余额');
+                }
+                $hadMoney = $user['money'] - $reduceMoney;
+                $remark = $remark?:'后台余额扣除';
+                $type = 2;
+            }else{
+                $hadMoney = $user['money'] + $money;
+                $remark = $remark?:'后台余额添加';
+                $type = 1;
             }
-            $addMoney = $user['money'] + $money;
-            $res = db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+            $res = db('member')->where('id',$uid)->update(['money'=>$hadMoney]);
             if($res){
                 //记录永不余额
-                Share::userMoneyRecord($uid,$money,'后台余额添加',1,0);
+                Share::userMoneyRecord($uid,$money,$remark,$type,0);
                 return json(['code'=>1,'data'=>'/admin/member/index','msg'=>'操作成功']);
             }else{
                 return json(['code'=>-1,'data'=>'','msg'=>'操作失败']);

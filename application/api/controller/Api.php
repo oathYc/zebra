@@ -1850,6 +1850,8 @@ class Api extends Controller
         $phone = input('phone','');//提现手机号  支付宝必填
         Share::checkEmptyParams(['money'=>$money]);
         $type = 1;
+        //判断是否在提现时间内
+        Share::checkReturnTime();
 //        if($type ==2 && !$phone){
 //            Share::jsonData(0,'','请填写支付宝提现手机号');
 //        }
@@ -1865,7 +1867,7 @@ class Api extends Controller
         //判断是否实名审核通过
         Share::checkRealNameStatus($uid);
         //手续费
-        $procedures = 0;
+        $procedures = self::getReturnPercent($money);
         Share::checkReturnMoney($uid,$money,$procedures);//检查余额
         $orderNo = 'TX'.time().rand(11111,99999);
         //体现申请

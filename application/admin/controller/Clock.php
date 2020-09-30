@@ -99,7 +99,7 @@ class Clock extends Base
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
 
-            return json(['code' => 1, 'data' => '', 'msg' => '添加打卡活动成功']);
+            return json(['code' => 1, 'data' => '/admin/clock/index', 'msg' => '添加打卡活动成功']);
         }
         return $this->fetch();
     }

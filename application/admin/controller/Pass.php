@@ -121,7 +121,7 @@ class Pass extends Base
             $signTime['passId'] = $passId;
             $signTime['createTime'] = time();
             db('pass_time')->insert($signTime);
-            return json(['code' => 1, 'data' => '', 'msg' => '添加闯关活动成功']);
+            return json(['code' => 1, 'data' => '/admin/pass/index', 'msg' => '添加闯关活动成功']);
         }
         return $this->fetch();
     }
