@@ -835,7 +835,7 @@ class Share extends \think\Model
         $array = array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5','6','7','8','9','0');
         $total = count($array);
         for($i = 0; $i<8;$i++){
-            $rand = rand(0,$total);
+            $rand = rand(0,$total-1);
             $code[] = $array[$rand];
         }
         $code = implode('',$code);
