@@ -40,7 +40,8 @@ class Share extends Controller
         $oauth2 = $this->getJson($oauth2Url);
 
         if(!isset($oauth2['access_token'])){
-            \app\common\model\Share::jsonData(0,'','服务器出错，请退出刷新重试');
+            echo '服务器出错（token），请退出刷新重试！';die;
+            \app\common\model\Share::jsonData(0,'','');
         }
         $access_token = $oauth2["access_token"];
 
@@ -52,6 +53,7 @@ class Share extends Controller
         file_put_contents("./uploads/invite_user.txt",json_encode($userinfo).PHP_EOL,FILE_APPEND);
 
         if(!isset($userinfo['unionid'])){
+            echo '服务器出错（unionid），请退出刷新重试！';die;
             \app\common\model\Share::jsonData(0,'','服务器出错，请退出刷新重试');
         }
 
