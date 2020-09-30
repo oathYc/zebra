@@ -1245,11 +1245,11 @@ class Share extends \think\Model
         }
 //        $money = $type==4?8.8:3;//新人奖励8.8  参加活动奖励3元
         //获取奖励金额 后台设置
-        $shareMmoney = db('system')->where('type',5)->find();
-        if(!$shareMmoney){
+        $shareMoney = db('system')->where('type',5)->find();
+        if(!$shareMoney){
             return false;
         }
-        $money = $shareMmoney['content'];
+        $money = $shareMoney['content'];
         $insert = [
             'uid'=>$sharerUid,
             'shareUid'=>$uid,
