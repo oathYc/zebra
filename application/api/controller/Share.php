@@ -19,7 +19,7 @@ class Share extends Controller
     protected  $host = 'http://cgyq.hualin688.com';
 
     public function index(){
-        $inviterCode = input('inviterCode');
+        $inviterCode = input('inviterCode');file_put_contents("./uploads/share_index_code.txt",json_encode([$inviterCode]).PHP_EOL,FILE_APPEND);
         $hostUrl = config('hostUrl');
         $redirect_uri = urlencode ($this->host.'/api/share/getapp?inviterCode='.$inviterCode);
 
