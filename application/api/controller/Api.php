@@ -2018,5 +2018,41 @@ class Api extends Controller
         var_dump(count($oldArr));
         var_dump(json_encode($oldArr));
     }
+    public function userShare(){
+        $openid = input('openid');
+        $unionid = input('unionid');
+        $inviterCode = input('inviterCode');
+        $arr = [$openid,$unionid,$inviterCode];
+        file_put_contents("./uploads/user_share.txt",json_encode($arr).PHP_EOL,FILE_APPEND);
+        //查看有么有该邀请用户
+        $inviter = db('member')->where('inviteCOde',$inviterCode)->find();
+        if($inviter){
+            //查看该用户是否已经注册了
+            $hadUser = db('member')->where('unionid',$unionid)->find();
+            if(!$hadUser){
+                $password = 123456;
+                $inviteCode = \app\common\model\Share::getInviteCode();
+                $params = [
+                    'phone'=>'',
+                    'password'=>md5($password),
+                    'real_pass'=>$password,
+                    'username'=>'',
+                    'nickname'=>'',
+                    'createTime'=>time(),
+                    'money'=>0,
+                    'openid'=>$openid,
+                    'unionid'=>$unionid,
+                    'avatar'=>'',
+                    'inviteCode'=>$inviteCode,
+                    'inviterCode'=>$inviterCode,
+                ];
+                db('member')->insert($params);
+                //邀请新人奖励
+//                    $user = db('member')->where('unionid',$unionid)->find();
+//                    \app\common\model\Share::shareReward($user['id'],'','邀请新人奖励',4);
+            }
+        }
+        die(1);
+    }
 
 }
