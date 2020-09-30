@@ -1243,7 +1243,13 @@ class Share extends \think\Model
                 return false;
             }
         }
-        $money = $type==4?8.8:3;//新人奖励8.8  参加活动奖励3元
+//        $money = $type==4?8.8:3;//新人奖励8.8  参加活动奖励3元
+        //获取奖励金额 后台设置
+        $shareMmoney = db('system')->where('type',5)->find();
+        if(!$shareMmoney){
+            return false;
+        }
+        $money = $shareMmoney['content'];
         $insert = [
             'uid'=>$sharerUid,
             'shareUid'=>$uid,
@@ -1259,7 +1265,7 @@ class Share extends \think\Model
         $addMoney = $sharer['money'] + $money;
         db('member')->where('id',$sharer['id'])->update(['money'=>$addMoney]);
         //余额变化记录
-        $remark = $type==4?'邀请新人奖励':'参加活动挑战奖励-'.$objectStr;
+        $remark = $type==4?'邀请新人奖励':'下级参加活动挑战奖励-'.$objectStr;
         self::userMoneyRecord($sharerUid,$money,$remark,1,5);
     }
     /**

@@ -237,7 +237,7 @@ class Api extends Controller
             if($inviterCode){
                 $uid = db('member')->where(['phone'=>$phone])->find()['id'];
 //                邀请奖励
-                Share::shareReward($uid,0,'',4);
+//                Share::shareReward($uid,0,'',4);
             }
             Share::jsonData(1,'','注册成功');
         }else{
@@ -691,7 +691,7 @@ class Api extends Controller
         if($res){
             //邀请人信息记录
             $objectStr = '房间挑战（'.$room['name'].'）';
-            Share::shareReward($uid,$roomId,$objectStr,2);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
+//            Share::shareReward($uid,$roomId,$objectStr,2);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','报名失败，请售后重试！');
@@ -1160,7 +1160,7 @@ class Api extends Controller
         $res = db('member')->where('id',$uid)->update(['inviterCode'=>$inviterCode]);
         if($res){
             //邀请人奖励
-            Share::shareReward($uid,0,'',4);
+//            Share::shareReward($uid,0,'',4);
             Share::jsonData(1);
         }else{
             Share::jsonData(0,'','添加失败，请重试！');
@@ -1516,7 +1516,7 @@ class Api extends Controller
 
             //邀请人信息记录
             $objectStr = '闯关挑战（'.$pass['name'].'第'.$number.'期）';
-            Share::shareReward($uid,$passId,$objectStr,3);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
+//            Share::shareReward($uid,$passId,$objectStr,3);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1,'','报名成功');
         }else{
             Share::jsonData(0,'','报名失败');
