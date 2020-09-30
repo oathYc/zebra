@@ -260,6 +260,7 @@ class Member extends Base
                 $user = db('member')->where('id',$vo['uid'])->find();
                 // 优化显示头像
                 $result[$key]['avatar'] = '<img src="' . $user['avatar'] . '" width="40px" height="40px">';
+                $result[$key]['qrcode'] = '<img ondblclick="scanImg(this)"  src="' . $user['qrcode'] . '" width="40px" height="40px" title="双击放大">';
                 $result[$key]['nickname'] = $user['nickname'];
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeReturnBtn($vo['id'],$vo['status']);
@@ -306,20 +307,20 @@ class Member extends Base
                 if($return['status'] != 0){
                     return json(['code' => 1, 'data' => '', 'msg' => '该申请状态不是提现中！']);
                 }
-                if($return['type'] ==1){//微信提现
-                    $res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
-                }else{//支付宝提现
-                    $res = Appalipay::alipayReturn($return['phone'],$return['money'],$realName);
-                }
-                if(!isset($res['code']) || $res['code'] != 1){
-                    return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
-                }
+//                if($return['type'] ==1){//微信提现
+//                    $res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
+//                }else{//支付宝提现
+//                    $res = Appalipay::alipayReturn($return['phone'],$return['money'],$realName);
+//                }
+//                if(!isset($res['code']) || $res['code'] != 1){
+//                    return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
+//                }
                 db('user_return')->where('id', $id)->update(['status'=>1,'returnTime'=>time()]);
                 //修改用户余额
                 $hadMoney = $user['money'] - $reduceMoney;
                 db('member')->where('id',$return['uid'])->update(['money'=>$hadMoney]);
                 //余额记录
-                Share::userMoneyRecord($return['uid'],$reduceMoney,'余额体现，体现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
+                Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
             } catch (\Exception $e) {
                 return json(['code' => -1, 'data' => '', 'msg' => $e->getMessage()]);
             }
@@ -426,7 +427,7 @@ class Member extends Base
             if($res){
                 //记录永不余额
                 Share::userMoneyRecord($uid,$money,'后台余额添加',1,0);
-                return json(['code'=>1,'data'=>'','msg'=>'操作成功']);
+                return json(['code'=>1,'data'=>'/admin/member/index','msg'=>'操作成功']);
             }else{
                 return json(['code'=>-1,'data'=>'','msg'=>'操作失败']);
             }

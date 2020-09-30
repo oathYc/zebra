@@ -46,6 +46,7 @@
                         <th data-field="nickname">用户昵称</th>
                         <th data-field="money">申请金额（元）</th>
                         <th data-field="procedures">手续费（元）</th>
+                        <th data-field="qrcode">二维码</th>
                         <th data-field="statusStr">申请状态</th>
                         <th data-field="typeStr">提现类型</th>
                         <th data-field="phone">提现账号</th>
@@ -59,6 +60,10 @@
             <!-- End Example Pagination -->
         </div>
     </div>
+</div>
+
+<div class="ibox-content" id="img" style="display: none">
+    <img style="width: 430px;height: 360px" src="" id="scanImg">
 </div>
 <!-- End Panel Other -->
 <script src="__JS__/jquery.min.js?v=2.1.4"></script>
@@ -133,6 +138,19 @@
             layer.close(index);
         })
 
+    }
+
+    function scanImg(_this){
+        layer.open({
+            type: 1,
+            title: '提现二维码',
+            anim: 2,
+            skin: 'layui-layer-molv', //加上边框
+            area: ['620px', '450px'], //宽高
+            content: $('#img')
+        });
+        var src = $(_this).attr('src');
+        $('#scanImg').attr('src',src);
     }
 </script>
 </body>
