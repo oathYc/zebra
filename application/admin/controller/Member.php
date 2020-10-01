@@ -340,11 +340,12 @@ class Member extends Base
                 $res = db('user_return')->where('id', $id)->update($update);
                 //修改用户余额
                 if($res){
-
-                    $hadMoney = $user['money'] - $reduceMoney;
-                    db('member')->where('id',$return['uid'])->update(['money'=>$hadMoney]);
-                    //余额记录
-                    Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
+                    if($status ==1){
+                        $hadMoney = $user['money'] - $reduceMoney;
+                        db('member')->where('id',$return['uid'])->update(['money'=>$hadMoney]);
+                        //余额记录
+                        Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
+                    }
                 }else{
                     return json(['code' => -1, 'data' => '', 'msg' => '操作失败，请重试']);
                 }
