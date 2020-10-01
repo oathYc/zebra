@@ -433,6 +433,8 @@ class Api extends Controller
         $user['signNum'] = $signNum;
         $user['moneyGet'] = $moneyGet;
         $user['returnTime'] = $beginTime."到".$endTime;
+        $user['returnBeginTime'] = $beginTime;
+        $user['returnEndTime'] = $endTime;
         $user['returnPercent'] = $returnPercent;
         Share::jsonData(1,$user);
     }

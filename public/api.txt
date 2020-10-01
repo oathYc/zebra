@@ -63,6 +63,8 @@
 返回参数    version         版本号
             returnTime      提现时间
             returnPercent   提现费率
+            returnBeginTime    提现开始时间  时分单位
+            returnEndTime       提现结束时间  时分单位
 
 接口名称    个人信息修改
 接口路径    messageEdit
