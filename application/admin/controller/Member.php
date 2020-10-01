@@ -186,8 +186,10 @@ class Member extends Base
     {
         $operate = '';
         if($status == 0) {//0-申请中
-            $operate .= '<a href="javascript:applyCheck(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
-            $operate .= '<i class="fa fa-paste"></i> 同意</button></a> ';
+//            $operate .= '<a href="javascript:applyCheck(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
+//            $operate .= '<i class="fa fa-paste"></i> 同意</button></a> ';
+            $operate .= '<a href="/admin/member/returnCheck?id='.$id.'"><button type="button" class="btn btn-primary btn-sm">';
+            $operate .= '<i class="fa fa-paste"></i> 审核</button></a> ';
         }
 
         return $operate;
@@ -266,8 +268,8 @@ class Member extends Base
                 $result[$key]['operate'] = $this->makeReturnBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
                 $result[$key]['returnTime'] = $vo['status']==1?date('Y-m-d H:i:s',$vo['returnTime']):'';
-                $result[$key]['typeStr'] = $vo['status']==1?'微信':'支付宝';
-                $result[$key]['statusStr'] = $vo['status']==1?'已提现':'提现中';
+                $result[$key]['typeStr'] = $vo['type']==1?'微信':'支付宝';
+                $result[$key]['statusStr'] = self::getReturnStatus($vo['status']);
             }
 
             $return['total'] = db('user_return')->where($where)->count();  //总数据
@@ -278,19 +280,38 @@ class Member extends Base
         }
         $status = [
             0=>'申请中',
-            1=>'已提现'
+            1=>'已提现',
+            2=>'已拒绝'
         ];
         $this->assign('status',$status);
         return $this->fetch();
     }
+    //提现状态后去
+    public static function getReturnStatus($status)
+    {
+        $arr = [
+            0=>'申请中',
+            1=>'已提现',
+            2=>'已拒绝'
+        ];
+        if(isset($arr[$status])){
+            return $arr[$status];
+        }else{
+            return '';
+        }
+    }
     //用户提现 同意
-    public function userReturn(){
+    public function returnCheck(){
+        $id = input('param.id/d');
         if (request()->isAjax()) {
-            $id = input('param.id/d');
-
+            $status = input('status',1);//0-待审核 1-同意 2-拒绝
+            $remark = input('remark');
+            if($status == 2 && !$remark){
+                return json(['code'=>-1,'data'=>'','msg'=>'拒绝理由必须填写']);
+            }
             try {
                 $return = db('user_return')->where('id',$id)->find();
-                $realName = db('member')->where('id',$return['uid'])->find()['name'];
+//                $realName = db('member')->where('id',$return['uid'])->find()['real_name'];
                 //判断用户余额
                 $user= db('member')->where("id",$return['uid'])->find();
                 if(!$user){
@@ -302,10 +323,10 @@ class Member extends Base
                     return json(['code' => 1, 'data' => '', 'msg' => '用户余额不足，不可提现']);
                 }
                 if(!$return){
-                    return json(['code' => 1, 'data' => '', 'msg' => '没有该申请信息']);
+                    return json(['code' => -1, 'data' => '', 'msg' => '没有该申请信息']);
                 }
                 if($return['status'] != 0){
-                    return json(['code' => 1, 'data' => '', 'msg' => '该申请状态不是提现中！']);
+                    return json(['code' => -1, 'data' => '', 'msg' => '该申请状态不是提现中！']);
                 }
 //                if($return['type'] ==1){//微信提现
 //                    $res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
@@ -315,18 +336,33 @@ class Member extends Base
 //                if(!isset($res['code']) || $res['code'] != 1){
 //                    return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
 //                }
-                db('user_return')->where('id', $id)->update(['status'=>1,'returnTime'=>time()]);
+                $update = ['status'=>$status,'remark'=>$remark,'returnTime'=>time()];
+                $res = db('user_return')->where('id', $id)->update($update);
                 //修改用户余额
-                $hadMoney = $user['money'] - $reduceMoney;
-                db('member')->where('id',$return['uid'])->update(['money'=>$hadMoney]);
-                //余额记录
-                Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
+                if($res){
+
+                    $hadMoney = $user['money'] - $reduceMoney;
+                    db('member')->where('id',$return['uid'])->update(['money'=>$hadMoney]);
+                    //余额记录
+                    Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
+                }else{
+                    return json(['code' => -1, 'data' => '', 'msg' => '操作失败，请重试']);
+                }
             } catch (\Exception $e) {
                 return json(['code' => -1, 'data' => '', 'msg' => $e->getMessage()]);
             }
 
-            return json(['code' => 1, 'data' => '', 'msg' => '操作成功']);
+            return json(['code' => 1, 'data' => '/admin/member/returnApply', 'msg' => '操作成功']);
         }
+        $info = db('user_return')->where('id',$id)->find();
+        $user = db('member')->where('id',$info['uid'])->find();
+        $info['nickname'] = $user['nickname'];
+        $info['qrcode'] ='<img src="' . $user['qrcode'] . '" width="340px" height="280px">';
+        $info['realName'] = $user['real_name'];
+        $info['userMoney'] = $user['money'];
+        $info['card'] = $user['card'];
+        $this->assign('info',$info);
+        return $this->fetch();
     }
 
     // 用户实名认证

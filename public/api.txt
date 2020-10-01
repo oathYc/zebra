@@ -391,8 +391,10 @@
 接口路径    myReturn
 接口参数    page                    页数 默认1
            pageSize                 每页数量 默认10
-           status                   默认99  99-全部 0-提现中 1-已提现
+           status                   默认99  99-全部 0-提现中 1-已提现 2-已拒绝
 返回参数    createTime                  申请时间
-            returnTime                  提现时间
+           remark                   审核理由
+           returnTime               审核时间
+           status                   0-提现中 1-已提现 2-已拒绝
 
 
