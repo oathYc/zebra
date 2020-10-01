@@ -409,9 +409,31 @@ class Api extends Controller
         }else{
             $number = 0;
         }
+        //提现费率获取
+        $returnPercent = db('system')->where('type',7)->find();
+        if($returnPercent){
+            $returnPercent = $returnPercent['content']?:0;
+        }else{
+            $returnPercent = 0;
+        }
+        //提现时间获取
+        $returnTime = db('system')->where('type',6)->find();
+        $beginTime = '00:00';
+        $endTime = '23:59';
+        if($returnTime){
+            $times = explode('-',$returnTime['content']);
+            if(isset($times[0]) && $times[0]){
+                $beginTime = $times[0];
+            }
+            if(isset($times[1]) && $times[1]){
+                $endTime = $times[1];
+            }
+        }
         $user['version'] = $number;
         $user['signNum'] = $signNum;
         $user['moneyGet'] = $moneyGet;
+        $user['returnTime'] = $beginTime."到".$endTime;
+        $user['returnPercent'] = $returnPercent;
         Share::jsonData(1,$user);
     }
     /**

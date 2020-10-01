@@ -60,7 +60,9 @@
 接口名称    个人信息获取
 接口路径    myMessage
 接口参数
-返回参数
+返回参数    version         版本号
+            returnTime      提现时间
+            returnPercent   提现费率
 
 接口名称    个人信息修改
 接口路径    messageEdit
