@@ -1867,7 +1867,7 @@ class Api extends Controller
         //判断是否实名审核通过
         Share::checkRealNameStatus($uid);
         //手续费
-        $procedures = self::getReturnPercent($money);
+        $procedures = Share::getReturnPercent($money);
         Share::checkReturnMoney($uid,$money,$procedures);//检查余额
         $orderNo = 'TX'.time().rand(11111,99999);
         //体现申请
