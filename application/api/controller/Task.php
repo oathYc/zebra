@@ -162,6 +162,14 @@ class Task extends Controller
                    $rewardMoney = $val['joinMoney'] * ($v['reward']/100);
                    $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
                }
+               //判断是否已发改奖励 避免重复发放
+               $checkDate = date('Y-m-d');
+               $isReward = db('pass_reward')->where(['uid'=>$uid,'passId'=>$v['id'],'joinId'=>$joinId,'date'=>$checkDate]);
+               if($isReward){
+                   //修改对应的奖励发送状态
+                   db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//奖励状态
+                   continue;
+               }
                //奖励发放
                Share::sendPassRewardNew($uid,$userMoney,$v,$joinId,$number);
                //本金退还
