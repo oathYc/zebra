@@ -164,7 +164,7 @@ class Task extends Controller
                }
                //判断是否已发改奖励 避免重复发放
                $checkDate = date('Y-m-d');
-               $isReward = db('pass_reward')->where(['uid'=>$uid,'passId'=>$v['id'],'joinId'=>$joinId,'date'=>$checkDate]);
+               $isReward = db('pass_reward')->where(['uid'=>$uid,'passId'=>$v['id'],'joinId'=>$joinId,'date'=>$checkDate])->find();
                if($isReward){
                    //修改对应的奖励发送状态
                    db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//奖励状态
@@ -214,6 +214,7 @@ class Task extends Controller
        if($join['status'] == 0){
            //判断当前签到状态 参与签到状态 0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
            if($join['signStatus'] == 0 || $join['signStatus'] == 1){
+               db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
                return 1;
            }else{//下一轮挑战中
                //判断是否有未签到的记录
