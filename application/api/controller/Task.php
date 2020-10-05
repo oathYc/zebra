@@ -147,7 +147,6 @@ class Task extends Controller
 //               $rewardMoney = $v['money'] * ($v['reward']/100);
            }
            $rewardMoney = Share::getDecimalMoney($rewardMoney);
-
            //奖励发放
            foreach($userSign as $t => $val){
                $challengeNumber = $val['signNumber'];
@@ -166,7 +165,7 @@ class Task extends Controller
                $checkDate = date('Y-m-d');
                $isReward = db('pass_reward')->where(['uid'=>$uid,'passId'=>$v['id'],'joinId'=>$joinId,'date'=>$checkDate])->find();
                if($isReward){
-                   //修改对应的奖励发送状态
+//                   修改对应的奖励发送状态
                    db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//奖励状态
                    continue;
                }
@@ -209,6 +208,12 @@ class Task extends Controller
            return 0 ;// 0-失败 1-成功 退还本金
        }
        if($join['status'] == 1){
+           $signError = db('pass_sign')->where(['uid'=>$join['uid'],'passId'=>$join['passId'],'joinId'=>$join['id'],'status'=>2])->find();
+            //是否有签到失败的数据
+           if($signError){
+               db('pass_join')->where('id',$join['id'])->update(['status'=>2]);//参加状态  0-参与中 1-已完成 2-未完成
+               return 0;
+           }
            return 1;
        }
        if($join['status'] == 0){
@@ -230,9 +235,17 @@ class Task extends Controller
                    }
                     db('pass_join')->where('id',$join['id'])->update(['status'=>$status]);
                    return $success;
-               }else{//没有 说明都签到成功
-                   db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
-                   return 1;
+               }else{//没有
+                   //判断是否有签到失败的数据
+                   $signError = db('pass_sign')->where(['uid'=>$join['uid'],'passId'=>$join['passId'],'joinId'=>$join['id'],'status'=>2])->find();
+//                    没有说明都签到成功
+                   if($signError){
+                       db('pass_join')->where('id',$join['id'])->update(['status'=>2]);//参加状态  0-参与中 1-已完成 2-未完成
+                        return 0;
+                   }else{
+                       db('pass_join')->where('id',$join['id'])->update(['status'=>1]);
+                       return 1;
+                   }
                }
            }
        }
