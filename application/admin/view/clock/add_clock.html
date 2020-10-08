@@ -41,57 +41,66 @@
                 </div>
                 <div class="ibox-content">
                     <form class="form-horizontal m-t layui-form" id="commentForm" method="post" action="{:url('clock/addClock')}">
+                        <input type="hidden" value="{$info['id']}" name="id" />
 
                         <div class="form-group">
                             <label class="col-sm-3 control-label">打卡名称：</label>
                             <div class="input-group col-sm-4">
-                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true">
+                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true" value="{$info['name']}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">打卡描述：</label>
                             <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="desc" required="true" id="desc"></textarea>
+                                <textarea class="form-control" name="desc" required="true" id="desc">{$info['desc']}</textarea>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">打卡天数：</label>
                             <div class="input-group col-sm-4">
-                                <input id="days" type="text" class="form-control" name="days" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')">
+                                <input id="days" type="text" class="form-control" name="days" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" value="{$info['days']}">
                             </div>
                         </div>
                         <div class="form-group " id="moneyParent">
                             <label class="col-sm-3 control-label">报名金额：</label>
                             <div class="input-group col-sm-4">
-                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="报名价格" style="width: 150px">
+                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="报名价格" style="width: 150px" value="{$info['moneys'][0]['price']}" >
                                 <span  class=" btn btn-primary moneyInput"  onclick="addMoney()" >添加</span>
                             </div>
+                            {foreach name="$info['moneys']" item="val" key="key"}
+                            {if $key > 0}
+                                <div class="input-group col-sm-4 layui-col-md-offset3 moneyDiv">
+                                    <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="报名价格"  style="width: 150px"  value="{$val['price']}">
+                                    <span class="btn  btn-primary moneyInput" onclick="deleteMoney(this)" >删除</span>
+                                </div>
+                            {/if}
+                            {/foreach}
                         </div>
                         <div class="form-group layui-form-item">
                             <label class="col-sm-3 control-label">奖励类型：</label>
                             <div class="input-group col-sm-6">
-                                <input type="radio" name="rewardType" value="1" title="固定金额" />
-                                <input type="radio" name="rewardType" value="2" title="百分比" />
+                                <input  {if $info['rewardType'] eq 1} checked {/if} type="radio" name="rewardType" value="1" title="固定金额" />
+                                <input  {if $info['rewardType'] eq 2} checked {/if}  type="radio" name="rewardType" value="2" title="百分比" />
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">奖励值：</label>
                             <div class="input-group col-sm-4">
-                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" onkeyup = "value=value.replace(/[^.\d]/g,'')">
+                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" onkeyup = "value=value.replace(/[^.\d]/g,'')" value="{$info['reward']}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">签到时间：</label>
                             <div class="input-group ">
-                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off" placeholder="开始时间">
+                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off" placeholder="开始时间" value="{$info['beginTimeStr']}">
 <!--                                <span style="position: relative;margin-left: -119px;" >到</span>-->
-                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off" placeholder="结束时间">
+                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off" placeholder="结束时间"  value="{$info['endTimeStr']}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">排序：</label>
                             <div class="input-group col-sm-4">
-                                <input  id="sort" type="text" lay-verify="number" class="form-control" name="sort" required="" onkeyup = "value=value.replace(/[^\d]/g,'')">
+                                <input  id="sort" type="text" lay-verify="number" class="form-control" name="sort" required="" onkeyup = "value=value.replace(/[^\d]/g,'')"  value="{$info['sort']}">
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
@@ -102,7 +111,7 @@
                                     <i class="layui-icon"></i>上传图片</button>
                             </div>
                             <div class="input-group col-sm-3" id="img">
-
+                                {$info['image']}
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
@@ -113,14 +122,14 @@
                                     <i class="layui-icon"></i>上传图片</button>
                             </div>
                             <div class="input-group col-sm-3" id="img1">
-
+                                {$info['background']}
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label class="col-sm-3 control-label">奖励规则：</label>
                             <div class="input-group col-sm-4">
-                                <textarea class="form-control" name="rule"></textarea>
+                                <textarea class="form-control" name="rule">{$info['rule']}</textarea>
                             </div>
                         </div>
                         <div class="form-group">

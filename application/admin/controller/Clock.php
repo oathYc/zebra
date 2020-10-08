@@ -60,6 +60,7 @@ class Clock extends Base
     }
     //添加打卡活动
     public function addClock(){
+        $id = input('id');
         if(request()->isPost()){
 
             $param = input('post.');
@@ -74,13 +75,21 @@ class Clock extends Base
             }
             $param['createTime'] = time();
 
-            $has = db('clock_in')->field('id')->where('name', $param['name'])->find();
-            if(!empty($has)){
-                return json(['code' => -1, 'data' => '', 'msg' => '该打卡活动已经存在']);
+            if(!$id){//新增
+                $has = db('clock_in')->field('id')->where('name', $param['name'])->find();
+                if(!empty($has)){
+                    return json(['code' => -1, 'data' => '', 'msg' => '该打卡活动已经存在']);
+                }
             }
 
+
             try{
-                db('clock_in')->insert($param);
+                if($id){
+                    unset($param['id']);
+                    db('clock_in')->where('id',$id)->update($param);
+                }else{
+                    db('clock_in')->insert($param);
+                }
                 $clockId = db('clock_in')->where('name',$param['name'])->find()['id'];
                 //记录打卡报名金额
                 $time = time();
@@ -92,6 +101,7 @@ class Clock extends Base
                         'createTime'=>$time,
                     ];
                 }
+                db('clock_in_price')->where('clockInId',$clockId)->delete();
                 if($moneyArr){
                     db('clock_in_price')->insertAll($moneyArr);
                 }
@@ -101,6 +111,11 @@ class Clock extends Base
 
             return json(['code' => 1, 'data' => '/admin/clock/index', 'msg' => '添加打卡活动成功']);
         }
+        $info = db('clock_in')->where('id',$id)->find();
+        $info['moneys'] = db('clock_in_price')->where('clockInId',$info['id'])->select();
+        $info['image'] = $info['image']?'<img src="' . $info['image'] . '" width="40px" height="40px">':"";
+        $info['background'] = $info['background']?'<img src="' . $info['background'] . '" width="40px" height="40px">':'';
+        $this->assign('info',$info);
         return $this->fetch();
     }
     public static function rewardType($type){
@@ -122,6 +137,10 @@ class Clock extends Base
         $operate = '';
         $operate .= '<a href="javascript:editStatus(' . $id . ','.$status.')">';
         $operate .= '<button type="button" class="btn btn-primary btn-sm"><i class="fa fa-paste"></i> '.$statusStr.'</button></a> ';
+
+        $operate .= '<a href="/admin/clock/addClock?id='.$id.'">';
+        $operate .= '<button type="button" class="btn btn-primary btn-sm"><i class="fa fa-paste"></i> 修改</button></a> ';
+
         $operate .= '<a href="javascript:delClock(' . $id . ')"><button type="button" class="btn btn-danger btn-sm">';
         $operate .= '<i class="fa fa-trash-o"></i> 删除</button></a> ';
 
