@@ -619,7 +619,7 @@ class Api extends Controller
         $joinCount = db('room_join')->where('roomId',$roomId)->count();
         $joinCount = $joinCount?$joinCount:0;
         if($joinCount){
-            $userList = db('room_join')->where('roomId',$roomId)->order('createTime','desc')->select();
+            $userList = db('room_join')->where('roomId',$roomId)->order('createTime','asc')->select();
             foreach($userList as $o => $p){
                 $user = db('member')->where('id',$p['uid'])->find();
                 if(!$user){
@@ -923,7 +923,7 @@ class Api extends Controller
         //参与金额 参与中的
         $joinMoney = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->sum('joinMoney');
         //参与人数
-        $joinData = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->order('createTime','desc')->select();
+        $joinData = db('clock_in_join')->where(['clockInId'=>$id,'status'=>1])->order('createTime','asc')->select();
         $joinNumber = count($joinData)?count($joinData):0;
         $userList = $joinData?$joinData:[];
         foreach($userList as $o => $p){
