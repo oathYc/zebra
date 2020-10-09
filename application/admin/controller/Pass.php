@@ -21,7 +21,7 @@ class Pass extends Base
 
             $where = [];
 
-            $result = db('pass')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
+            $result = db('pass')->where($where)->limit($offset, $limit)->order('number', 'desc')->select();
             foreach ($result as $key => $vo) {
                 // 优化显示头像
                 $statusStr  = $vo['status']== 1?'启用':'关闭';
