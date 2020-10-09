@@ -484,4 +484,66 @@ class Member extends Base
         $this->assign('info',$user);
         return $this->fetch();
     }
+    //排行榜
+    public function ranking(){
+        if(request()->isAjax()){
+            $type = 4;//1-打卡 2-房间挑战 3-闯关  4-邀请
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+            $where = [
+                'type'=>$type,
+            ];
+            $data = db('money_get')->where($where)->order('moneyGet','desc')->limit($offset,$limit)->select();
+            foreach($data as $k => $v){
+                $user = db('member')->where('id',$v['uid'])->find();
+                $data[$k]['nickname'] = $user['nickname'];
+            }
+            $return['total'] = db('money_get')->where($where)->count();  //总数据
+            $return['rows'] = $data;
+            return json($return);
+        }
+        return $this->fetch();
+    }
+    //用户邀请
+    public function share(){
+        if(request()->isAjax()){
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+            $where = [
+//                'type'=>$type,
+            ];
+            $data = db('share_reward')->where($where)->order('id','desc')->limit($offset,$limit)->select();
+            foreach($data as $k => $v){
+                //邀请人信息
+                $user = db('member')->where('id',$v['uid'])->find();
+                $data[$k]['nickname'] = $user['nickname'];
+                //被邀请人信息
+                $shareUser = db('member')->where('id',$v['shareUid'])->find();
+                $data[$k]['shareNickname'] = $shareUser['nickname'];
+                $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
+                $data[$k]['typeStr'] = self::getTypeStr($v['type']);
+            }
+            $return['total'] = db('share_reward')->where($where)->count();  //总数据
+            $return['rows'] = $data;
+            return json($return);
+        }
+        return $this->fetch();
+    }
+    //类型
+    public static function getTypeStr($type){
+        $arr = [
+            1=>"打卡挑战",
+            2=>"房间挑战",
+            3=>'闯关挑战'
+        ];
+        if(isset($arr[$type])){
+            return $arr[$type];
+        }else{
+            return '';
+        }
+    }
 }
