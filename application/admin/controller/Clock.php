@@ -112,9 +112,11 @@ class Clock extends Base
             return json(['code' => 1, 'data' => '/admin/clock/index', 'msg' => '添加打卡活动成功']);
         }
         $info = db('clock_in')->where('id',$id)->find();
-        $info['moneys'] = db('clock_in_price')->where('clockInId',$info['id'])->select();
-        $info['image'] = $info['image']?'<img src="' . $info['image'] . '" width="40px" height="40px">':"";
-        $info['background'] = $info['background']?'<img src="' . $info['background'] . '" width="40px" height="40px">':'';
+        if($info){
+            $info['moneys'] = db('clock_in_price')->where('clockInId',$info['id'])->select();
+            $info['image'] = isset($info['image'])?'<img src="' . $info['image'] . '" width="40px" height="40px">':"";
+            $info['background'] = isset($info['background'])?'<img src="' . $info['background'] . '" width="40px" height="40px">':'';
+        }
         $this->assign('info',$info);
         return $this->fetch();
     }
