@@ -89,6 +89,8 @@ class Api extends Controller
     public function wxLogin() {
 //            $json = '{"nickname":".","openid":"o8m6C57HIDfgizWst5ORVxyAXjfI","unionid":"oTa415y5Xs0rTBmN20ngPoEuSMFg","headimgurl":"http://thirdwx.qlogo.cn/mmopen/vi_32/SkxPZKY0iboCkjbtGXic5oYmFAJNnS1UjiaGs2rGfZutA1FZydUAKl2h7cVGfCtYX50SibbOugJzUgsZQuvQvlhbtw/132"}';
 //            $str = json_decode($json,true);
+        $param = input('param.');
+        file_put_contents('./uploads/wxLogin.txt', json_encode($param).PHP_EOL,FILE_APPEND);
         $name = strip_tags(input('nickname'));//昵称
         $openid = strip_tags(input('openid')); //openid
         $unionid = strip_tags(input('unionid'));
