@@ -1301,7 +1301,7 @@ class Api extends Controller
      */
     public function habitRanking(){
         $uid = $this->uid;
-        $data = db('money_get')->field("*,sum(moneyGet) as moneyGet")->group('uid')->limit(0,10)->where(['type'=>['!=',4]])->order('moneyGet','desc')->select();
+        $data = db('money_get')->field("uid,sum(moneyGet) as moneyGet")->limit(0,10)->where(['type'=>['<',4]])->group('uid')->order('moneyGet','desc')->select();
         $own = [
             'mySite'=>0,
             'myMoney'=>0,
