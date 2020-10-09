@@ -78,6 +78,8 @@ class Pass extends Base
             unset($param['moneys']);
             $param['money'] = $moneys[0];
 
+            $signTime = isset($param['signTime'])?$param['signTime']:[];
+            unset($param['signTime']);
             if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
                 $param['reward'] = 100;
             }
@@ -110,17 +112,22 @@ class Pass extends Base
                     db('pass_price')->where('passId',$passId)->delete();
                     db('pass_price')->insertAll($moneyArr);
                 }
+                //记录签到时间
+                $signTimeArr = [];
+                $number = $param['challenge'];
+                for($j=0;$j<$number;$j++){
+                    if(isset($signTime[$j]) && $signTime[$j]>0){
+                        $signTimeArr[] = ['number'=>$j+1,'time'=>$signTime[$j],'passId'=>$passId,'createTime'=>$time];
+                    }else{
+                        $signTimeArr[] = ['number'=>$j+1,'time'=>3,'passId'=>$passId,'createTime'=>$time];//默认3分钟
+                    }
+                }
+                db('pass_time')->where('passId',$passId)->delete();
+                db('pass_time')->insertAll($signTimeArr);
             }catch(\Exception $e){
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
-            $passId = db('pass')->getLastInsID();
-            //记录闯关签到时间
-//            foreach($signTime as $k => $v){
-//                $signTime[$k] = $v?$v:3;//默认三分钟
-//            }
-            $signTime['passId'] = $passId;
-            $signTime['createTime'] = time();
-            db('pass_time')->insert($signTime);
+
             return json(['code' => 1, 'data' => '/admin/pass/index', 'msg' => '添加闯关活动成功']);
         }
         return $this->fetch();
@@ -207,6 +214,9 @@ class Pass extends Base
             $pricesArr[] = $v['price'];
         }
         $info['moneys'] = implode('元、',$pricesArr).'元';
+        //获取签到时间
+        $signTime = db('pass_time')->where('passId',$info['id'])->order('number','asc')->select();
+        $info['signTimeArr'] = $signTime;
         $this->assign('info',$info);
         return $this->fetch();
     }

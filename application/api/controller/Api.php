@@ -1541,7 +1541,7 @@ class Api extends Controller
             Share::createUserPassSignNew($uid,$pass,$join);
 
             //邀请人信息记录
-            $objectStr = '闯关挑战（'.$pass['name'].'第'.$number.'期）';
+//            $objectStr = '闯关挑战（'.$pass['name'].'第'.$number.'期）';
 //            Share::shareReward($uid,$passId,$objectStr,3);//1-打卡 2-房间挑战 3-闯关 4-邀请新人
             Share::jsonData(1,'','报名成功');
         }else{
