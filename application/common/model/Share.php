@@ -1312,6 +1312,38 @@ class Share extends \think\Model
     }
     /**
      * 闯关
+     * 每日凌晨奖励计算
+     * 一级分享奖励发放
+     */
+    public static function sendPassShareReward($uid,$rewardMoney,$pass,$joinId=0,$number=1){
+        $user = db('member')->where('id',$uid)->find();
+        if($user['inviterCode']){
+            $sharer = db('member')->where('inviteCode',$user['inviterCode'])->find();
+            if($sharer){//有邀请信息
+                //获取一级分销比例
+                $passPercent = db('system')->where('type',8)->find();
+                if($passPercent && $passPercent['content'] > 0 && $rewardMoney > 0){
+                    $shareMoney = $rewardMoney*($passPercent['content']/100);
+                    $shareMoney = self::getDecimalMoney($shareMoney);
+                    $addMoney = $sharer['money'] + $shareMoney;
+                    $res = db('member')->where('id',$sharer['id'])->update(['money'=>$addMoney]);
+                    if($res){//记录信息
+                        //用户余额记录
+                        self::userMoneyRecord($sharer['id'],$shareMoney,'下级闯关活动奖励分成'.'第'.$number.'期',1,5,1);
+                        //分享奖励
+                        self::shareReward($sharer['id'],$pass['id'],$pass['name'].'第'.$number.'期',4);
+                        //奖励金额记录
+                        self::rewardRecord($sharer['id'],$shareMoney,$pass['id'],3,$joinId);
+                        //收益记录
+                        self::userMoneyGet($sharer['id'],$shareMoney,4);
+                    }
+                }
+
+            }
+        }
+    }
+    /**
+     * 闯关
      * 每日凌晨结算
      * 本金退还
      */

@@ -8,7 +8,7 @@ namespace app\api\controller;
 
 use app\common\model\Share;
 use think\Controller;
-
+use think\Exception;
 
 
 header("Access-Control-Allow-Origin:*");
@@ -171,6 +171,11 @@ class Task extends Controller
                }
                //奖励发放
                Share::sendPassRewardNew($uid,$userMoney,$v,$joinId,$number);
+               try{
+                   //邀请人分销奖励发放
+                   Share::sendPassShareReward($uid,$userMoney,$v,$joinId,$number);
+               }catch(Exception $re){
+               }
                //本金退还
                if($return == 1){
                     Share::returnPassJoinMoney($uid,$v['money'],$v['name']);
