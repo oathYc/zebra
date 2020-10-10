@@ -209,7 +209,7 @@
 
 接口名称    打卡活动-打卡签到记录
 接口路径    clockRecord
-接口参数    clockInId                   打卡活动id
+接口参数
             page                    页数 默认1
             pageSize                每页数量 默认10
 返回参数
