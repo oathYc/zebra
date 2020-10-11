@@ -27,7 +27,7 @@ class Clock extends Base
                 $statusStr  = $vo['status']== 1?'启用':'关闭';
                 $result[$key]['statusStr'] = $statusStr;
                 $result[$key]['signTime'] = $vo['beginTimeStr'].'-'.$vo['endTimeStr'];
-                $result[$key]['rewardType'] = self::rewardType($vo['rewardType']);
+//                $result[$key]['rewardType'] = self::rewardType($vo['rewardType']);
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);

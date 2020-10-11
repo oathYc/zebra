@@ -46,19 +46,19 @@
                                 <textarea   class="form-control"  required="true" aria-required="true" >{$info['moneys']}</textarea>
                             </div>
                         </div>
-                        <div class="form-group layui-form-item">
-                            <label class="col-sm-3 control-label">奖励类型：</label>
-                            <div class="input-group col-sm-6">
-                                <input {if 1 eq $info['rewardType']} checked {/if} type="radio" name="rewardType" value="1" title="固定金额" />
-                                <input type="radio" name="rewardType" value="2" title="百分比" {if 2 eq $info['rewardType']} checked {/if}  />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">奖励值：</label>
-                            <div class="input-group col-sm-4">
-                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" value="{$info['reward']}">
-                            </div>
-                        </div>
+<!--                        <div class="form-group layui-form-item">-->
+<!--                            <label class="col-sm-3 control-label">奖励类型：</label>-->
+<!--                            <div class="input-group col-sm-6">-->
+<!--                                <input {if 1 eq $info['rewardType']} checked {/if} type="radio" name="rewardType" value="1" title="固定金额" />-->
+<!--                                <input type="radio" name="rewardType" value="2" title="百分比" {if 2 eq $info['rewardType']} checked {/if}  />-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="form-group">-->
+<!--                            <label class="col-sm-3 control-label">奖励值：</label>-->
+<!--                            <div class="input-group col-sm-4">-->
+<!--                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" value="{$info['reward']}">-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="form-group">
                             <label class="col-sm-3 control-label">签到时间：</label>
                             <div class="input-group ">

@@ -190,6 +190,132 @@ class Task extends Controller
        }
    }
 
+    /**
+     * 打卡活动
+     * 奖励金额发放
+     * 5分钟执行一次
+     */
+    public function clockInRewardSend(){
+        $today = date('Y-m-d');
+        $now = date('Y-m-d H:i:s');//当前时间
+        $time = date('H:i:s');//当前时间
+        $clocks = db('clock_in')->select();
+        foreach($clocks as $k => $v){
+            $clockId = $v['id'];
+            $day = $v['days'];
+            $signEndTime = $v['endTimeStr'].":59";
+            //判断今日是否已发奖励
+            $isReward = db('clock_reward_record')->where(['clockInId'=>$clockId,'date'=>$today])->find();
+            if($isReward){//今日该打卡活动已经发过奖励
+                continue;
+            }
+            if($signEndTime < $time){//已经过了签到结束时间
+                //获取参与中的数据 状态  0-失败 1-参与中 2-已完成
+                $joinData = db('clock_in_join')->where(['clockInId'=>$clockId,'status'=>1])->select();
+                //判断未打卡的情况
+                foreach($joinData as $o => $p){
+                    //判断该参与者的打卡天数
+                    $hasSignDay = db('clock_in_sign')->where(['uid'=>$p['uid'],'clockInId'=>$clockId,'joinId'=>$p['id']])->count();
+                    if($hasSignDay < $day){//还未完成
+                        $status = 1;
+                        //判断今日是否打卡
+                        $isSign = db('clock_in_sign')->where(['uid'=>$p['uid'],'clockInId'=>$clockId,'joinId'=>$p['id'],'date'=>$today])->find();
+                        if(!$isSign){//今日未打卡
+                            $status = 0;
+                        }
+                    }else{
+                        $status = 2;
+                    }
+                    db('clock_in_join')->where('id',$p['id'])->update(['status'=>$status]);
+                }
+                //获取今天成功打卡的数据
+                $successSign = db('clock_in_sign')->where(['clockInId'=>$clockId,'date'=>$today])->select();
+                $successMoney = 0;
+                foreach($successSign as $r => $e){
+                    $joinMoney = db('clock_in_join')->where('id',$e['joinId'])->find()['joinMoney'];
+                    $successSign[$r]['joinMoney'] = $joinMoney;
+                    $successMoney += $joinMoney;
+                }
+                //获取今日失败金
+                $failMoney = self::getClockFailMoney($clockId);
+                //除去抽成
+                $rewardTotalMoney = self::getRewardTotalMoney($failMoney);
+                //奖励发放
+                $successSignUid = [];
+                foreach($successSign as $w => $q){
+                    $joinMoney = $q['joinMoney'];
+                    //获取比重
+                    $percent = $joinMoney/$successMoney;
+                    if($rewardTotalMoney){
+                        $rewardMoney = $rewardTotalMoney*$percent;
+                    }else{
+                        $rewardMoney = 0;
+                    }
+                    $uid = $q['uid'];
+                    //金额规范  分
+                    $money = Share::getDecimalMoney($rewardMoney);
+                    $user = db('member')->where('id',$uid)->find();
+                    $addMoney = $user['money'] + $money;
+                    db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+                    Share::userMoneyRecord($uid,$money,'打卡活动每日奖励'.'-'.$v['name'],1,1,1);
+                    Share::rewardRecord($uid,$money,$v['id'],1,$q['joinId']);
+                    Share::userMoneyGet($uid,$money,1);
+                    $successSignUid[] = $uid;
+                }
+                //记录奖励记录
+                $param = [
+                    'clockInId'=>$clockId,
+                    'date'=>$today,
+                    'createTime'=>time(),
+                    'failMoney'=>$failMoney,
+                    'rewardMoney'=>$rewardTotalMoney,
+                    'successTotal'=>count($successSign),
+                    'successUid'=>json_encode($successSignUid),
+                ];
+                db('clock_reward_record')->insert($param);
+            }
+        }
+    }
+
+    /**
+     * 获取打卡当日的失败金
+     */
+    public static function getClockFailMoney($clockId){
+        //获取昨天打卡的数据
+        $date = date("Y-m-d",strtotime("-1day"));
+        $today = date('Y-m-d');
+        $yesterDay = db('clock_in_sign')->where(['clockInId'=>$clockId,'date'=>$date])->select();
+        $failMoney = 0 ;
+        foreach($yesterDay as $k => $v){
+            //判断该参与挑战当前是否是失败状态
+            $isFail = db('clock_in_join')->where(['id'=>$v['joinId'],'status'=>0])->find();
+            if($isFail){
+                //判断今日是不是未打卡
+                $todaySign  = db('clock_in_sign')->where(['clockInId'=>$clockId,'date'=>$today,'joinId'=>$v['joinId'],'uid'=>$v['uid']])->find();
+                if(!$todaySign){
+                    $joinMoney = $isFail['joinMoney'];
+                    $joinMoney = $joinMoney?$joinMoney:0;
+                    $failMoney += $joinMoney;
+                }
+            }
+        }
+        return $failMoney;
+    }
+    /**
+     * 去除打卡活动的抽成
+     */
+    public static function getRewardTotalMoney($money){
+        //1-关于我们 2-帮助中心 3-免责申明 4-版本 5-奖励金额 6-提现时间 7-提现费率 8-闯关一级分销比例 9-打卡抽成
+        $data = db('system')->where('type',9)->find();
+        if($data){
+            $percent = $data['content']/100;
+        }else{
+            $percent = 0;
+        }
+        $returnMoney = $money*(1-$percent);
+        return Share::getDecimalMoney($returnMoney);
+    }
+
    /**
     * 获取当前用户的挑战签到轮数
     */

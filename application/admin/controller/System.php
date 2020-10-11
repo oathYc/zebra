@@ -375,4 +375,43 @@ class System extends Base
 
         return $this->fetch();
     }
+    //打卡奖励抽成白扥比
+    public function clockPercent()
+    {
+        $type = 9;
+        //1-关于我们 2-帮助中心 3-免责申明 4-版本 5-奖励金额 6-提现时间 7-提现费率 8-闯关一级分销比例 9-打卡抽成
+        if(request()->isPost()){
+
+            $param = input('post.');
+//            if(empty($param['content'])){
+//                return json(['code' => -1, 'data' => '', 'msg' => '内容不能为空']);
+//            }
+            try{
+                $param['createTime'] = time();
+                $param['type'] = $type;
+                if($param['id']){
+                    $res = db('system')->where('id', $param['id'])->update($param);
+                }else{
+                    unset($param['id']);
+                    $res = db('system')->insert($param);
+                }
+                if($res){
+                    return json(['code'=>1,'data'=>'','msg'=>'操作成功']);
+                }else{
+                    return json(['code'=>-1,'data'=>'','msg'=>'操作失败']);
+                }
+            }catch(\Exception $e){
+                return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
+            }
+
+            return json(['code' => 1, 'data' => '', 'msg' => '设置成功']);
+        }
+
+        $info = db('system')->where('type', $type)->find();
+        $this->assign([
+            'info' => $info,
+        ]);
+
+        return $this->fetch();
+    }
 }

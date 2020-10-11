@@ -1080,7 +1080,7 @@ class Api extends Controller
             }
             db('clock_in_join')->where('id',$hadSign['id'])->update($update);
             //发放奖励
-            Share::clockInReward($uid,$hadSign['joinMoney'],$clock,$hadSign);
+//            Share::clockInReward($uid,$hadSign['joinMoney'],$clock,$hadSign);
             //退还报名费
             if($hadNum >= $clock['days']){
                 Share::returnClockInMoney($uid,$hadSign['joinMoney'],$clock);
