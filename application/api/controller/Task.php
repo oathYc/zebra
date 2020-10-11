@@ -299,6 +299,18 @@ class Task extends Controller
                 }
             }
         }
+        //获取今天报名的数据
+        $todayJoin = db('clock_in_join')->where(['clockInId'=>$clockId,'beginTime'=>['=',$today]])->select();
+        foreach($todayJoin as $r => $t){
+            //判断今日是不是未打卡
+            $todaySign  = db('clock_in_sign')->where(['clockInId'=>$clockId,'date'=>$today,'joinId'=>$t['id'],'uid'=>$t['uid']])->find();
+            if(!$todaySign){
+                $joinMoney = $t['joinMoney'];
+                $joinMoney = $joinMoney?$joinMoney:0;
+                $failMoney += $joinMoney;
+            }
+            db('clock_in_join')->where('id',$t['id'])->update(['status'=>0]);
+        }
         return $failMoney;
     }
     /**
