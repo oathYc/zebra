@@ -233,6 +233,7 @@ class Task extends Controller
                 $successSign = db('clock_in_sign')->where(['clockInId'=>$clockId,'date'=>$today])->select();
                 $successMoney = 0;
                 $rewardTotalMoney = 0;
+                $failMoney = 0;
                 if($rewardType == 3){//失败金
                     foreach($successSign as $r => $e) {
                         $joinMoney = db('clock_in_join')->where('id', $e['joinId'])->find()['joinMoney'];
