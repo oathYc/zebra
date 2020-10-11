@@ -27,7 +27,7 @@ class Clock extends Base
                 $statusStr  = $vo['status']== 1?'启用':'关闭';
                 $result[$key]['statusStr'] = $statusStr;
                 $result[$key]['signTime'] = $vo['beginTimeStr'].'-'.$vo['endTimeStr'];
-//                $result[$key]['rewardType'] = self::rewardType($vo['rewardType']);
+                $result[$key]['rewardType'] = self::rewardType($vo['rewardType']);
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
@@ -123,7 +123,8 @@ class Clock extends Base
     public static function rewardType($type){
         $arr = [
             1=>'固定金额（元）',
-            2=>'百分比'
+            2=>'报名费百分比',
+            3=>'失败金百分比'
         ];
         if(isset($arr[$type])){
             return $arr[$type];

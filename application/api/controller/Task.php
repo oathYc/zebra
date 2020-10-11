@@ -204,6 +204,7 @@ class Task extends Controller
             $clockId = $v['id'];
             $day = $v['days'];
             $signEndTime = $v['endTimeStr'].":59";
+            $rewardType = $v['rewardType'];
             //判断今日是否已发奖励
             $isReward = db('clock_reward_record')->where(['clockInId'=>$clockId,'date'=>$today])->find();
             if($isReward){//今日该打卡活动已经发过奖励
@@ -231,25 +232,39 @@ class Task extends Controller
                 //获取今天成功打卡的数据
                 $successSign = db('clock_in_sign')->where(['clockInId'=>$clockId,'date'=>$today])->select();
                 $successMoney = 0;
-                foreach($successSign as $r => $e){
-                    $joinMoney = db('clock_in_join')->where('id',$e['joinId'])->find()['joinMoney'];
-                    $successSign[$r]['joinMoney'] = $joinMoney;
-                    $successMoney += $joinMoney;
+                $rewardTotalMoney = 0;
+                if($rewardType == 3){//失败金
+                    foreach($successSign as $r => $e) {
+                        $joinMoney = db('clock_in_join')->where('id', $e['joinId'])->find()['joinMoney'];
+                        $successSign[$r]['joinMoney'] = $joinMoney;
+                        $successMoney += $joinMoney;
+
+                    }
+                    //获取今日失败金
+                    $failMoney = self::getClockFailMoney($clockId);
+                    //除去抽成
+                    $rewardTotalMoney = $failMoney*($v['reward']/100);
+//                    $rewardTotalMoney = self::getRewardTotalMoney($failMoney);
                 }
-                //获取今日失败金
-                $failMoney = self::getClockFailMoney($clockId);
-                //除去抽成
-                $rewardTotalMoney = self::getRewardTotalMoney($failMoney);
                 //奖励发放
                 $successSignUid = [];
                 foreach($successSign as $w => $q){
-                    $joinMoney = $q['joinMoney'];
-                    //获取比重
-                    $percent = $joinMoney/$successMoney;
-                    if($rewardTotalMoney){
-                        $rewardMoney = $rewardTotalMoney*$percent;
+                    if($rewardType ==3){
+                        $joinMoney = $q['joinMoney'];
+                        //获取比重
+                        $percent = $joinMoney/$successMoney;
+                        if($rewardTotalMoney){
+                            $rewardMoney = $rewardTotalMoney*$percent;
+                        }else{
+                            $rewardMoney = 0;
+                        }
                     }else{
-                        $rewardMoney = 0;
+                        if($rewardType == 1){
+                            $rewardMoney = $v['reward'];
+                        }else{
+                            $joinMoney = db('clock_in_join')->where('id', $q['joinId'])->find()['joinMoney'];
+                            $rewardMoney = $joinMoney*($v['reward']/100);
+                        }
                     }
                     $uid = $q['uid'];
                     //金额规范  分

@@ -76,19 +76,20 @@
                             {/if}
                             {/foreach}
                         </div>
-<!--                        <div class="form-group layui-form-item">-->
-<!--                            <label class="col-sm-3 control-label">奖励类型：</label>-->
-<!--                            <div class="input-group col-sm-6">-->
-<!--                                <input  {if $info['rewardType'] eq 1} checked {/if} type="radio" name="rewardType" value="1" title="固定金额" />-->
-<!--                                <input  {if $info['rewardType'] eq 2} checked {/if}  type="radio" name="rewardType" value="2" title="百分比" />-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="form-group">-->
-<!--                            <label class="col-sm-3 control-label">奖励值：</label>-->
-<!--                            <div class="input-group col-sm-4">-->
-<!--                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" onkeyup = "value=value.replace(/[^.\d]/g,'')" value="{$info['reward']}">-->
-<!--                            </div>-->
-<!--                        </div>-->
+                        <div class="form-group layui-form-item">
+                            <label class="col-sm-3 control-label">奖励类型：</label>
+                            <div class="input-group col-sm-6">
+                                <input  {if $info['rewardType'] eq 1} checked {/if} type="radio" name="rewardType" value="1" title="固定金额" />
+                                <input  {if $info['rewardType'] eq 2} checked {/if}  type="radio" name="rewardType" value="2" title="报名费百分比" />
+                                <input  {if $info['rewardType'] eq 3} checked {/if}  type="radio" name="rewardType" value="3" title="失败金百分比" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">奖励值：</label>
+                            <div class="input-group col-sm-4">
+                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="金额值/百分比奖励" onkeyup = "value=value.replace(/[^.\d]/g,'')" value="{$info['reward']}">
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">签到时间：</label>
                             <div class="input-group ">
