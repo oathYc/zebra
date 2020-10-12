@@ -411,24 +411,33 @@ class Api extends Controller
         }else{
             $number = 0;
         }
-        //提现费率获取
-        $returnPercent = db('system')->where('type',7)->find();
-        if($returnPercent){
-            $returnPercent = $returnPercent['content']?:0;
-        }else{
-            $returnPercent = 0;
-        }
+
         //提现时间获取
         $returnTime = db('system')->where('type',6)->find();
         $beginTime = '00:00';
         $endTime = '23:59';
+        $returnPercent = '0';
+        $returnNum = '0';
+        $returnMaxMoney = '0';
         if($returnTime){
-            $times = explode('-',$returnTime['content']);
-            if(isset($times[0]) && $times[0]){
-                $beginTime = $times[0];
+            $content = json_decode($returnTime['content'],true);
+            if(isset($content['beginTime']) && $content['beginTime']){
+                $beginTime = $content['beginTime'];
             }
-            if(isset($times[1]) && $times[1]){
-                $endTime = $times[1];
+            if(isset($content['endTime']) && $content['endTime']){
+                $beginTime = $content['endTime'];
+            }
+            //提现费率获取
+            if(isset($content['percent']) && $content['percent']){
+                $returnPercent = $content['percent'];
+            }
+            //提现次数
+            if(isset($content['returnNum']) && $content['returnNum']){
+                $returnNum = $content['returnNum'];
+            }
+            //提现费金额
+            if(isset($content['maxMoney']) && $content['maxMoney']){
+                $returnMaxMoney = $content['maxMoney'];
             }
         }
         $user['version'] = $number;
@@ -438,6 +447,11 @@ class Api extends Controller
         $user['returnBeginTime'] = $beginTime;
         $user['returnEndTime'] = $endTime;
         $user['returnPercent'] = $returnPercent;
+        $user['returnNum'] = $returnNum;
+        $user['returnMaxMoney'] = $returnMaxMoney;
+        //今日已提现金额
+        $hadReturnMoney = Share::getUserTodayReturnMoney($uid);
+        $user['hadReturnMoney'] = $hadReturnMoney;
         Share::jsonData(1,$user);
     }
     /**
@@ -1890,6 +1904,8 @@ class Api extends Controller
         if($money < 20){
             Share::jsonData(0,'','提现金额不能小于20');
         }
+        //判断今日提现次数 判断今日还可提现金额
+        Share::checkReturnLimit($uid,$money);
         //判断是否实名审核通过
         Share::checkRealNameStatus($uid);
         //手续费

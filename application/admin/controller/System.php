@@ -248,10 +248,10 @@ class System extends Base
 
         return $this->fetch();
     }
-    //提现时间
+    //提现设置
     public function returnTime()
     {
-        $type = 6;//1-关于我们 2-帮助中心 3-免责申明 4-版本 5-奖励金额 6-提现时间设置 7-提现费率
+        $type = 6;//1-关于我们 2-帮助中心 3-免责申明 4-版本 5-奖励金额 6-提现设置 7-提现费率
         if(request()->isPost()){
 
             $param = input('post.');
@@ -259,17 +259,22 @@ class System extends Base
 //            if(empty($param['content'])){
 //                return json(['code' => -1, 'data' => '', 'msg' => '内容不能为空']);
 //            }
-            $param['content'] = $content;
+            $contentArr = [
+                'beginTime'=>$param['beginTime'],
+                'endTime'=>$param['endTime'],
+                'timeStr'=>$content,
+                'percent'=>$param['percent'],
+                'returnNum'=>$param['number'],
+                'maxMoney'=>$param['maxMoney'],
+            ];
+            $params['content'] = json_encode($contentArr);
             try{
-                $param['createTime'] = time();
-                $param['type'] = $type;
-                unset($param['beginTime']);
-                unset($param['endTime']);
+                $params['createTime'] = time();
+                $params['type'] = $type;
                 if($param['id']){
-                    $res = db('system')->where('id', $param['id'])->update($param);
+                    $res = db('system')->where('id', $param['id'])->update($params);
                 }else{
-                    unset($param['id']);
-                    $res = db('system')->insert($param);
+                    $res = db('system')->insert($params);
                 }
                 if($res){
                     return json(['code'=>1,'data'=>'','msg'=>'操作成功']);
@@ -285,7 +290,8 @@ class System extends Base
 
         $info = db('system')->where('type', $type)->find();
         if($info){
-            $info['times'] = explode('-',$info['content']);
+            $info['content'] = json_decode($info['content'],true);
+//            $info['times'] = explode('-',$info['content']);
         }else{
             $info = [
                 'id'=>0,

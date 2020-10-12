@@ -1522,4 +1522,41 @@ class Share extends \think\Model
         $returnMoney = self::getDecimalMoney($return);
         return $returnMoney;
     }
+    /**
+     * 获取用户今日已提现金额
+     */
+    public static function getUserTodayReturnMoney($uid){
+        $todayTime = strtotime(date('Y-m-d'));
+        $money = db('user_return')->where(['uid'=>$uid,'createTime'=>['>=',$todayTime]])->sum('money');
+        $money = self::getDecimalMoney($money);
+        return $money;
+    }
+    /**
+     * 判断用户今日的提现次数 和金额
+     */
+    public static function checkReturnLimit($uid,$money){
+        $todayTime = strtotime(date('Y-m-d'));
+        $returnLimit = db('system')->where('type',6)->find();
+        if(!$returnLimit){
+            return true;
+        }
+        $content = json_decode($returnLimit['content'],true);
+        if(isset($content['returnNum']) && $content['returnNum'] > 0){
+            $hadNum = db('user_return')->where(['uid'=>$uid,'createTime'=>['>=',$todayTime]])->count();
+            if($hadNum >= $content['returnNum']){
+                self::jsonData(0,'','您今日已到达提现次数('.$content['returnNum'].')限制！');
+            }
+        }
+        if(isset($content['maxMoney']) && $content['maxMoney'] > 0){
+            $hadMoney = db('user_return')->where(['uid'=>$uid,'createTime'=>['>=',$todayTime]])->sum('money');
+            if($hadMoney >= $content['maxMoney']){
+                self::jsonData(0,'','您今日已到达提现金额('.$content['maxMoney'].')限制！');
+            }
+            $needMoney = $hadMoney + $money;
+            if($needMoney > $content['maxMoney']){
+                $haveMoney = $content['maxMoney'] - $hadMoney;
+                self::jsonData(0,'','您当前可提现余额只有'.$haveMoney.'元');
+            }
+        }
+    }
 }
