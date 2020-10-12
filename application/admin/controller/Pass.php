@@ -300,7 +300,7 @@ class Pass extends Base
             if($passId){
                 $where['passId'] = $passId;
             }
-            $result = db('pass_sign')->where($where)->limit($offset, $limit)->order('signTime', 'desc')->select();
+            $result = db('pass_sign')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
             foreach ($result as $key => $vo) {
                 //获取打卡活动信息
                 $passId = $vo['passId'];
