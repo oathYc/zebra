@@ -68,8 +68,6 @@
             returnNum          每日提现次数  0为不限制  默认0
             returnMaxMoney      每日可提现金额 0位不限制  默认0
             hadReturnMoney       今日已提现金额
-
-
 接口名称    个人信息修改
 接口路径    messageEdit
 接口参数    nickname            昵称

@@ -1513,11 +1513,13 @@ class Share extends \think\Model
      * 获取提现费用
      */
     public static function getReturnPercent($money){
-        $returnPercent = db('system')->where('type',7)->find();
+        $returnPercent = db('system')->where('type',6)->find();
         if(!$returnPercent){
             return 0;
         }
-        $content = $returnPercent['content']?:0;
+        $content = json_decode($returnPercent['content'],true);
+        $content = isset($content['percent'])?$content['percent']:0;
+        $content = $content?$content:0;
         $return = ($content/100)*$money;
         $returnMoney = self::getDecimalMoney($return);
         return $returnMoney;
@@ -1555,7 +1557,7 @@ class Share extends \think\Model
             $needMoney = $hadMoney + $money;
             if($needMoney > $content['maxMoney']){
                 $haveMoney = $content['maxMoney'] - $hadMoney;
-                self::jsonData(0,'','您当前可提现余额只有'.$haveMoney.'元');
+                self::jsonData(0,'','您今日可提现余额只有'.$haveMoney.'元');
             }
         }
     }
