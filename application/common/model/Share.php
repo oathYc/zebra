@@ -1127,7 +1127,7 @@ class Share extends \think\Model
      * 获取用户累计收益金额
      */
     public static function getUserMoneyGet($uid){
-        $moneyGet = db('money_get')->where(['uid'=>$uid])->sum('moneyGet');
+        $moneyGet = db('money_get')->where(['uid'=>$uid,'type'=>['in',[1,2,3]]])->sum('moneyGet');
         return $moneyGet?$moneyGet:0;
     }
     /**
