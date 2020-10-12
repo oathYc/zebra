@@ -289,6 +289,7 @@ class Pass extends Base
             $offset = ($param['pageNumber'] - 1) * $limit;
             $status = $param['status'];
             $uid = $param['uid'];
+            $passId = $param['passId'];
             $where = [];
             if($status != 99){
                 $where['status'] = $status;
@@ -296,7 +297,9 @@ class Pass extends Base
             if($uid){
                 $where['uid'] = $uid;
             }
-
+            if($passId){
+                $where['passId'] = $passId;
+            }
             $result = db('pass_sign')->where($where)->limit($offset, $limit)->order('signTime', 'desc')->select();
             foreach ($result as $key => $vo) {
                 //获取打卡活动信息
@@ -331,6 +334,9 @@ class Pass extends Base
             1=>'已签到',
             2=>'签到失败'
         ];
+        //获取活动数据
+        $pass = db('pass')->field("id,name")->select();
+        $this->assign('pass',$pass);
         $this->assign('statusArr',$statusArr);
         return $this->fetch();
     }

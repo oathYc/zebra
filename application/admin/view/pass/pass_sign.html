@@ -32,6 +32,15 @@
                         </select>
                     </div>&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
+                        <label>闯关活动：</label>
+                        <select class="form-control" id="passId">
+                            <option value="0">全部</option>
+                            {foreach name="pass" item="va" key="key"}
+                            <option value="{$va['id']}">{$va['name']}</option>
+                            {/foreach}
+                        </select>
+                    </div>&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
                         <label>用户uid：</label>
                         <input class="form-control" id="uid" />
                     </div>
@@ -99,6 +108,7 @@
                     pageSize: params.pageSize,
                     status:$('#status').val(),
                     uid:$('#uid').val(),
+                    passId:$('#passId').val(),
                 };
                 return param;
             },
