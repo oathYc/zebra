@@ -281,6 +281,9 @@ class Pass extends Base
     }
     //闯关签到
     public function passSign(){
+        //处理签到失败的数据
+        $now = date('Y-m-d H:i:s');
+        db('pass_sign')->where(['signTimeEnd'=>['<',$now],'status'=>0])->update(['status'=>2]);
         if (request()->isAjax()) {
 
             $param = input('param.');
@@ -326,9 +329,7 @@ class Pass extends Base
             return json($return);
 
         }
-        //处理签到失败的数据
-        $now = date('Y-m-d H:i:s');
-        db('pass_sign')->where(['signTimeEnd'=>['<',$now],'status'=>0])->update(['status'=>2]);
+
         $statusArr = [
             0=>'待签到',
             1=>'已签到',
