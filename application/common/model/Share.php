@@ -1492,19 +1492,22 @@ class Share extends \think\Model
     public static function checkReturnTime(){
         $now = date('H:i');
         $returnTime = db('system')->where('type',6)->find();
+        if(!$returnTime){
+            return true;
+        }
+        $returnTime = json_decode($returnTime['content'],true);
         if($returnTime){
-            $times = explode('-',$returnTime['content']);
-            if(isset($times[0]) && $times[0] && isset($times[1]) && $times[1]){
-                if($now < $times[0] || $now > $times[1]){
-                    self::jsonData(0,'','你当前不在提现时间内（'.$returnTime['content'].'）');
+            if(isset($returnTime['beginTime']) && $returnTime['beginTime'] && isset($returnTime['endTime']) && $returnTime['endTime']){
+                if($now < $returnTime['beginTime'] || $now > $returnTime['endTime']){
+                    self::jsonData(0,'','你当前不在提现时间内（'.$returnTime['beginTime'].'-'.$returnTime['endTime'].'）');
                 }
-            }elseif(isset($times[0]) && $times[0]){
-                if($now < $times[0]){
-                    self::jsonData(0,'','提现时间必须在'.$times[0].'后');
+            }elseif(isset($returnTime['beginTime']) && $returnTime['beginTime']){
+                if($now < $returnTime['beginTime']){
+                    self::jsonData(0,'','提现时间必须在'.$returnTime['beginTime'].'后');
                 }
-            }elseif(isset($times[1]) && $times[1]){
-                if($now > $times[1]){
-                    self::jsonData(0,'','提现时间必须在'.$times[1].'前');
+            }elseif(isset($returnTime['endTime']) && $returnTime['endTime']){
+                if($now > $returnTime['endTime']){
+                    self::jsonData(0,'','提现时间必须在'.$returnTime['endTime'].'前');
                 }
             }
         }
