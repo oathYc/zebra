@@ -66,6 +66,7 @@
             returnBeginTime    提现开始时间  时分单位
             returnEndTime       提现结束时间  时分单位
             returnNum          每日提现次数  0为不限制  默认0
+            hadReturnNum        今日已提现次数
             returnMaxMoney      每日可提现金额 0位不限制  默认0
             hadReturnMoney       今日已提现金额
 接口名称    个人信息修改

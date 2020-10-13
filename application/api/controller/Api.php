@@ -440,6 +440,8 @@ class Api extends Controller
                 $returnMaxMoney = $content['maxMoney'];
             }
         }
+        //今日已提现次数
+        $hadReturnNum = db('user_return')->where(['uid'=>$uid,'createTime'=>['>=',strtotime(date("Y-m-d"))]])->count();
         $user['version'] = $number;
         $user['signNum'] = $signNum;
         $user['moneyGet'] = $moneyGet;
@@ -448,6 +450,7 @@ class Api extends Controller
         $user['returnEndTime'] = $endTime;
         $user['returnPercent'] = $returnPercent;
         $user['returnNum'] = $returnNum;
+        $user['hadReturnNum'] = $hadReturnNum;
         $user['returnMaxMoney'] = $returnMaxMoney;
         //今日已提现金额
         $hadReturnMoney = Share::getUserTodayReturnMoney($uid);
