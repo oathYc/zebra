@@ -239,8 +239,19 @@ class Pass extends Base
 
             $limit = $param['pageSize'];
             $offset = ($param['pageNumber'] - 1) * $limit;
-
+            $status = $param['status'];
+            $uid = $param['uid'];
+            $passId = $param['passId'];
             $where = [];
+            if($status != 99){
+                $where['status'] = $status;
+            }
+            if($uid){
+                $where['uid'] = $uid;
+            }
+            if($passId){
+                $where['passId'] = $passId;
+            }
 
             $result = db('pass_join')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
             foreach ($result as $key => $vo) {
@@ -264,6 +275,15 @@ class Pass extends Base
             return json($return);
 
         }
+        //获取活动数据
+        $pass = db('pass')->field("id,name")->select();
+        $this->assign('pass',$pass);
+        $statusArr = [
+            0=>'参与中',
+            1=>'已完成',
+            2=>'未完成',
+        ];
+        $this->assign('statusArr',$statusArr);
         return $this->fetch();
     }
     //参与报名状态

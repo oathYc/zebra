@@ -255,8 +255,19 @@ class Clock extends Base
 
             $limit = $param['pageSize'];
             $offset = ($param['pageNumber'] - 1) * $limit;
-
+            $status = $param['status'];
+            $uid = $param['uid'];
+            $clockInId = $param['clockInId'];
             $where = [];
+            if($status != 99){
+                $where['status'] = $status;
+            }
+            if($uid){
+                $where['uid'] = $uid;
+            }
+            if($clockInId){
+                $where['clockInId'] = $clockInId;
+            }
 
             $result = db('clock_in_join')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
             foreach ($result as $key => $vo) {
@@ -275,11 +286,20 @@ class Clock extends Base
                 $user = db('member')->where('id',$vo['uid'])->find();
                 $result[$key]['nickname'] = $user['nickname'];
             }
-            $return['total'] = db('clock_in_join')->count();  //总数据
+            $return['total'] = db('clock_in_join')->where($where)->count();  //总数据
             $return['rows'] = $result;
             return json($return);
 
         }
+        //获取活动数据
+        $clockIn = db('clock_in')->field("id,name")->select();
+        $this->assign('clockIn',$clockIn);
+        $statusArr = [
+            0=>'已失败',
+            1=>'参与中',
+            2=>'已完成',
+        ];
+        $this->assign('statusArr',$statusArr);
         return $this->fetch();
     }
     //参与报名状态
@@ -303,8 +323,16 @@ class Clock extends Base
 
             $limit = $param['pageSize'];
             $offset = ($param['pageNumber'] - 1) * $limit;
-
+            $uid = $param['uid'];
+            $clockInId = $param['clockInId'];
             $where = [];
+
+            if($uid){
+                $where['uid'] = $uid;
+            }
+            if($clockInId){
+                $where['clockInId'] = $clockInId;
+            }
 
             $result = db('clock_in_sign')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
             foreach ($result as $key => $vo) {
@@ -324,11 +352,14 @@ class Clock extends Base
                 $user = db('member')->where('id',$vo['uid'])->find();
                 $result[$key]['nickname'] = $user['nickname'];
             }
-            $return['total'] = db('clock_in_join')->count();  //总数据
+            $return['total'] = db('clock_in_join')->where($where)->count();  //总数据
             $return['rows'] = $result;
             return json($return);
 
         }
+        //获取活动数据
+        $clockIn = db('clock_in')->field("id,name")->select();
+        $this->assign('clockIn',$clockIn);
         return $this->fetch();
     }
     //排行榜
