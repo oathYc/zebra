@@ -425,7 +425,7 @@ class Api extends Controller
                 $beginTime = $content['beginTime'];
             }
             if(isset($content['endTime']) && $content['endTime']){
-                $beginTime = $content['endTime'];
+                $endTime = $content['endTime'];
             }
             //提现费率获取
             if(isset($content['percent']) && $content['percent']){
