@@ -1320,6 +1320,11 @@ class Share extends \think\Model
         if($user['inviterCode']){
             $sharer = db('member')->where('inviteCode',$user['inviterCode'])->find();
             if($sharer){//有邀请信息
+                //判断邀请人是否参加了闯关活动 参加了才有奖励
+                $hadJoin = db('pass_join')->where(['uid'=>$sharer['id']])->find();
+                if(!$hadJoin){
+                    return false;
+                }
                 //获取一级分销比例
                 $passPercent = db('system')->where('type',8)->find();
                 if($passPercent && $passPercent['content'] > 0 && $rewardMoney > 0){
