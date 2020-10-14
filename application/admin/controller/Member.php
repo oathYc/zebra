@@ -268,7 +268,7 @@ class Member extends Base
                 $result[$key]['operate'] = $this->makeReturnBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
                 $result[$key]['returnTime'] = $vo['status']==1?date('Y-m-d H:i:s',$vo['returnTime']):'';
-                $result[$key]['typeStr'] = $vo['type']==1?'微信':'支付宝';
+                $result[$key]['typeStr'] = $vo['type']==2?'微信':'支付宝';
                 $result[$key]['statusStr'] = self::getReturnStatus($vo['status']);
             }
 
