@@ -79,7 +79,9 @@ class Pass extends Base
             $param['money'] = $moneys[0];
 
             $signTime = isset($param['signTime'])?$param['signTime']:[];
+            $signPercent = isset($param['signPercent'])?$param['signPercent']:[];
             unset($param['signTime']);
+            unset($param['signPercent']);
             if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
                 $param['reward'] = 100;
             }
@@ -112,8 +114,9 @@ class Pass extends Base
                     db('pass_price')->where('passId',$passId)->delete();
                     db('pass_price')->insertAll($moneyArr);
                 }
-                //记录签到时间
+                //记录签到时间 每轮签到奖励
                 $signTimeArr = [];
+                $signPercentArr = [];
                 $number = $param['challenge'];
                 for($j=0;$j<$number;$j++){
                     if(isset($signTime[$j]) && $signTime[$j]>0){
@@ -121,9 +124,20 @@ class Pass extends Base
                     }else{
                         $signTimeArr[] = ['number'=>$j+1,'time'=>3,'passId'=>$passId,'createTime'=>$time];//默认3分钟
                     }
+                    if($param['rewardType'] == 3){//报名百分比才设置对应的签到奖励
+                        if(isset($signPercent[$j]) && $signPercent[$j]>0){
+                            $signPercentArr[] = ['number'=>$j+1,'percent'=>$signPercent[$j],'passId'=>$passId,'createTime'=>$time];
+                        }else{
+                            $signPercentArr[] = ['number'=>$j+1,'percent'=>0,'passId'=>$passId,'createTime'=>$time];//默认3分钟
+                        }
+                    }
                 }
                 db('pass_time')->where('passId',$passId)->delete();
                 db('pass_time')->insertAll($signTimeArr);
+                db('pass_percent')->where('passId',$passId)->delete();
+                if($param['rewardType'] == 3){
+                    db('pass_percent')->insertAll($signPercentArr);
+                }
             }catch(\Exception $e){
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
@@ -216,7 +230,9 @@ class Pass extends Base
         $info['moneys'] = implode('元、',$pricesArr).'元';
         //获取签到时间
         $signTime = db('pass_time')->where('passId',$info['id'])->order('number','asc')->select();
+        $signPercent = db('pass_percent')->where('passId',$info['id'])->order('number','asc')->select();
         $info['signTimeArr'] = $signTime;
+        $info['signPercentArr'] = $signPercent;
         $this->assign('info',$info);
         return $this->fetch();
     }

@@ -153,13 +153,17 @@ class Task extends Controller
                $uid = $val['uid'];
                $return = $val['moneyReturn'];
                $joinId = $val['joinId'];
+               $userNumberData = [];
                if($rewardType == 1){
                    $userMoney = $rewardMoney;
                }elseif($rewardType == 2){
                    $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
-               }else{
-                   $rewardMoney = $val['joinMoney'] * ($v['reward']/100);
-                   $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
+               }else{//报名费百分比奖励模式
+                   $userMoneyData = self::getUserPassReward($uid,$v['id'],$joinId,$val['joinMoney']);
+//                   $rewardMoney = $val['joinMoney'] * ($v['reward']/100);
+//                   $userMoney = $rewardMoney*intval($challengeNumber);//按挑战轮数计算
+                   $userMoney = $userMoneyData['userMoney'];
+                   $userNumberData = $userMoneyData['userNumberMoney'];
                }
                //判断是否已发改奖励 避免重复发放
                $checkDate = date('Y-m-d');
@@ -171,7 +175,11 @@ class Task extends Controller
                }
                //奖励发放
                Share::sendPassRewardNew($uid,$userMoney,$v,$joinId,$number);
+
                try{
+                   if($userNumberData){//记录用户的每轮奖励数据
+                       db('pass_reward_number')->insertAll($userNumberData);
+                    }
                    //邀请人分销奖励发放
                    Share::sendPassShareReward($uid,$userMoney,$v,$joinId,$number);
                }catch(Exception $re){
@@ -562,6 +570,57 @@ class Task extends Controller
            //记录房间数据
            db('room_create')->where('id',$room['id'])->update(['successCount'=>$successCount,'successMoney'=>$successMoney,'failCount'=>$failCount,'failMoney'=>$failMoney]);
        }
+   }
+   /**
+    * 闯关模式
+    * 报名费奖励模式
+    * 获取用户挑战奖励
+    */
+   public static  function getUserPassReward($uid,$passId,$joinId,$joinMoney=0){
+       $return = [
+           'userMoney'=>0,
+           'userNumberMoney'=>[],
+       ];
+       $passPercent = db('pass_percent')->where('passId',$passId)->order('number','asc')->select();
+       if(!$joinMoney || !$passPercent){
+           return $return;
+       }
+        //获取签到成功的数据 打卡状态  0-未打卡 1-已打卡
+       $signSuccessData = db('pass_sign')->where(['uid'=>$uid,'passId'=>$passId,'joinId'=>$joinId,'status'=>1])->order('number','asc')->select();
+       if(!$signSuccessData){
+           return $return;
+       }
+       $date = date('Y-m-d');
+       $time = time();
+       foreach ($signSuccessData as $k => $v){
+           $number = $v['number'];//当前轮数
+           foreach($passPercent as $p => $o){
+               if($o['number'] == $number){
+                    //计算当前轮数的奖励
+                   if($o['percent']){
+                       $money = $joinMoney*($o['percent']/100);
+                   }else{
+                       $money = 0;
+                   }
+                   $money = Share::getDecimalMoney($money);
+                   //记录数据
+                   $return['userMoney'] += $money;
+                   $return['userNumberMoney'][] = [
+                       'uid'=>$uid,
+                       'passId'=>$passId,
+                       'joinId'=>$joinId,
+                       'date'=>$date,
+                       'money'=>$money,
+                       'createTime'=>$time,
+                       'number'=>$number,
+                       'joinMoney'=>$joinMoney,
+                       'percent'=>$o['percent']
+                   ];
+                   continue;
+               }
+           }
+       }
+       return $return;
    }
 
 }

@@ -1337,8 +1337,17 @@ class Share extends \think\Model
                         self::userMoneyRecord($sharer['id'],$shareMoney,'下级闯关活动奖励分成'.'第'.$number.'期',1,5,1);
                         //分享奖励
 //                        self::shareReward($sharer['id'],$pass['id'],$pass['name'].'第'.$number.'期',4);
+                        $insert = [
+                            'uid'=>$sharer['id'],
+                            'shareUid'=>$uid,
+                            'type'=>4,
+                            'money'=>$shareMoney,
+                            'objectId'=>$pass['id'],
+                            'createTime'=> time(),
+                        ];
+                        db('share_reward')->insert($insert);
                         //奖励金额记录
-                        self::rewardRecord($sharer['id'],$shareMoney,$pass['id'],3,$joinId);
+//                        self::rewardRecord($sharer['id'],$shareMoney,$pass['id'],3,$joinId);
                         //收益记录
                         self::userMoneyGet($sharer['id'],$shareMoney,4);
                     }
