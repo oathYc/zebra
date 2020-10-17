@@ -446,7 +446,7 @@ class Pass extends Base
             if($param['passId']){
                 $where['passId'] = $param['passId'];
             }
-            $data = db('pass_reward_record')->where($where)->order('number','desc')->limit($offset,$limit)->select();
+            $data = db('pass_reward_record')->where($where)->order('date','desc')->limit($offset,$limit)->select();
             $return['total'] = db('pass_reward_record')->where($where)->count();  //总数据
             $return['rows'] = $data;
             return json($return);
