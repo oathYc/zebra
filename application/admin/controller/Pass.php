@@ -26,7 +26,11 @@ class Pass extends Base
                 // 优化显示头像
                 $statusStr  = $vo['status']== 1?'启用':'关闭';
                 $result[$key]['statusStr'] = $statusStr;
-                $result[$key]['joinTime'] = $vo['beginTimeStr'].'-'.$vo['endTimeStr'];
+                $signTime = $vo['beginTimeStr'].'-'.$vo['endTimeStr'];
+                if($vo['secondBeginStr'] && $vo['secondEndStr']){
+                    $signTime .= "<br/>".$vo['secondBeginStr'].'-'.$vo['secondEndStr'];
+                }
+                $result[$key]['joinTime'] = $signTime;
                 $result[$key]['rewardType'] = self::rewardType($vo['rewardType']);
                 // 生成操作按钮
                 $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
