@@ -931,7 +931,12 @@ class Share extends \think\Model
         $currTime = date("H:i");
         $currMinute = self::getMinute($currTime);
         if($currMinute >= $pass['beginTime'] && $currMinute <= $pass['endTime']){
-            Share::jsonData(0,'','该闯关活动只能在'.$pass['beginTimeStr'].'-'.$pass['endTimeStr'].'时间段之外才可报名！');
+            Share::jsonData(0,'','该闯关活动在'.$pass['beginTimeStr'].'-'.$pass['endTimeStr'].'时间段内不可报名！');
+        }
+        if($pass['secondBegin'] && $pass['secondEnd']){
+            if($currMinute >= $pass['secondBegin'] && $currMinute <= $pass['secondEnd']){
+                Share::jsonData(0,'','该闯关活动在'.$pass['secondBeginStr'].'-'.$pass['secondEndStr'].'时间段内不可报名！');
+            }
         }
     }
     /**

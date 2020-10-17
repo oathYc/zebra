@@ -126,6 +126,14 @@
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">禁止报名时间：</label>
+                            <div class="input-group ">
+                                <input id="beginTime1" type="text" class="input-date form-control" name="secondBeginStr"  style="width: 100px" autocomplete="off" placeholder="开始时间" value="{$info['secondBeginStr']}">
+                                <!--                                <span style="position: relative;margin-left: -119px;" >到</span>-->
+                                <input id="endTime1" type="text" class=" input-date form-control" name="secondEndStr"  style="width: 100px;margin-left: 26px" autocomplete="off" placeholder="结束时间" value="{$info['secondEndStr']}">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">活动排序：</label>
                             <div class="input-group col-sm-4">
                                 <input   type="text" lay-verify="number" class="form-control" name="number" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="" value="{$info['number']}">
@@ -210,6 +218,20 @@
         });
         laydate.render({
             elem:'#endTime',
+            type:'time',
+            trigger:'click',
+            format:'HH:mm',
+            ready:formatminutes,
+        });
+        laydate.render({
+            elem:'#beginTime1',
+            type:'time',
+            trigger:'click',
+            format:'HH:mm',
+            ready:formatminutes,
+        });
+        laydate.render({
+            elem:'#endTime1',
             type:'time',
             trigger:'click',
             format:'HH:mm',

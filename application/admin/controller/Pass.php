@@ -59,6 +59,15 @@ class Pass extends Base
             if($param['endTime'] <= $param['beginTime']){
                 return json(['code' => -1, 'data' => '', 'msg' => '禁止报名结束时间必须大于开始时间！']);
             }
+            if(($param['secondBeginStr'] && !$param['secondEndStr']) || (!$param['secondBeginStr'] && $param['secondEndStr'])){
+                $param['secondEndStr'] = '';
+                $param['secondBeginStr'] = '';
+            }
+            $param['secondBegin'] = Share::getMinute($param['secondBeginStr']);
+            $param['secondEnd'] = Share::getMinute($param['secondEndStr']);
+            if($param['secondEnd'] && $param['secondBegin'] && ($param['secondEnd'] <= $param['secondBegin'])){
+                return json(['code' => -1, 'data' => '', 'msg' => '禁止报名结束时间必须大于开始时间！']);
+            }
 //            if(!$param['hour']){
 //                $param['hour'] = '2.5';
 //            }
@@ -419,5 +428,74 @@ class Pass extends Base
             return json($return);
         }
         return $this->fetch();
+    }
+    //闯关奖励
+    public function passReward(){
+        if(request()->isAjax()){
+            self::updatePassRewardRecord();
+            $param = input('param.');
+
+            $limit = $param['pageSize'];
+            $offset = ($param['pageNumber'] - 1) * $limit;
+            $where = [
+            ];
+            if($param['passId']){
+                $where['passId'] = $param['passId'];
+            }
+            $data = db('pass_reward_record')->where($where)->order('number','desc')->limit($offset,$limit)->select();
+            $return['total'] = db('pass_reward_record')->where($where)->count();  //总数据
+            $return['rows'] = $data;
+            return json($return);
+        }
+        $pass = db('pass')->select();
+        $this->assign('pass',$pass);
+        return $this->fetch();
+    }
+    //更新奖励数据
+    public static function updatePassRewardRecord(){
+        $pass = db('pass')->select();
+        foreach($pass as $k => $v){
+            //获取当前期数
+            $number = Share::getPassNumber($v);
+            if($number > 1){
+                $targetNumber  = $number-1;//统计期数
+                $time = time();
+                $insertAll = [];
+                for($i=1;$i<=$targetNumber;$i++){
+                    //判断是否已有记录
+                    $hadRecord = db('pass_reward_record')->where(['passId'=>$v['id'],'number'=>$i])->find();
+                    if(!$hadRecord){//统计该期的数据
+                        $joinData = db('pass_join')->where(['passId'=>$v['id'],'number'=>$i])->select();
+                        $joinNumber = count($joinData);//参与人数
+                        $joinMoney = 0;//参与金额
+                        $joinIds = [];//参与id集合
+                        $signNumber = 0;//闯关次数
+                        $rewardMoney = 0;
+                        foreach($joinData as $r => $t){
+                            $joinIds[] = $t['id'];
+                            $joinMoney += $t['joinMoney'];
+                        }
+                        if($joinNumber > 0){
+                            $signNumber = db('pass_sign')->where(['passId'=>$v['id'],'status'=>1,'joinId'=>['in',$joinIds]])->count();
+                            //获取发出去的闯关收益
+                            $rewardMoney = db('pass_reward')->where(['passId'=>$v['id'],'joinId'=>['in',$joinIds]])->sum('money');
+                        }
+                        $insertAll[] = [
+                            'passId'=>$v['id'],
+                            'passName'=>$v['name'],
+                            'number'=>$i,
+                            'joinNumber'=>$joinNumber,
+                            'joinMoney'=>$joinMoney,
+                            'signNumber'=>$signNumber,
+                            'rewardMoney'=>$rewardMoney,
+                            'createTime'=>$time,
+                        ];
+                    }
+                }
+                if($insertAll){
+                    db('pass_reward_record')->insertAll($insertAll);
+                }
+            }
+        }
     }
 }
