@@ -126,7 +126,7 @@
                         <div class="form-group signTimeDiv">
                             <label class="col-sm-3 control-label">挑战轮数：</label>
                             <div class="input-group col-sm-4">
-                                <input  type="text" id="challenge" lay-verify="number" class="form-control" name="challenge" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="" style="width: 86px;" autocomplete="off"  onchange="addChallenge()"><br/>>&nbsp;&nbsp;
+                                <input  type="text" id="challenge" lay-verify="number" class="form-control" name="challenge" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="" style="width: 86px;" autocomplete="off"  onchange="addChallenge()"><br/>&nbsp;&nbsp;
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
@@ -346,7 +346,7 @@
                 '                            <label class="col-sm-3 control-label">第'+i+'轮签到时间：</label>\n' +
                 '                            <div class="input-group">\n' +
                 '                                <input  type="text"  class="form-control" name="signTime[]"  onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到时间"  style="width: 100px;" placeholder="默认3分钟">\n'
-                + '<input  type="text"  class="form-control" name="signPercent[]" value=""  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到收益" placeholder="默认0">\n' +
+                + '<input  type="text"  class="form-control" name="signPercent[]" value=""  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^.\\d]/g,\'\')" title="签到收益" placeholder="默认0">\n' +
                 '                            </div>\n' +
                 '                        </div>\n';
         }

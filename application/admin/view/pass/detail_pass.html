@@ -149,7 +149,7 @@
                                 <label class="col-sm-3 control-label">第{$signTime['number']}轮设置：</label>
                                 <div class="input-group ">
                                     <input  type="text"  class="form-control" name="signTime[]" value="{$signTime['time']}"  style="width: 100px"   onkeyup = "value=value.replace(/[^\d]/g,'')" title="签到时间" placeholder="默认3分钟">&nbsp;&nbsp;&nbsp;
-                                    <input  type="text"  class="form-control" name="signPercent[]" value="{$signTime['percent']}"  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^\d]/g,'')" title="签到收益" placeholder="默认0">
+                                    <input  type="text"  class="form-control" name="signPercent[]" value="{$signTime['percent']}"  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^.\d]/g,'')" title="签到收益" placeholder="默认0">
                                 </div>
                             </div>
                             {/foreach}
@@ -371,7 +371,7 @@
                 '                            <label class="col-sm-3 control-label">第'+i+'轮签到时间：</label>\n' +
                 '                            <div class="input-group">\n' +
                 '                                <input  type="text"  class="form-control" name="signTime[]"  onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到时间"  style="width: 100px;" placeholder="默认3分钟">\n'
-                + '<input  type="text"  class="form-control" name="signPercent[]" value=""  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到收益" placeholder="默认0">\n' +
+                + '<input  type="text"  class="form-control" name="signPercent[]" value=""  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^.\\d]/g,\'\')" title="签到收益" placeholder="默认0">\n' +
                 '                            </div>\n' +
                 '                        </div>\n';
         }
