@@ -461,6 +461,8 @@ class Pass extends Base
         foreach($pass as $k => $v){
             //获取当前期数
             $number = Share::getPassNumber($v);
+            $date = date('Y-m-d',$v['createTime']);
+            $dateTime = strtotime($date);
             if($number > 1){
                 $targetNumber  = $number-1;//统计期数
                 $time = time();
@@ -484,6 +486,7 @@ class Pass extends Base
                             //获取发出去的闯关收益
                             $rewardMoney = db('pass_reward')->where(['passId'=>$v['id'],'joinId'=>['in',$joinIds]])->sum('money');
                         }
+                        $dateRecord = date("Y-m-d",($dateTime+($i-1)*86400));
                         $insertAll[] = [
                             'passId'=>$v['id'],
                             'passName'=>$v['name'],
@@ -493,6 +496,7 @@ class Pass extends Base
                             'signNumber'=>$signNumber,
                             'rewardMoney'=>$rewardMoney,
                             'createTime'=>$time,
+                            'date'=>$dateRecord,
                         ];
                     }
                 }
