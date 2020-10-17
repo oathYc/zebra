@@ -82,9 +82,10 @@ class Pass extends Base
             $signPercent = isset($param['signPercent'])?$param['signPercent']:[];
             unset($param['signTime']);
             unset($param['signPercent']);
-            if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
-                $param['reward'] = 100;
-            }
+//            if(in_array($param['rewardType'],[1,3]) && $param['reward'] > 100){
+//                $param['reward'] = 100;
+//            }
+            $param['rewardType'] = 3;//报名费百分比奖励
 //            $has = db('pass')->field('id')->where('number', $param['number'])->find();
 //            if(!empty($has)){
 //                return json(['code' => -1, 'data' => '', 'msg' => '该闯关活动（期数相同）已经存在']);
@@ -230,9 +231,16 @@ class Pass extends Base
         $info['moneys'] = implode('元、',$pricesArr).'元';
         //获取签到时间
         $signTime = db('pass_time')->where('passId',$info['id'])->order('number','asc')->select();
-        $signPercent = db('pass_percent')->where('passId',$info['id'])->order('number','asc')->select();
+        foreach($signTime as $p => $r){
+            $percent = db('pass_percent')->where(['passId'=>$info['id'],'number'=>$r['number']])->find();
+            if(!$percent){
+                $percent = 0;
+            }else{
+                $percent = $percent['percent']?$percent['percent']:0;
+            }
+            $signTime[$p]['percent'] = $percent;
+        }
         $info['signTimeArr'] = $signTime;
-        $info['signPercentArr'] = $signPercent;
         $this->assign('info',$info);
         return $this->fetch();
     }

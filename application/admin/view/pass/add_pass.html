@@ -87,20 +87,20 @@
                                 <input type="radio" name="status" checked value="1" title="启用" />
                             </div>
                         </div>
-                        <div class="form-group layui-form-item">
-                            <label class="col-sm-3 control-label">奖励类型：</label>
-                            <div class="input-group">
-                                <input type="radio" name="rewardType" value="1" title="失败金额百分比" />
-                                <input type="radio" name="rewardType" value="2" title="固定奖励金额" />
-                                <input type="radio" name="rewardType" value="3" title="报名费用百分比" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">奖励值：</label>
-                            <div class="input-group col-sm-4">
-                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="对应奖励类型的值" onkeyup = "value=value.replace(/[^.\d]/g,'')">
-                            </div>
-                        </div>
+<!--                        <div class="form-group layui-form-item">-->
+<!--                            <label class="col-sm-3 control-label">奖励类型：</label>-->
+<!--                            <div class="input-group">-->
+<!--                                <input type="radio" name="rewardType" value="1" title="失败金额百分比" />-->
+<!--                                <input type="radio" name="rewardType" value="2" title="固定奖励金额" />-->
+<!--                                <input type="radio" name="rewardType" value="3" title="报名费用百分比" />-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="form-group">-->
+<!--                            <label class="col-sm-3 control-label">奖励值：</label>-->
+<!--                            <div class="input-group col-sm-4">-->
+<!--                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="对应奖励类型的值" onkeyup = "value=value.replace(/[^.\d]/g,'')">-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="form-group">
                             <label class="col-sm-3 control-label">禁止报名时间：</label>
                             <div class="input-group ">
@@ -118,10 +118,7 @@
                         <div class="form-group signTimeDiv">
                             <label class="col-sm-3 control-label">挑战轮数：</label>
                             <div class="input-group col-sm-4">
-                                <input  type="text" id="challenge" lay-verify="number" class="form-control" name="challenge" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="" style="width: 86px;" autocomplete="off">&nbsp;&nbsp;
-                                <span class="btn btn-primary" onclick="addChallenge()">设置</span>&nbsp;&nbsp;
-                                <span class="btn btn-primary" onclick="addChallengePercent()">收益</span>&nbsp;&nbsp;
-                                <span class="btn btn-primary" onclick="delChallenge()">取消</span>
+                                <input  type="text" id="challenge" lay-verify="number" class="form-control" name="challenge" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="" style="width: 86px;" autocomplete="off"  onchange="addChallenge()">&nbsp;&nbsp;
                             </div>
                         </div>
                         <div class="form-group layui-form-item form-inline" style="height: 60px;">
@@ -315,16 +312,19 @@
         $('#moneyParent').append(str);
     }
     function addChallenge(){
+        $('.signTime').remove();
         var number = $('#challenge').val();
         if(!number || number < 1){
-            alert("请先设置正确的挑战轮数！");return false;
+            // alert("请先设置正确的挑战轮数！");
+            return false;
         }
         var str= '';
         for( var i=1;i<=number;i++){
             str += '                        <div class="form-group signTime">\n' +
                 '                            <label class="col-sm-3 control-label">第'+i+'轮签到时间：</label>\n' +
-                '                            <div class="input-group col-sm-4">\n' +
-                '                                <input  type="text"  class="form-control" name="signTime[]"  onkeyup = "value=value.replace(/[^\\d]/g,\'\')" placeholder="默认3分钟">\n' +
+                '                            <div class="input-group">\n' +
+                '                                <input  type="text"  class="form-control" name="signTime[]"  onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到时间"  style="width: 100px;" placeholder="默认3分钟">\n'
+                + '<input  type="text"  class="form-control" name="signPercent[]" value=""  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到收益" placeholder="默认0">\n' +
                 '                            </div>\n' +
                 '                        </div>\n';
         }
