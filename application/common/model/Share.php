@@ -1504,6 +1504,13 @@ class Share extends \think\Model
         if($now > $beginTime && $now <= $endTime){
             db('pass_join')->where('id',$joinId)->update(['status'=>1]);
         }
+        if($pass['secondBeginStr'] && $pass['secondEndStr']){//第二个禁止报名时间
+            $secondBegin = $pass['secondBeginStr'].':00';
+            $secondEnd = $pass['secondEndStr'].':59';
+            if($now > $secondBegin && $now <= $secondEnd){
+                db('pass_join')->where('id',$joinId)->update(['status'=>1]);
+            }
+        }
     }
     /**
      * 检查是否在提现设置的时间段内
