@@ -2133,6 +2133,8 @@ class Api extends Controller
             'status'=>2,//参加状态  0-参与中 1-已完成 2-未完成
             ];
         $total = db('pass_join')->where($where)->count();
+        $totalMoney = db('pass_join')->where($where)->sum('joinMoney');
+        $totalMoney = $totalMoney?$totalMoney:0;
         $data = db('pass_join')->where($where)->limit($offset,$pageSize)->order('joinTime','desc')->select();
         foreach($data as $k => $v){
             $pass = db('pass')->where('id',$v['passId'])->find();
@@ -2143,8 +2145,9 @@ class Api extends Controller
             }
         }
         $return = [
+            'total'=>$total,
+            'totalMoney'=>$totalMoney,
             'data' => $data,
-            'total'=>$total
         ];
         Share::jsonData(1,$return);
     }
