@@ -1367,9 +1367,8 @@ class Share extends \think\Model
      */
     public static function sendPassFinishReward($uid,$pass,$joinId,$number=1){
         //查看是否有额外奖励设置
-        $reward = db('system')->where('type',10)->find();
-        if($reward){
-            $reward = $reward['content'];
+        if(isset($pass['finishReward']) && $pass['finishReward']){
+            $reward = $pass['finishReward'];
         }else{
             $reward = 0;
         }
