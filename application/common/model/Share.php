@@ -1362,6 +1362,31 @@ class Share extends \think\Model
         }
     }
     /**
+     * 闯关挑战全部完成
+     * 额外奖励发放
+     */
+    public static function sendPassFinishReward($uid,$pass,$joinId,$number=1){
+        //查看是否有额外奖励设置
+        $reward = db('system')->where('type',10)->find();
+        if($reward){
+            $reward = $reward['content'];
+        }else{
+            $reward = 0;
+        }
+        $reward = self::getDecimalMoney($reward);
+        $user = db('member')->where('id',$uid)->find();
+        $addMoney = $user['money'] + $reward;
+        db('member')->where('id',$uid)->update(['money'=>$addMoney]);
+        $desc = '闯关活动挑战完成奖励-'.$pass['name'].'第'.$number.'期';
+        self::userMoneyRecord($uid,$reward,$desc,1,3,1);
+//        if($reward){
+            //收益记录
+//            self::userMoneyGet($uid,$reward,3);
+            //收益明细记录
+//            self::rewardRecord($uid,$reward,$pass['id'],3,$joinId);
+//        }
+    }
+    /**
      * 闯关
      * 每日凌晨结算
      * 本金退还

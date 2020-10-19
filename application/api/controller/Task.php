@@ -175,13 +175,15 @@ class Task extends Controller
                }
                //奖励发放
                Share::sendPassRewardNew($uid,$userMoney,$v,$joinId,$number);
-
                try{
                    if($userNumberData){//记录用户的每轮奖励数据
                        db('pass_reward_number')->insertAll($userNumberData);
                     }
                    //邀请人分销奖励发放
                    Share::sendPassShareReward($uid,$userMoney,$v,$joinId,$number);
+                   if($challengeNumber == $v['number']){//闯关挑战全部完成 额外奖励发送
+                        Share::sendPassFinishReward($uid,$v,$joinId,$number);
+                   }
                }catch(Exception $re){
                }
                //本金退还
