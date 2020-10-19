@@ -26,7 +26,8 @@ class Member extends Base
 
             $where = [];
             if (!empty($param['searchText'])) {
-                $where['nickname'] = ['like', '%' . $param['searchText'] . '%'];
+//                $where['nickname'] = ['like', '%' . $param['searchText'] . '%'];
+                $where['id'] =$param['searchText'];
             }
 
             $result = db('member')->where($where)->limit($offset, $limit)->order('id', 'desc')->select();
@@ -429,7 +430,25 @@ class Member extends Base
             $operate .= '<a href="javascript:realNameCheck(' . $id . ')"><button type="button" class="btn btn-primary btn-sm">';
             $operate .= '<i class="fa fa-paste"></i>通过</button></a> ';
         }
+        $operate .= '<a href="javascript:resetName(' . $id . ')"><button type="button" class="btn btn-danger btn-sm">';
+        $operate .= '<i class="fa fa-paste"></i>重置</button></a> ';
         return $operate;
+    }
+    //实名认证重置
+    public function resetRealName(){
+        if (request()->isAjax()) {
+            $id = input('param.id/d');
+            try {
+                $member = db('member')->where('id',$id)->find();
+                if(!$member){
+                    return json(['code' => 1, 'data' => '', 'msg' => '申请用户不存在']);
+                }//实名认证审核状态 0-未提交 1-待审核 2-审核通过 3-审核失败
+                db('member')->where('id',$id)->update(['check'=>0,'card'=>'','real_name'=>'']);
+            } catch (\Exception $e) {
+                return json(['code' => -1, 'data' => '', 'msg' => $e->getMessage()]);
+            }
+            return json(['code' => 1, 'data' => '', 'msg' => '操作成功']);
+        }
     }
     //实名认证审核
     public function realNameCheck(){
