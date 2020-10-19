@@ -2118,5 +2118,34 @@ class Api extends Controller
         }
         die(1);
     }
-
+    /**
+     * 闯关
+     * 我的贡献
+     * 失败记录
+     */
+    public function myPassFail(){
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $uid = $this->uid;
+        $offset = $pageSize*($page-1);
+        $where = [
+            'uid'=>$uid,
+            'status'=>2,//参加状态  0-参与中 1-已完成 2-未完成
+            ];
+        $total = db('pass_join')->where($where)->count();
+        $data = db('pass_join')->where($where)->limit($offset,$pageSize)->order('joinTime','desc')->select();
+        foreach($data as $k => $v){
+            $pass = db('pass')->where('id',$v['passId'])->find();
+            if($pass){
+                $data[$k]['passName'] = $pass['name'];
+            }else{
+                $data[$k]['passName'] = '活动已被删除';
+            }
+        }
+        $return = [
+            'data' => $data,
+            'total'=>$total
+        ];
+        Share::jsonData(1,$return);
+    }
 }
