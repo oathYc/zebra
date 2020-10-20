@@ -170,8 +170,8 @@ class Task extends Controller
                $isReward = db('pass_reward')->where(['uid'=>$uid,'passId'=>$v['id'],'joinId'=>$joinId,'date'=>$checkDate])->find();
                if($isReward){
 //                   修改对应的奖励发送状态
-//                   db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//奖励状态
-//                   continue;
+                   db('pass_join')->where('id',$joinId)->update(['isReward'=>1]);//奖励状态
+                   continue;
                }
                //奖励发放
                Share::sendPassRewardNew($uid,$userMoney,$v,$joinId,$number);
