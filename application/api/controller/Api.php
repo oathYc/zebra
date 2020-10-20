@@ -1245,10 +1245,15 @@ class Api extends Controller
         foreach($data as $k => $v){
             $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
-            $data[$k]['avatar'] = $user['avatar'];if($v['uid'] == $uid){
+            $data[$k]['avatar'] = $user['avatar'];
+            if($v['uid'] == $uid){
                 $own['mySite'] = $k+1;
-                $own['myMoney'] = $v['moneyGet'];
             }
+        }
+        $myMoneyData = db('money_get')->where(['type'=>1,'uid'=>$uid])->find();
+        if($myMoneyData){
+            $myMoney = $myMoneyData['moneyGet'];
+            $own['myMoney'] = $myMoney;
         }
         $return = [
             'ranking'=>$data,
@@ -1272,10 +1277,15 @@ class Api extends Controller
         foreach($data as $k => $v){
             $user = db('member')->where('id',$v['uid'])->find();
             $data[$k]['nickname'] = $user['nickname'];
-            $data[$k]['avatar'] = $user['avatar'];if($v['uid'] == $uid){
+            $data[$k]['avatar'] = $user['avatar'];
+            if($v['uid'] == $uid){
                 $own['mySite'] = $k+1;
-                $own['myMoney'] = $v['moneyGet'];
             }
+        }
+        $myMoneyData = db('money_get')->where(['type'=>2,'uid'=>$uid])->find();
+        if($myMoneyData){
+            $myMoney = $myMoneyData['moneyGet'];
+            $own['myMoney'] = $myMoney;
         }
         $return = [
             'ranking'=>$data,
@@ -1302,8 +1312,12 @@ class Api extends Controller
             $data[$k]['avatar'] = $user['avatar'];
             if($v['uid'] == $uid){
                 $own['mySite'] = $k+1;
-                $own['myMoney'] = $v['moneyGet'];
             }
+        }
+        $myMoneyData = db('money_get')->where(['type'=>3,'uid'=>$uid])->find();
+        if($myMoneyData){
+            $myMoney = $myMoneyData['moneyGet'];
+            $own['myMoney'] = $myMoney;
         }
         $return = [
             'ranking'=>$data,
@@ -1329,8 +1343,11 @@ class Api extends Controller
             $data[$k]['avatar'] = $user['avatar'];
             if($v['uid'] == $uid){
                 $own['mySite'] = $k+1;
-                $own['myMoney'] = $v['moneyGet'];
             }
+        }
+        $myMoney = db('money_get')->where(['type'=>['<',4],'uid'=>$uid])->sum('moneyGet');
+        if($myMoney){
+            $own['myMoney'] = $myMoney;
         }
         $return = [
             'ranking'=>$data,
@@ -1356,8 +1373,13 @@ class Api extends Controller
             $data[$k]['avatar'] = $user['avatar'];
             if($v['uid'] == $uid){
                 $own['mySite'] = $k+1;
-                $own['myMoney'] = $v['moneyGet'];
             }
+        }
+
+        $myMoneyData = db('money_get')->where(['type'=>4,'uid'=>$uid])->find();
+        if($myMoneyData){
+            $myMoney = $myMoneyData['moneyGet'];
+            $own['myMoney'] = $myMoney;
         }
         $return = [
             'ranking'=>$data,
