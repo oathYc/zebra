@@ -163,7 +163,7 @@ xml;
             }
             $data = self::fromXml( $xml );
 
-            file_put_contents('./uploads/wxParam1.txt', $data.PHP_EOL,FILE_APPEND);
+            file_put_contents('./uploads/wxParam1.txt', json_encode($data).PHP_EOL,FILE_APPEND);
             if( !empty($data['return_code']) ){
                 if( $data['return_code'] == 'FAIL' ){
                     return false;
