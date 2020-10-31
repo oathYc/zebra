@@ -139,6 +139,23 @@ xml;
 
             $xml=file_get_contents('php://input', 'r');
             $paramFile = './uploads/wxParam.txt';
+            $xml = '<xml><appid><![CDATA[wxec196ca61616173c]]></appid>
+<bank_type><![CDATA[HXB_CREDIT]]></bank_type>
+<cash_fee><![CDATA[1]]></cash_fee>
+<fee_type><![CDATA[CNY]]></fee_type>
+<is_subscribe><![CDATA[N]]></is_subscribe>
+<mch_id><![CDATA[1602479152]]></mch_id>
+<nonce_str><![CDATA[ebb55ce21ae7164cd385c7462a68d0]]></nonce_str>
+<openid><![CDATA[oVIYc5_pK3TcRitJqPMAZ8WdixIU]]></openid>
+<out_trade_no><![CDATA[CG16041247604740]]></out_trade_no>
+<result_code><![CDATA[SUCCESS]]></result_code>
+<return_code><![CDATA[SUCCESS]]></return_code>
+<sign><![CDATA[6DBEAFC48D8F30EFBDC36492B06B4B68]]></sign>
+<time_end><![CDATA[20201031141249]]></time_end>
+<total_fee>1</total_fee>
+<trade_type><![CDATA[APP]]></trade_type>
+<transaction_id><![CDATA[4200000726202010311717194037]]></transaction_id>
+</xml>';
             file_put_contents($paramFile, $xml.PHP_EOL);
             $data = array();
             if( empty($xml) ){
