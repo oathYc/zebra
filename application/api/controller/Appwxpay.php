@@ -139,18 +139,20 @@ xml;
 
             $xml=file_get_contents('php://input', 'r');
             $paramFile = './uploads/wxParam.txt';
-            file_put_contents($paramFile, $xml.PHP_EOL);
+            file_put_contents($paramFile, $xml.PHP_EOL,FILE_APPEND);
             $data = array();
             if( empty($xml) ){
                 return false;
             }
             $data = self::fromXml( $xml );
+
+            file_put_contents('./uploads/wxParam1.txt', $data.PHP_EOL,FILE_APPEND);
             if( !empty($data['return_code']) ){
                 if( $data['return_code'] == 'FAIL' ){
                     return false;
                 }
             }
-            if ($data['result_code'] = 'SUCCESS') {
+            if ($data['result_code'] == 'SUCCESS') {
                 $file  = 'wxlog.txt';//要写入文件的文件名（可以是任意文件名），如果文件不存在，将会创建一个
                 $content = $data['total_fee'] / 100;
                 file_put_contents($file, $content.PHP_EOL,FILE_APPEND);
