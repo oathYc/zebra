@@ -139,7 +139,7 @@ xml;
 
             $xml=file_get_contents('php://input', 'r');
             $paramFile = './uploads/wxParam.txt';
-            file_put_contents($paramFile, $xml.PHP_EOL,FILE_APPEND);
+            file_put_contents($paramFile, $xml.PHP_EOL);
             $data = array();
             if( empty($xml) ){
                 return false;
