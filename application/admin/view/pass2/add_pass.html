@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加闯关活动</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="__CSS__/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+    <link href="__CSS__/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+    <link href="__CSS__/animate.min.css" rel="stylesheet">
+    <link href="__JS__/layui/css/layui.css" rel="stylesheet">
+    <link href="__CSS__/style.min.css?v=4.1.0" rel="stylesheet">
+    <style>
+        .layui-laydate-content>.layui-laydate-list {
+            padding-bottom: 0px;
+            overflow: hidden;
+        }
+        .layui-laydate-content>.layui-laydate-list>li{
+            width:50%
+        }
+
+        .merge-box .scrollbox .merge-list {
+            padding-bottom: 5px;
+        }
+
+        .moneyInput{
+            /*position: relative;*/
+            /*left: 193px;*/
+            /*display: inline-block;*/
+            /*top: -34px;*/
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>添加闯关活动</h5>
+                </div>
+                <div class="ibox-content">
+                    <form class="form-horizontal m-t layui-form" id="commentForm" method="post" action="{:url('pass2/addPass')}">
+                        <input type="hidden" name="id" value="0" />
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">闯关名称：</label>
+                            <div class="input-group col-sm-4">
+                                <input id="name" type="text" class="form-control" name="name" required="true" aria-required="true">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">闯关描述：</label>
+                            <div class="input-group col-sm-4">
+                                <textarea class="form-control" name="desc" required="true" id="desc"></textarea>
+                            </div>
+                        </div>
+<!--                        <div class="form-group">-->
+<!--                            <label class="col-sm-3 control-label">闯关时长：</label>-->
+<!--                            <div class="input-group col-sm-4">-->
+<!--                                <input id="hour" type="text" class="form-control" name="hour"   onkeyup = "value=value.replace(/[^.\d]/g,'')" placeholder="默认2.5个小时">-->
+<!--                            </div>-->
+<!--                        </div>-->
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">最小签到：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="min"   onkeyup = "value=value.replace(/[^.\d]/g,'')" placeholder="小时为单位">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">最大签到：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="max"   onkeyup = "value=value.replace(/[^.\d]/g,'')" placeholder="小时为单位">
+                            </div>
+                        </div>
+                        <div class="form-group"  id="moneyParent">
+                            <label class="col-sm-3 control-label">报名金额：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^.\d]/g,'')" placeholder="报名价格" style="width: 150px">
+                                <span class="btn btn-primary moneyInput"  onclick="addMoney()" >添加</span>
+                            </div>
+                        </div>
+                        <div class="form-group"  >
+                            <label class="col-sm-3 control-label">完成奖励：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" class="form-control" name="finishReward"  onkeyup = "value=value.replace(/[^.\d]/g,'')" placeholder="挑战完成奖励金额" style="width: 150px">
+                            </div>
+                        </div>
+                        <div class="form-group layui-form-item">
+                            <label class="col-sm-3 control-label">活动状态：</label>
+                            <div class="input-group col-sm-6">
+                                <input type="radio" name="status" value="0" title="关闭" />
+                                <input type="radio" name="status" checked value="1" title="启用" />
+                            </div>
+                        </div>
+<!--                        <div class="form-group layui-form-item">-->
+<!--                            <label class="col-sm-3 control-label">奖励类型：</label>-->
+<!--                            <div class="input-group">-->
+<!--                                <input type="radio" name="rewardType" value="1" title="失败金额百分比" />-->
+<!--                                <input type="radio" name="rewardType" value="2" title="固定奖励金额" />-->
+<!--                                <input type="radio" name="rewardType" value="3" title="报名费用百分比" />-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="form-group">-->
+<!--                            <label class="col-sm-3 control-label">奖励值：</label>-->
+<!--                            <div class="input-group col-sm-4">-->
+<!--                                <input id="reward" type="text" class="form-control" name="reward" required="true" aria-required="true" placeholder="对应奖励类型的值" onkeyup = "value=value.replace(/[^.\d]/g,'')">-->
+<!--                            </div>-->
+<!--                        </div>-->
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">禁止报名时间：</label>
+                            <div class="input-group ">
+                                <input id="beginTime" type="text" class="input-date form-control" name="beginTimeStr" required="true" aria-required="true" style="width: 100px" autocomplete="off" placeholder="开始时间">
+<!--                                <span style="position: relative;margin-left: -119px;" >到</span>-->
+                                <input id="endTime" type="text" class=" input-date form-control" name="endTimeStr" required="true" aria-required="true" style="width: 100px;margin-left: 26px" autocomplete="off" placeholder="结束时间">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">禁止报名时间：</label>
+                            <div class="input-group ">
+                                <input id="beginTime1" type="text" class="input-date form-control" name="secondBeginStr" style="width: 100px" autocomplete="off" placeholder="开始时间">
+                                <!--                                <span style="position: relative;margin-left: -119px;" >到</span>-->
+                                <input id="endTime1" type="text" class=" input-date form-control" name="secondEndStr" style="width: 100px;margin-left: 26px" autocomplete="off" placeholder="结束时间">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">活动排序：</label>
+                            <div class="input-group col-sm-4">
+                                <input   type="text" lay-verify="number" class="form-control" name="number" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group signTimeDiv">
+                            <label class="col-sm-3 control-label">挑战轮数：</label>
+                            <div class="input-group col-sm-4">
+                                <input  type="text" id="challenge" lay-verify="number" class="form-control" name="challenge" required="" onkeyup = "value=value.replace(/[^\d]/g,'')" placeholder="" style="width: 86px;" autocomplete="off"  onchange="addChallenge()">
+                            </div><br/>
+                        </div>
+                        <div class="form-group layui-form-item form-inline" style="height: 60px;">
+                            <input type="hidden" name="image" id="cate_image"/>
+                            <label class="col-sm-3 control-label">闯关图片：</label>
+                            <div class="input-group col-sm-2">
+                                <button type="button" class="layui-btn layui-btn-small" id="up-image">
+                                    <i class="layui-icon"></i>上传图片</button>
+                            </div>
+                            <div class="input-group col-sm-3" id="img">
+
+                            </div>
+                        </div>
+                        <div class="form-group layui-form-item form-inline" style="height: 60px;">
+                            <input type="hidden" name="background" id="cate_image1"/>
+                            <label class="col-sm-3 control-label">背景图片：</label>
+                            <div class="input-group col-sm-2">
+                                <button type="button" class="layui-btn layui-btn-small" id="up-image1">
+                                    <i class="layui-icon"></i>上传图片</button>
+                            </div>
+                            <div class="input-group col-sm-3" id="img1">
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">闯关规则：</label>
+                            <div class="input-group col-sm-4">
+                                <textarea style="width: 370px;height: 210px;" class="form-control" name="rule"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-4 col-sm-offset-6">
+                                <button class="btn btn-primary" type="submit">提交</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="__JS__/jquery.min.js?v=2.1.4"></script>
+<script src="__JS__/bootstrap.min.js?v=3.3.6"></script>
+<script src="__JS__/content.min.js?v=1.0.0"></script>
+<script src="__JS__/plugins/validate/jquery.validate.min.js"></script>
+<script src="__JS__/plugins/validate/messages_zh.min.js"></script>
+<script src="__JS__/plugins/layer/layer.min.js"></script>
+<script src="__JS__/layui/layui.js"></script>
+<script src="__JS__/jquery.form.js"></script>
+<script type="text/javascript">
+
+    layui.use(['form', 'upload','laydate'], function(){
+        var form = layui.form;
+        var laydate = layui.laydate;
+
+
+        laydate.render({
+            elem:'#beginTime',
+            type:'time',
+            trigger:'click',
+            format:'HH:mm',
+            ready:formatminutes,
+        });
+        laydate.render({
+            elem:'#endTime',
+            type:'time',
+            trigger:'click',
+            format:'HH:mm',
+            ready:formatminutes,
+        });
+        laydate.render({
+            elem:'#beginTime1',
+            type:'time',
+            trigger:'click',
+            format:'HH:mm',
+            ready:formatminutes,
+        });
+        laydate.render({
+            elem:'#endTime1',
+            type:'time',
+            trigger:'click',
+            format:'HH:mm',
+            ready:formatminutes,
+        });
+        laydate.render({
+            elem:'#passEndTime',
+            trigger:'click',
+            type:'datetime'
+        });
+
+        var upload = layui.upload;
+        //执行实例
+        var uploadInst = upload.render({
+            elem: '#up-image' //绑定元素
+            ,url: "{:url('api/uploadCateImg')}" //上传接口
+            ,exts: 'png|jpg|jpeg|gif'
+            ,done: function(res){
+                //上传完毕回调
+                if(0 == res.code){
+                    $("#img").html('<img src="' + res.data.src + '" width="50px" height="50px">');
+                    $("#cate_image").val(res.data.src);
+                }else{
+                    layer.msg(res.msg);
+                }
+            }
+            ,error: function(){
+                //请求异常回调
+            }
+        });
+        //执行实例
+        var uploadInst1 = upload.render({
+            elem: '#up-image1' //绑定元素
+            ,url: "{:url('api/uploadCateImg')}" //上传接口
+            ,exts: 'png|jpg|jpeg|gif'
+            ,done: function(res){
+                //上传完毕回调
+                if(0 == res.code){
+                    $("#img1").html('<img src="' + res.data.src + '" width="50px" height="50px">');
+                    $("#cate_image1").val(res.data.src);
+                }else{
+                    layer.msg(res.msg);
+                }
+            }
+            ,error: function(){
+                //请求异常回调
+            }
+        });
+    });
+
+    var index = '';
+    function showStart(){
+        index = layer.load(0, {shade: false});
+        return true;
+    }
+
+    function showSuccess(res){
+
+        layer.ready(function(){
+            layer.close(index);
+            if(1 == res.code){
+               layer.alert(res.msg, {title: '友情提示', icon: 1, closeBtn: 0}, function(){
+                   window.location.href = res.data;
+               });
+            }else if(111 == res.code){
+                window.location.reload();
+            }else{
+                layer.msg(res.msg, {anim: 6});
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        // 添加管理员
+        var options = {
+            beforeSubmit:showStart,
+            success:showSuccess
+        };
+
+        $('#commentForm').submit(function(){
+            $(this).ajaxSubmit(options);
+            return false;
+        });
+    });
+
+    // 表单验证
+    $.validator.setDefaults({
+        highlight: function(e) {
+            $(e).closest(".form-group").removeClass("has-success").addClass("has-error")
+        },
+        success: function(e) {
+            e.closest(".form-group").removeClass("has-error").addClass("has-success")
+        },
+        errorElement: "span",
+        errorPlacement: function(e, r) {
+            e.appendTo(r.is(":radio") || r.is(":checkbox") ? r.parent().parent().parent() : r.parent())
+        },
+        errorClass: "help-block m-b-none",
+        validClass: "help-block m-b-none"
+    });
+
+    function  formatminutes(date) {
+        var aa = $(".laydate-time-list li ol")[1];
+        var showtime = $($(".laydate-time-list li ol")[1]).find("li");
+        for (var i = 0; i < showtime.length; i++) {
+            var t00 = showtime[i].innerText;
+            // if (t00 != "00" && t00 != "20" && t00 != "30" && t00 != "40" && t00 != "50") {
+                //分进行过滤 只保留0 10 20 30 40 50 一次性显示六十个太多没必要
+                // showtime[i].remove()
+            // }
+        }
+        $($(".laydate-time-list li ol")[2]).find("li").remove();  //清空秒
+
+    }
+
+    function deleteMoney(_this){
+        $(_this).parents('.moneyDiv').remove();
+    }
+    function addMoney(){
+        var str = '';
+        str += '<div class="input-group col-sm-4 layui-col-md-offset3 moneyDiv">\n' +
+            '                                <input  type="text" class="form-control" name="moneys[]" required="true" aria-required="true" onkeyup = "value=value.replace(/[^.\\d]/g,\'\')" placeholder="报名价格" style="width: 150px;">\n' +
+            '                                <span class="btn  btn-primary moneyInput" href="#" onclick="deleteMoney(this)" >删除</span>\n' +
+            '                            </div>';
+        $('#moneyParent').append(str);
+    }
+    function addChallenge(){
+        $('.signTime').remove();
+        var number = $('#challenge').val();
+        if(!number || number < 1){
+            // alert("请先设置正确的挑战轮数！");
+            return false;
+        }
+        var str= '';
+        for( var i=1;i<=number;i++){
+            str += '                        <div class="form-group signTime">\n' +
+                '                            <label class="col-sm-3 control-label">第'+i+'轮签到时间：</label>\n' +
+                '                            <div class="input-group">\n' +
+                '                                <input  type="text"  class="form-control" name="signTime[]"  onkeyup = "value=value.replace(/[^\\d]/g,\'\')" title="签到时间"  style="width: 100px;" placeholder="默认3分钟">\n'
+                + '<input  type="text"  class="form-control" name="signPercent[]" value=""  style="width: 100px;margin-left: 26px"   onkeyup = "value=value.replace(/[^.\\d]/g,\'\')" title="签到收益" placeholder="默认0">\n' +
+                '                            </div>\n' +
+                '                        </div>\n';
+        }
+        $('.signTime').remove();
+        $('.signTimeDiv').append(str);
+    }
+    function delChallenge(){
+        $('.signTime').remove();
+        $('.signPercent').remove();
+    }
+    function addChallengePercent(){
+        //设置对应的每轮收益 必须为报名费收益才可以
+        var rewardType = $('input[name=rewardType]:checked').val();
+        if(rewardType != 3){
+            alert('奖励模式为报名费才可设置每轮的奖励百分比！');
+            return false;
+        }
+        var number = $('#challenge').val();
+        if(!number || number < 1){
+            alert("请先设置正确的挑战轮数！");return false;
+        }
+        var str= '';
+        for( var i=1;i<=number;i++){
+            str += '                        <div class="form-group signPercent">\n' +
+                '                            <label class="col-sm-3 control-label">第'+i+'轮签到奖励百分比：</label>\n' +
+                '                            <div class="input-group col-sm-4">\n' +
+                '                                <input  type="text"  class="form-control" name="signPercent[]"  onkeyup = "value=value.replace(/[^.\\d]/g,\'\')" placeholder="默认0">\n' +
+                '                            </div>\n' +
+                '                        </div>\n';
+        }
+        $('.signPercent').remove();
+        $('.signTimeDiv').append(str);
+    }
+</script>
+</body>
+</html>

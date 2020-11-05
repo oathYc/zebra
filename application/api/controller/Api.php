@@ -8,6 +8,7 @@ namespace app\api\controller;
 use app\api\model\Identity;
 use app\api\model\Member;
 use app\common\model\Share;
+use app\common\model\Share2;
 use extend\PinYin;
 use think\Controller;
 use think\Cookie;
@@ -1845,7 +1846,7 @@ class Api extends Controller
             $where['moneyType'] = ['in',$arr];
         }
         $total = db('user_money_record')->where($where)->count();
-        $data = db('user_money_record')->where($where)->limit($offset,$pageSize)->select();
+        $data = db('user_money_record')->where($where)->order('createTime','desc')->limit($offset,$pageSize)->select();
         foreach($data as $k => $v){
             $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
         }
@@ -2173,4 +2174,363 @@ class Api extends Controller
         ];
         Share::jsonData(1,$return);
     }
+  
+       /**
+     * 三英战吕布列表
+     */
+    public function  passList2()
+    {
+        $uid = $this->uid; //关闭结束的闯关活动
+        $data = db('three_pass')->where('status', 1)->order('number', 'desc')->select();
+        foreach ($data as $k => $v) {
+            $number = Share2::getPassNumber($v); //当前期数
+            //报名人数
+            $hadJoin = db('three_pass_join')->where(['passId' => $v['id'], 'number' => $number])->group('uid')->count();
+            $data[$k]['joinNum'] = $hadJoin ? $hadJoin : 0;
+            //报名金额
+            $joinMoney = db('three_pass_join')->where(['passId' => $v['id'], 'number' => $number])->sum('joinMoney');
+            $data[$k]['joinMoney'] = $joinMoney ? $joinMoney : 0;
+            //是否报名 参加状态  0-参与中 1-已完成 2-未完成
+            $join = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $v['id'], 'status' => 0])->find();
+            if (!$join) {
+                $isJoin = 0; //0-当前未参加  1-已参加
+            } else {
+                //判断当前打卡状态
+                Share2::checkPassStatus($uid, $v['id'], $join['id']);
+                $join = db('three_pass_join')->where('id', $join['id'])->find();
+                if ($join['status'] == 0) {
+                    $isJoin = 1;
+                } else {
+                    $isJoin = 0;
+                }
+            }
+            $data[$k]['isJoin'] = $isJoin;
+            //报名价格获取
+            $prices = db('three_pass_price')->where('passId', $v['id'])->order('price', 'asc')->select();
+            $data[$k]['prices'] = $prices;
+            //获取当前期数
+            $data[$k]['number'] = $number;
+            //获取本期启动的历史参与情况
+            $joinHistory = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $v['id']])->order('id', 'desc')->select();
+            $data[$k]['joinHistory'] = $joinHistory;
+        }
+        Share2::jsonData(1, $data);
+    }
+
+    /**
+     *  
+     * 三英战吕布
+     * 闯关报名
+     */
+    public function passJoin2()
+    {
+        $uid = $this->uid;
+        $passId = input('passId');
+        $joinMoney = input('joinMoney');
+        Share2::checkEmptyParams(['passId' => $passId, 'joinMoney' => $joinMoney]);
+        $pass = db('three_pass')->where('id', $passId)->find();
+        if (!$pass) {
+            Share2::jsonData(0, '', '没有该闯关活动！');
+        }
+        if ($pass['status'] != 1) {
+            Share2::jsonData(0, '', '该闯关活动已下线！');
+        }
+        $user = db('member')->where('id', $uid)->find();
+        if (in_array($passId ,explode(',',$user['three_pass_ids']))){
+            Share::jsonData(0, '', '你不能参加该活动！');
+        }
+        //判断是否在报名时间内
+        Share2::checkPassJoinTime($pass);
+        //判断是否有该报名价格
+        $hadMoney = db('three_pass_price')->where(['passId' => $passId, 'price' => $joinMoney])->find();
+        if (!$hadMoney) {
+            Share2::jsonData(0, '', '没有该报名价格');
+        }
+        //获取当前期数
+        $number = Share2::getPassNumber($pass);
+        //检查是否已经报名
+        $now = date('Y-m-d H:i:s');
+        $time = strtotime($now);
+        $hadSuccess = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 1])->find();
+        if ($hadSuccess) {
+            Share2::jsonData(0, '', '本期活动你已经挑战成功，不能再次参加！');
+        }
+        $hadJoin = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 0])->find();
+        if ($hadJoin) { //已参加且未结束
+            //检查参与状态
+            Share2::checkPassStatus($uid, $passId, $hadJoin['id']);
+            $currJoin  = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 0])->find();
+            if ($currJoin) {
+                Share2::jsonData(0, '', '你当前已经参加了本期闯关活动(闯关中)，不可重复参加！');
+            }
+        }
+        //添加报名
+        $params = [
+            'uid' => $uid,
+            'passId' => $passId,
+            'joinTime' => $now,
+            'joinMoney' => $joinMoney,
+            'status' => 0, //参加状态  0-参与中 1-已完成 2-未完成
+            'createTime' => $time,
+            'isReward' => 0,
+            'signStatus' => 2, //0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+            'number' => $number
+        ];
+        //扣除用户报名费用
+        Share2::reducePassJoinMoney($uid, $joinMoney, $pass);
+        $res = db('three_pass_join')->insert($params);
+        if ($res) { //报名成功
+            //生成用户闯关签到 第一轮
+            $join = db('three_pass_join')->where($params)->find();
+            Share2::createUserPassSignNew($uid, $pass, $join);
+
+            //邀请人信息记录
+
+            Share2::jsonData(1, '', '报名成功');
+        } else {
+            Share2::jsonData(0, '', '报名失败');
+        }
+    }
+
+
+    /**
+     * 三英战吕布
+     * 闯关详情
+     */
+    public function passDetail2()
+    {
+        $uid = $this->uid;
+        $passId = input('passId');
+        Share2::checkEmptyParams(['passId' => $passId]);
+        $pass = db('three_pass')->where('id', $passId)->find();
+        if (!$pass) {
+            Share2::jsonData(0, '', '没有该闯关活动！');
+        }
+        $number = Share2::getPassNumber($pass);; //当前期数
+        //报名人数
+        $hadJoin = db('three_pass_join')->where(['passId' => $passId, 'number' => $number])->group('uid')->count();
+        $pass['joinNum'] = $hadJoin ? $hadJoin : 0;
+        //报名金额
+        $joinMoney = db('three_pass_join')->where(['passId' => $passId, 'number' => $number])->sum('joinMoney');
+        $pass['joinMoney'] = $joinMoney ? $joinMoney : 0;
+        //当前是否报名  0-参与中 1-已完成 2-未完成
+        $join = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 0])->find();
+        $hadSign = 0; //当前打卡轮数
+        $nextBegin = ''; //下一轮签到开始时间
+        $nextEnd = ''; //下一轮签到结束时间
+        $nextSignId = 0;
+        $isJoin = 0;
+        if (!$join) {
+            $isJoin = 0; //0-当前未参加  1-已参加
+            $signData = [];
+        } else {
+            //判断是否有未签到记录  0-暂停 1-停止（挑战结束） 2-下一轮（继续挑战）
+            if ($join['signStatus'] == 1) {
+                //停止挑战 修改状态
+                db('three_pass_join')->where('id', $join['id'])->update(['status' => 1]);
+                $isJoin = 0;
+            } elseif ($join['signStatus'] == 2) {
+                //判断是否挑战失败
+                $now = date('Y-m-d H:i:s');
+                $noSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], "status" => 0])->order('signTimeBegin', 'asc')->find();
+                if($noSign){
+                    if ($noSign['status'] == 0) { //当前未签到
+                        //判断是否挑战失败
+                        if ($now > $noSign['signTimeEnd']) { //已挑战失败 修改状态
+                            db('three_pass_join')->where('id', $join['id'])->update(['status' => 2]);
+                            $isJoin = 0;
+                        } else { //还未到签到时间
+                            $nextBegin = $noSign['signTimeBegin'];
+                            $nextEnd = $noSign['signTimeEnd'];
+                            $nextSignId = $noSign['id'];
+                            $isJoin = 1;
+                        }
+                    } else { //今日已签到
+                        $isJoin = 1;
+                    }
+                }else{
+                     $noSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order('number', 'desc')->find();
+                      $isJoin = 1;
+                }
+                
+                //获取最新一轮的打卡轮数
+                if ($isJoin == 1) {
+                    $hadSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->order('signTimeBegin', 'asc')->find()['number'];
+                }
+            } else { //暂停状态
+                $isJoin = 1; //获取签到时间数据
+                //获取最新一轮的打卡轮数
+                $hadSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->order('signTimeBegin', 'asc')->find()['number'];
+            }
+            if ($isJoin == 1) {
+                $signData = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order('signTimeBegin', 'asc')->select();
+            } else {
+                $signData = [];
+            }
+            $signData = $signData ? $signData : [];
+            $pass['signStatus'] = $join['signStatus'];
+            $pass['joinId'] = $join['id'];
+        }
+        $pass['isJoin'] = $isJoin;
+        $pass['signData'] = $signData;
+        $pass['hadSign'] = $hadSign ? $hadSign : 0;
+        $pass['nextSignBegin'] = $nextBegin;
+        $pass['nextSignEnd'] = $nextEnd;
+        $pass['signId'] = $nextSignId;
+        //报名价格获取
+        $prices = db('three_pass_price')->where('passId', $pass['id'])->order('price', 'asc')->select();
+        $pass['prices'] = $prices;
+        $pass['nowTime'] = time();
+        $pass['number'] = $number;
+        $hadSuccess = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 1])->find();
+        if ($hadSuccess) {
+            $isSuccess = 1; //已经成功挑战过
+        } else {
+            $isSuccess = 0;
+        }
+        $pass['isSuccess'] = $isSuccess;
+        Share2::jsonData(1, $pass);
+    }
+
+
+    /**
+     * 三英战吕布
+     * 签到状态修改
+     */
+    public function passSignStatus2()
+    {
+        $uid = $this->uid;
+        $status = input('status', 1); //1-停止 2-继续挑战
+        $passId = input('passId');
+        $joinId = input('joinId');
+        Share2::checkEmptyParams(['passId' => $passId, 'joinId' => $joinId]);
+        $pass = db('three_pass')->where('id', $passId)->find();
+        $number = Share2::getPassNumber($pass);
+        $join = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 0, 'id' => $joinId])->find();
+        if(!empty($signs)){
+             Share2::jsonData(0, '', '还有没有签到的');
+        }
+        if (!$join) {
+            Share2::jsonData(0, '', '您还没有挑战中的活动，不能进行该操作');
+        }
+        if ($join['signStatus'] == 1) {
+            db('three_pass_join')->where('id', $join['id'])->update(['status' => 1]);
+            Share2::jsonData(0, '', '你已停止该挑战，不能进行该操作');
+        }
+        if ($join['signStatus'] != 0) {
+            Share2::jsonData(0, '', '当前活动不是暂停中，不能操作');
+        }
+        if ($status != 1 && $status != 2) {
+            Share2::jsonData(0, '', '修改状态不对');
+        }
+          $signs= db('three_pass_sign')->where('joinId', $joinId)->where('status',0)->select();
+        
+        if ($status == 2) { //判断是否在禁止报名时间内 在的话只能选择停止结束
+            $now = date('H:i:s');
+            $beginTime = $pass['beginTimeStr'] . ":00";
+            $endTime = $pass['endTimeStr'] . ":59";
+            if ($now >= $beginTime && $now <= $endTime) {
+                Share2::jsonData(0, '', '您当前在活动禁止报名时间内只能选择停止挑战');
+            }
+        }
+      
+        
+        $update = [
+            'signStatus' => $status
+        ];
+        if ($status == 1) { //停止挑战
+            $update['status'] = 1; //参加状态  0-参与中 1-已完成 2-未完成
+        }
+        $res = db('three_pass_join')->where('id', $joinId)->update($update);
+        if ($res) {
+            if ($status == 2) { //生成下一轮的签到数据
+                $pass = db('three_pass')->where('id', $passId)->find();
+                Share2::createUserPassSignNew($uid, $pass, $join, 2);
+            }
+            Share2::jsonData(1);
+        } else {
+            Share2::jsonData(0, '', '操作失败');
+        }
+    }
+
+    /**
+     * 三英战吕布
+     * 签到
+     */
+    public function passSign2()
+    {
+        $uid = $this->uid;
+        $passId = input('passId');
+        $signId = input('signId');
+        Share2::checkEmptyParams(['passId' => $passId]);
+        $pass = db('three_pass')->where('id', $passId)->find();
+        if (!$pass) {
+            Share2::jsonData(0, '', '没有该闯关活动');
+        }
+
+        $number = Share2::getPassNumber($pass);
+        $nowTime = date('Y-m-d H:i:s'); //当前时间
+        //获取报名信息
+        $join = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 0])->find();
+        if (!$join) {
+            Share2::jsonData(0, '', '你当前还没有报名该闯关活动！');
+        }
+        if ($join['signStatus'] == 0) {
+            Share2::jsonData(0, '', '当前挑战是暂停状态，请先开启挑战');
+        }
+        if ($join['signStatus'] == 1) {
+            db('three_pass_join')->where('id', $join['id'])->update(['status' => 1]);
+            Share2::jsonData(0, '', '当前活动已停止，请重新报名参加');
+        }
+        //判断当前签到次数是否已达到
+        $hadSignNumber = db('three_pass_sign')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->group('number')->count();
+        if ($hadSignNumber >= $pass['challenge']) {
+            db('three_pass_join')->where('id', $join['id'])->update(['status' => 1, 'signStatus' => 0]);
+            Share2::jsonData(0, '', '您已完成挑战');
+        }
+        //获取当前未打卡记录
+        $sign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'id' => $signId, 'joinId' => $join['id'], 'status' => 0])->order('number', 'desc')->find();
+
+        if (!$sign) { //修改签到状态
+            db('three_pass_join')->where('id', $join['id'])->update(['signStatus' => 0]);
+            Share2::jsonData(0, '', '当前没有待打卡信息！');
+        }
+        if ($nowTime < $sign['signTimeBegin']) {
+            Share2::jsonData(0, '', '还没有到打卡时间，请稍后尝试');
+        }
+        if ($nowTime > $sign['signTimeEnd']) {
+            //修改参与参与状态
+            db('three_pass_join')->where('id', $join['id'])->update(['status' => 2]);
+            Share2::jsonData(0, '', '已过打卡时间，挑战失败');
+        }
+        
+        if ($sign['is_true'] == 2) {
+
+            //db('three_pass_join')->where('id', $join['id'])->update(['status' => 2]);
+            $res = db('three_pass_sign')->where('id', $sign['id'])->update(['status' => 1, 'signTime' => $nowTime]);
+            Share2::jsonData(0, '', '打到假卡了');
+        }else{
+             $res = db('three_pass_sign')->where('id', $sign['number'])->update(['status' => 1, 'signTime' => $nowTime]);
+        }
+        
+        //打卡
+        $res = db('three_pass_sign')->where('id', $sign['id'])->update(['status' => 1, 'signTime' => $nowTime]);
+        if ($res) {
+            //判断是否完成挑战
+            if ($sign['number'] == $pass['challenge']) { //最后一轮打卡
+                //修改参加状态  已完成
+                db('three_pass_join')->where('id', $join['id'])->update(['status' => 1]);
+                //发放奖励
+
+            }
+            //是否在未报名时间段内 是的话签到成功及挑战结束
+            Share2::checkSignTime($pass, $join['id']);
+            //修改签到状态
+            db('three_pass_join')->where('id', $join['id'])->update(['signStatus' => 0]);
+            Share2::jsonData(1);
+        } else {
+            Share2::jsonData(0, '', '打卡失败，请刷新重试！');
+        }
+    }
+  
 }
