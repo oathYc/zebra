@@ -1730,6 +1730,9 @@ class Api extends Controller
         foreach($data as $k => $v){
             $pass = db('pass')->where('id',$v['passId'])->find();
             $pass['number'] = $v['number'];
+            //获取已经挑战成功的轮数
+            $hadSuccess = db('pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id'],'status'=>1])->count();
+            $data[$k]['hadSuccess'] = $hadSuccess?$hadSuccess:0;
             $data[$k]['pass'] = $pass;
         }
         $return = [

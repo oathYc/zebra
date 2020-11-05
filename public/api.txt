@@ -334,6 +334,7 @@
             joinMoney        报名金额
             endTime          挑战结束时间
             pass            活动信息集合
+            hadSuccess      已成功挑战轮数
 
 接口名称    闯关-我的签到
 接口路径    myPassSign
