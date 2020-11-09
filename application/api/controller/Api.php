@@ -1732,8 +1732,10 @@ class Api extends Controller
             $pass['number'] = $v['number'];
             //获取已经挑战成功的轮数
             $hadSuccess = db('pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id'],'status'=>1])->count();
+           //$hadSuccess = db('pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id'],'status'=>1])->count();
             $data[$k]['hadSuccess'] = $hadSuccess?$hadSuccess:0;
             $data[$k]['pass'] = $pass;
+           $data[$k]['number'] = db('pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id']])->count();
         }
         $return = [
             'total'=>$total,
@@ -2352,21 +2354,28 @@ class Api extends Controller
                         $isJoin = 1;
                     }
                 }else{
-                     $noSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order('number', 'desc')->find();
+                     $noSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order('signTimeBegin', 'asc')->find();
                       $isJoin = 1;
                 }
                 
                 //获取最新一轮的打卡轮数
                 if ($isJoin == 1) {
-                    $hadSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->order('signTimeBegin', 'asc')->find()['number'];
+                    $hadSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->order('signTimeBegin', 'asc')->max('number');
                 }
             } else { //暂停状态
                 $isJoin = 1; //获取签到时间数据
                 //获取最新一轮的打卡轮数
-                $hadSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->order('signTimeBegin', 'asc')->find()['number'];
+                $hadSign = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->order('signTimeBegin', 'asc')->max('number');
             }
             if ($isJoin == 1) {
-                $signData = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order('signTimeBegin', 'asc')->select();
+              	$max_number = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order('number', 'desc')->find();
+                if($max_number){
+                  $signData = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'],'number'=>$max_number['number']])->order(['number'=>'desc','signTimeBegin'=>'asc'])->select();
+                }else{
+                  $signData = db('three_pass_sign')->where(['uid' => $uid, 'passId' => $passId, 'joinId' => $join['id']])->order(['number'=>'desc','signTimeBegin'=>'asc'])->select();
+                }
+              
+                
             } else {
                 $signData = [];
             }
@@ -2410,6 +2419,7 @@ class Api extends Controller
         $pass = db('three_pass')->where('id', $passId)->find();
         $number = Share2::getPassNumber($pass);
         $join = db('three_pass_join')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'status' => 0, 'id' => $joinId])->find();
+      	$signs= db('three_pass_sign')->where('joinId', $joinId)->where('status',0)->select();
         if(!empty($signs)){
              Share2::jsonData(0, '', '还有没有签到的');
         }
@@ -2426,7 +2436,7 @@ class Api extends Controller
         if ($status != 1 && $status != 2) {
             Share2::jsonData(0, '', '修改状态不对');
         }
-          $signs= db('three_pass_sign')->where('joinId', $joinId)->where('status',0)->select();
+         
         
         if ($status == 2) { //判断是否在禁止报名时间内 在的话只能选择停止结束
             $now = date('H:i:s');
@@ -2508,16 +2518,15 @@ class Api extends Controller
         }
         
         if ($sign['is_true'] == 2) {
-
             //db('three_pass_join')->where('id', $join['id'])->update(['status' => 2]);
             $res = db('three_pass_sign')->where('id', $sign['id'])->update(['status' => 1, 'signTime' => $nowTime]);
             Share2::jsonData(0, '', '打到假卡了');
         }else{
-             $res = db('three_pass_sign')->where('id', $sign['number'])->update(['status' => 1, 'signTime' => $nowTime]);
+          
         }
         
         //打卡
-        $res = db('three_pass_sign')->where('id', $sign['id'])->update(['status' => 1, 'signTime' => $nowTime]);
+           $res = db('three_pass_sign')->where('number', $sign['number'])->update(['status' => 1, 'signTime' => $nowTime]);
         if ($res) {
             //判断是否完成挑战
             if ($sign['number'] == $pass['challenge']) { //最后一轮打卡
@@ -2534,6 +2543,41 @@ class Api extends Controller
         } else {
             Share2::jsonData(0, '', '打卡失败，请刷新重试！');
         }
+    }
+  
+   /**
+     * 三英战吕布
+     * 我的报名
+     */
+    public function myPass2(){
+        $uid = $this->uid;
+        $status = input('status',99);//99-全部  0-参与中 1-已完成 2-未完成
+        $where = [
+            'uid'=>$uid,
+        ];
+        if($status != 99){
+            $where['status'] = $status;
+        }
+        $page = input('page',1);
+        $pageSize = input('pageSize',10);
+        $offset = $pageSize*($page-1);
+        $total = db('three_pass_join')->where($where)->count();
+        $data = db('three_pass_join')->where($where)->limit($offset,$pageSize)->order('joinTime','desc')->select();
+        foreach($data as $k => $v){
+            $pass = db('three_pass')->where('id',$v['passId'])->find();
+            $pass['number'] = $v['number'];
+            //获取已经挑战成功的轮数
+            $hadSuccess = db('three_pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id'],'status'=>1])->count();
+           //$hadSuccess = db('pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id'],'status'=>1])->count();
+            $data[$k]['hadSuccess'] = $hadSuccess?$hadSuccess:0;
+            $data[$k]['pass'] = $pass;
+           $data[$k]['number'] = db('three_pass_sign')->where(['uid'=>$uid,'passId'=>$v['passId'],'joinId'=>$v['id']])->count();
+        }
+        $return = [
+            'total'=>$total,
+            'data'=>$data
+        ];
+        Share::jsonData(1,$return);
     }
   
 }

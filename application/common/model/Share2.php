@@ -971,7 +971,7 @@ class Share2 extends \think\Model
         $res = db('member')->where('id', $uid)->update(['money' => $reduce]);
         if ($res) {
             //记录余额消费记录
-            self::userMoneyRecord($uid, $money, '闯关报名费扣除-' . $pass['name'], 2, 3);
+            self::userMoneyRecord($uid, $money, '三英战吕布报名费扣除-' . $pass['name'], 2, 3);
         } else {
             self::jsonData(0, '', '扣除闯关报名费失败，请稍后重试！');
         }
@@ -1082,7 +1082,7 @@ class Share2 extends \think\Model
                     'signTimeEnd' => $signEndTime,
                 ];
                 $rand = random_int(1,3);
-                if($rand == 3){
+                if($rand == 3 && $is_true ==0 ){
                     $sign['is_true'] = 1; 
                     $is_true = 1;
                 }
@@ -1138,7 +1138,7 @@ class Share2 extends \think\Model
                     'signTimeEnd' => $signEndTime,
                 ];
                 $rand = random_int(1,3);
-                if($rand == 3){
+                if($rand == 3 && $is_true ==0 ){
                     $sign['is_true'] = 1; 
                     $is_true = 1;
                 }
@@ -1150,10 +1150,12 @@ class Share2 extends \think\Model
                     $sign['is_true'] = 2; 
                 }
                 $beginTime = strtotime($signEndTime);
+              	db('three_pass_sign')->insert($sign);
                 $signs[] = $sign;
+              	
             }
 
-            db('three_pass_sign')->insert($sign);
+            
             $signs[] = $sign;
         }
         //dingding_log('signs',json_encode($signs));
@@ -1374,7 +1376,7 @@ class Share2 extends \think\Model
                 $res = db('member')->where('id', $uid)->update(['money' => $addMoney]);
                 if ($res) {
                     //余额记录添加
-                    self::userMoneyRecord($uid, $rewardMoney, '闯关活动挑战奖励-' . $pass['name'] . '第' . $number . '期', 1, 3, 1);
+                    self::userMoneyRecord($uid, $rewardMoney, '三英战吕布活动挑战奖励-' . $pass['name'] . '第' . $number . '期', 1, 3, 1);
                     //收益记录
                     self::userMoneyGet($uid, $rewardMoney, 3);
                     //收益明细记录
@@ -1385,7 +1387,7 @@ class Share2 extends \think\Model
                 }
             } else { //0元奖励也要记录
                 //余额记录添加
-                self::userMoneyRecord($uid, $rewardMoney, '闯关活动挑战奖励-' . $pass['name'] . '第' . $number . '期', 1, 3);
+                self::userMoneyRecord($uid, $rewardMoney, '三英战吕布活动挑战奖励-' . $pass['name'] . '第' . $number . '期', 1, 3);
                 //收益明细记录
                 self::rewardRecord($uid, $rewardMoney, $pass['id'], 3, $joinId);
             }
@@ -1454,7 +1456,7 @@ class Share2 extends \think\Model
         $user = db('member')->where('id', $uid)->find();
         $addMoney = $user['money'] + $reward;
         db('member')->where('id', $uid)->update(['money' => $addMoney]);
-        $desc = '闯关活动挑战完成奖励-' . $pass['name'] . '第' . $number . '期';
+        $desc = '三英战吕布活动挑战完成奖励-' . $pass['name'] . '第' . $number . '期';
         self::userMoneyRecord($uid, $reward, $desc, 1, 3, 1);
         //        if($reward){
         //收益记录
@@ -1477,7 +1479,7 @@ class Share2 extends \think\Model
                 $res = db('member')->where('id', $uid)->update(['money' => $addMoney]);
                 if ($res) {
                     //余额记录添加
-                    self::userMoneyRecord($uid, $joinMoney, '闯关活动挑战本金退还-' . $passName, 1, 3);
+                    self::userMoneyRecord($uid, $joinMoney, '三英战吕布活动挑战本金退还-' . $passName, 1, 3);
                     return true;
                 } else {
                     return false;
