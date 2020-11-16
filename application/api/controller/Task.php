@@ -74,7 +74,7 @@ class Task extends Controller
         self::checkClockJoin($today);
         //闯关
         self::checkPassJoin();
-        //房间挑战
+//        房间挑战
         self::checkRoomJoin($today);
 
     }
@@ -430,8 +430,17 @@ class Task extends Controller
        foreach($joinData as $k => $v){
            //判断当前是不是已经挑战失败
             $todaySign = db('clock_in_sign')->where(['uid'=>$v['uid'],'joinId'=>$v['id'],'clockInId'=>$v['clockInId'],'date'=>$today])->find();
-            if(!$todaySign){//当天未签到  挑战失败
-                db('clock_in_join')->where('id',$v['id'])->update(['status'=>0]);
+            if(!$todaySign){//当天未签到
+                if($today == $v['beginTime']){// 判断是否是当天参加且参加时间是否在签到时间之后
+                    $clockIn = db('clock_in')->where('id',$v['clockInId'])->find();
+                    $endTime = strtotime($today." ".$clockIn['endTimeStr'].":59");
+//                    var_dump($today." ".$clockIn['endTimeStr'].":59",$endTime,$v['createTime']);die;
+                    if($v['createTime'] < $endTime){//参与时间小于第一次打卡结束时间
+                        db('clock_in_join')->where('id',$v['id'])->update(['status'=>0]);
+                    }
+                }else{//挑战失败
+                    db('clock_in_join')->where('id',$v['id'])->update(['status'=>0]);
+                }
             }
        }
    }
@@ -465,10 +474,10 @@ class Task extends Controller
         foreach($joinData as $k => $v){
             $sign = db('sign')->where(['uid'=>$v['uid'],'roomId'=>$v['roomId'],'date'=>$today])->find();
             $room = db('room_create')->where('id',$v['roomId'])->find();
-            if(!$room){
+            if(!$room){//房间不存在
                 db('room_join')->where('id',$v['id'])->update(['status'=>2]);
             }else{
-                if(!$sign){//打卡失败
+                if(!$sign){//打卡失败  没有打卡信息
                     db('room_join')->where('id',$v['id'])->update(['status'=>2]);
                 }else{
                     $signNumber = $room['signNum'];

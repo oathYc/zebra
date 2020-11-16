@@ -13,7 +13,7 @@ class Share extends \think\Model
     const COMMONMAX = 100000;
     const LOWESTMIN = 10;
     const LOWESTMAX = 100000;
-    const ROOMTIME = 60;
+    const ROOMTIME = 120;
     /**
      * @param int $code
      * @param array $data

@@ -708,7 +708,7 @@ class Api extends Controller
         $roomTime = Share::ROOMTIME;
         $beginTime = $room['beginTime'] - $roomTime;
         if($now >= $beginTime){
-            Share::jsonData(0,'','活动开始十分钟前才能报名，当前时间已过最晚报名时间！');
+            Share::jsonData(0,'','活动开始2分钟前才能报名，当前时间已过最晚报名时间！');
         }
         //判断自己是否已经报名
         $hadJoin = db('room_join')->where(['roomId'=>$roomId,'uid'=>$uid])->find();
@@ -2069,10 +2069,10 @@ class Api extends Controller
         include_once "./../extend/PinYin.php";
 
         //elsx文件路径
-        $inputFileName = "./qdexcel.xlsx";
-        $oldStr = '[{"group_id":1323,"promotion_second_channel_id":15129},{"group_id":1324,"promotion_second_channel_id":15179}]';
-        $oldArr = json_decode($oldStr,true);
-        var_dump($oldArr);die;
+        $inputFileName = "./uploads/1113.xlsx";
+        $oldData = file_get_contents('./uploads/group.txt');
+//        $oldData = json_decode($oldData,true);
+        var_dump($oldData);die;
         // 读取excel文件
         try {
             $inputFileType = \PHPExcel_IOFactory::identify($inputFileName);
