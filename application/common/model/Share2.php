@@ -1049,8 +1049,8 @@ class Share2 extends \think\Model
         //挑战时长
         $hour = $pass['hour'];
         //最小分钟数
-        $minMinute = $pass['min'] * 60;
-        $maxMinute = $pass['max'] * 60;
+        $minMinute = $pass['min'] * 60/3;
+        $maxMinute = $pass['max'] * 60 /3 ;
         //签到次数
         $number = $pass['challenge'];
         $signs = [];
@@ -1065,9 +1065,9 @@ class Share2 extends \think\Model
             $is_true = 0;
             $beginTime = strtotime($join['joinTime']);
             foreach ([1, 2, 3] as $key => $v) {
-                $randMinute = rand($minMinute, $maxMinute); //随机时间段
+                $randMinute = rand(0, $maxMinute); //随机时间段
                 //开始时间
-                $signBegin = $beginTime  + $randMinute * 60; //报名时间加随机时间段
+                $signBegin = $beginTime + $minMinute * 60 + $randMinute * 60; //报名时间加随机时间段
                 $signEnd = $signBegin + 60 * $signMinutes - 1;
                 $signBeginTime = date('Y-m-d H:i:s', $signBegin);
                 $signEndTime = date('Y-m-d H:i:s', $signEnd);
