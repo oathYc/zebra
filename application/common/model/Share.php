@@ -559,6 +559,8 @@ class Share extends \think\Model
             //相差天数
             $reduceDay = floor($todayTime - $beginTime)/86400;//今天减报名时间
             $signNum = 0;
+            $joinTime = $clockJoin['createTime'];
+            $now = time();
             for($i=0;$i<=$reduceDay;$i++){
                 $date = $i*86400 + $beginTime;
                 $targetDay = date('Y-m-d',$date);
@@ -571,15 +573,26 @@ class Share extends \think\Model
                     }
                 }else{//该天没有打卡记录
                     if($targetDay != $today){//不是今天
-                        db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
+                        //判断是不是报名当天
+                        if($i == 0){//报名当天 判断报名时间与打卡时间的前后关系
+                            //报名当天的签到结束时间
+                            $signEndTime = strtotime($targetDay.' '.$clock['endTimeStr'].":59");
+
+                            if($joinTime < $signEndTime){//在签到时间之前报的名
+                                //判断当前时间是否已过签到时间
+                                if($now >= $signEndTime){//当前已过打卡签到时间  即未打卡
+                                    db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
+                                }
+                            }
+                        }else{//不是报名当天
+                            db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
+                        }
                     }else{
                         //判断今天打卡状态
-                        $joinTime = $clockJoin['createTime'];
                         //今日签到结束时间
                         $signEndTime = strtotime($targetDay.' '.$clock['endTimeStr'].":59");
                         if($joinTime < $signEndTime){//今日签到结束之前报的名
                             //判断当前时间是否已过签到时间
-                            $now = time();
                             if($now >= $signEndTime){//当前已过今日打卡签到时间  即未打卡
                                 db('clock_in_join')->where(['id'=>$clockJoin['id']])->update(['status'=>0,'clockNum'=>$signNum]);//0-失败 1-参与中 2-已完成
                             }
