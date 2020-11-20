@@ -334,8 +334,8 @@ class Task extends Controller
                 $joinMoney = $t['joinMoney'];
                 $joinMoney = $joinMoney?$joinMoney:0;
                 $failMoney += $joinMoney;
+                db('clock_in_join')->where('id',$t['id'])->update(['status'=>0]);
             }
-            db('clock_in_join')->where('id',$t['id'])->update(['status'=>0]);
         }
         return $failMoney;
     }
