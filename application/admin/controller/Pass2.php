@@ -156,7 +156,7 @@ class Pass2 extends Base
                 return json(['code' => -2, 'data' => '', 'msg' => $e->getMessage()]);
             }
 
-            return json(['code' => 1, 'data' => '/admin/pass/index', 'msg' => '添加闯关活动成功']);
+            return json(['code' => 1, 'data' => '/admin/pass2/index', 'msg' => '添加闯关活动成功']);
         }
         return $this->fetch();
     }

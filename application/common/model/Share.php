@@ -1040,8 +1040,8 @@ class Share extends \think\Model
         //挑战时长
         $hour = $pass['hour'];
         //最小分钟数
-        $minMinute = $pass['min']*60;
-        $maxMinute = $pass['max']*60;
+        $minMinute = $pass['min'];
+        $maxMinute = $pass['max'];
         //签到次数
         $number = $pass['challenge'];
         //计算每轮签到的时间间隔
@@ -1177,9 +1177,9 @@ class Share extends \think\Model
         if(!$user){
             self::jsonData(0,'','没有该用户');
         }
-        if(empty($user['qrcode'])){
-            self::jsonData(0,'','你还没有上传提现二维码，请先上传提现二维码。');
-        }
+        // if(empty($user['qrcode'])){
+        //     self::jsonData(0,'','你还没有上传提现二维码，请先上传提现二维码。');
+        // }
         $returnMoney = $money + $procedures;
         if($user['money'] < $returnMoney){
             self::jsonData(0,'','你的余额（'.$user['money'].'）不足');

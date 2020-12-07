@@ -25,9 +25,9 @@ class Appalipay extends Controller
 
     const  GATEWAY = "https://openapi.alipay.com/gateway.do";
     const APPID = "2021001190647108";
-    const  RSAPRIVATEKEY = 'MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDV3ZH1ZiR11aoxlnUf/ExGc4xH/NVn4JK1Y20umsV43SnDcUKBIY5VzMUQj/feLdzD0exfpAX6xBOX/4uxaJernleY96EujQtlbOq7BHgSrwbqGFxi1Dn5Lqlxc7BQmt1y7NG3Fkijc12fPgbyd/5+gxVEYgku8Yh4mVnX0fg857BPMnjO90pIlHGbiBCv6IwLw8igjWqk0yd+/Jp3ReHEDrBYFcp/gDI53f1HYfDvUxtoGnkDwLXkFvCQRVTXJNss5W/EXNVVoMJNcbUxieMe/2MhwkyKDQv1BVQ3dkt+JuFNcGWHoJuh1juu29u8Hmlm76/hUTDstqVo0m89GBRPAgMBAAECggEAZ0XieK0FSD2QPPfZwUNVFeQwRobqCopgbeUAUTP9zbqGs1Ea+z5X/EiwlKng2NIuvAS/7wNGu+w5Rfnp3BaUvxPsWvqhQ9hqO2UYCI1E6kjIvvxaiILRJ+oHeriR2Kqf6yI+tvm0w/EusXoDYszdAPyNpYLtylRqQUpUHyrOg6G/73Yy01D1YeOOUtVH1RrOULb/B8cbJkWEJ3+LWr83AidljNdV3owOfw+Cplx53R27XYrdSr8i021a2/IH+j26XuV8ENXwPqxI6x60Shi71o8uhjzAfPi9AfZpLFNPTHMmaS9hcp+5MYkOFvQGI1lncIcN1OEFwE5ftss9dE4WqQKBgQDvkRkQG7swoZQmjZwdsPRnB38nL3aQSRcaY7ZaQ2pzxWs1ay98NLcIOoVzbhXNbjFWP+m33HvsDm54z7L/S2niAHEdw0QpH4+H061PBWzTn4a1NCE2pEZ9GLe0Ykv+vfuvlc0uw6pA9jkpuPnTAj0sVjBpr5lH5Spx1/ega1/x3QKBgQDkiSVjBoHQz13utFxiWWTt7L34oR0r1pBwTgEjN2t+KX35CN1zUUg0gzNIJBj480QlPy2eAkHKb84Yub7E2frbbr0dm5OSYJihG8wvjB3KAlCKOiB8MCukK4aak6mtCew4fD1wKqlvZJR5bggLbtb3h+ntAs1RP58Icuijcsu6GwKBgQDP9jo2hIwzxB/yc72Q/Lq88YIMxyP6TqiSjPqQUrOHOlo9rgUzoiM9LmgIcwjUIxMLF0JRDEI7AbAeidaNza5ltRJ8zrRNqosTUsrArSnybyomBNHMOEDEeX+HRElKIyvoGXdbYBlceSHYOS4NYYUvBsbSB9Bc2+/DkcHxbSSFtQKBgQDHw3Hgu2Fh6sFK1HEkrstghd4QpJRhK26aHDU2WU0mvJIWyz73fAdHj5+V4afKhKn+fNkdEw/7KfvW9RXh8EAs6wF4DfPSsYj42tmCflHTsG5CRUj8BQdAu6MvHv/j95Z6UW9Kyp/MdPirpBh4Fezl9fHucNKTwK78raTYqpGWHQKBgQCwryRKbYs4jGwvxra3RhteVos/vcR0SkbI2Q8Ce0cj1aFe/nGCVb4uNqdrV1WIaJ9N6adR0M6CA3kuyAB2I9Okg+rcTVEB+BEgS3OKNwXGn7AqGf+yJnUSzBhkS4yqBkQHY9goseYX1ytJ2+LFver18XMcc7/P9mgFvNhmbhT5Iw=='; // 商户私钥
+    const  RSAPRIVATEKEY = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCS+hu/jPNJz7Iuhy+Z7Q3QnavPF4nLrYL1yDWQ4DZb7b9S+EyHSezE+6hP9GFyWBM83nD9fZjZbM7SyS/riNGlCjs0Pdemd3pP4X401bfcses9hB79gahrEkVKRiGd/1M5vjqaIN4h0vQSNgsnGTU5FdKx5R6+Ms5gl9IR7O6HQz/NZITI3D75YO/gWHbHvx7wGDCz3TObbqCQUM1uBnmX7qtRnRLeZ+EFWijmvaLwDxk67g+pRC1NWzuu6NgEi8xlnufDj4/AWIXA51csCty1vBuQ9a/mDbJjoDx185KURT0tQRkGZUH8guQkJK0hmD03DruRBzzjD/rk1QejAMnjAgMBAAECggEAJH/N8kS7iiH0+s8BiDUxUBRHvVb4FkeRlR3SB5dWiH/DGoSk5Jf8H3LremeS54VtyZjn8FuHYL8/oWLq7o/8mAKxbyjIbAORsVKrN823KixY4d70nznarDROVsKRyJ3Gejl+bhYpc7bie79GB8Cf0fxUZW8jslIFpEEvntn65kXuaSzGMY99ZjrlXxFEPbrc2QSczJt0pCckwldId/93CAIHnewqEMbdmIsBW0s76wbNDx7tdBD62OFY7ymbNPStBZ2MLxz1GjXCv2IWRaHDV0qT9spZ/cicfGdGiA9fbi5pcovSwvELKNg4L/x1WHqXFZ/4THqm5WxX65Gpx46v4QKBgQD7u83DBI0Y62clUwD7k9EsfAP0hK83dWqGwFSNDenxvPuBNdbLgTu/WrXEtSjtJScacDQQtclWaUHXOGhiI8h5cvyTzjJUwJzyHUwhIJ7Jb0kmjSFtavzjkWhawoSlEgjgvcs0cnnDVXmDgMw4fYOGnRkX4d2vGWcRWLObfo5Q0QKBgQCVd8wXIFkrR/9tv248uYkUWkp5Sl9HGz6d0uECvgS7NIN1XCDBgW4ooN1Vk30YulzxoJ5VivshvCCJX1LSrI7huKFC8b5/zDxrPjs378TWjtKKyW+L03Dpa3XTddZnyERDYPQaTFpjHJQMr4qkylYfwC6E3N+aVrw5D+eEIGm8cwKBgQCKLPLrmeLtC8GpPh9q+B834La3D+GxelTHtGh0qG+CTm5q5SeKutwV0++0EpBtYxhMrcwWZAIo2UvXm9HIFMYky9YSN3tvA+7iAuzXvjUKcnhfndX8Xl6DdzwlnWH7zaNr4SHaHv/xFUjGwvrWAycfy7mLX2I0i6gEYIDt2BC8EQKBgHGEkJ6n1NFIVziVATZhezjX8mP4FjC9Amt/M6GPi6xaj9TcaYxNrspwkmliIMpdECX7ZQV3DpBqfxOWMCMNJ19LiD59t7778I9KrlMnaQnDYyhBINTDe6fsE4rMnlAoC6BYzEwE3UkU9WRFFjld6tcmcK47yh8/7Kgx6hWxQFz9AoGAElWZi6RkM4vzqXB3TLLhRgEQO7FyDbek73fvALR66mjMDbgBazBJ0ZmPDGB1HLna7MkJpEb8ADDXZtFinqfzSsu8HUxS/ylE8qRUkhWfDEKFLIeA71n8+t21hUgBnN1o0ZNBWPQuKl8BtFwTNeRIYbPO8H1VZ0JwbnANh8DYeYY='; // 商户私钥
 
-    const PUBLICKEY ='MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlxS1Nxo03vvJV5dBHya5tOBYvmqqaRac6oJYTtYbA3BZA+FuR+5a8pcQrvMTHlSvMKA+8I2XmOeSI1DuuBNMrfLKCKHDpHptKh6gbklcSvRDr8QdaTTj6UrW24+uhpu6suXQh5quJQd7bDTwDicoTPzAp1xRe1KyaD6DW6XQ3BAj44zQDrin7InGMGOnma2W7hjoLtoE/xFILLj2iXofCzaiQAeT/N1YFiPOA9aOJeSCGo5erzpF2uJNWNC0C94c8wkRvn7+ACt4gWfDQ6tdXGiNa1gAL4km95wrRFxtqsHKbljzvvq2FevrFtlPNLFzDxTSBXaFOSj5OgmITss73wIDAQAB'; // 支付宝公钥
+    const PUBLICKEY ='MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCnxj/9qwVfgoUh/y2W89L6BkRAFljhNhgPdyPuBV64bfQNN1PjbCzkIM6qRdKBoLPXmKKMiFYnkd6rAoprih3/PrQEB/VsW8OoM8fxn67UDYuyBTqA23MML9q1+ilIZwBC2AQ2UBVOrFXfFl75p6/B5KsiNG9zpgmLCUYuLkxpLQIDAQAB'; // 支付宝公钥
 
 	public static function recharge($uid,$money) {
 		header('Access-Control-Allow-Origin: *');
@@ -126,11 +126,11 @@ class Appalipay extends Controller
 
 
 // 支付宝
-    public static function alipayReturn($account,$amount,$username,$returnId) {
+    public static function alipayReturn($account,$amount,$username) {
         $order_no = date('Ymd') . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
 
 //            $res = $this -> userWithDraw($order_no,'863758424@qq.com',0.1,'吴亚丁');
-        $res = self::userWithDraw($order_no,$account,$amount,$username,$returnId);
+        $res = self::userWithDraw($order_no,$account,$amount,$username);
 
         return $res;
     }
@@ -149,9 +149,7 @@ class Appalipay extends Controller
     public static function userWithDraw(
         $out_biz_no,$payee_account,$amount,$payee_real_name,$returnId)
     {
-        // var_dump($payee_real_name);
-        // var_dump($payee_account);
-        $payer_show_name = '斑马挑战提现';
+        $payer_show_name = '用户余额提现';
         $remark = '提现到支付宝';
         $aop = new \AopClient();
         $aop->gatewayUrl = self::GATEWAY;//支付宝网关 https://openapi.alipay.com/gateway.do这个是不变的
@@ -173,19 +171,16 @@ class Appalipay extends Controller
             "\"remark\":\"$remark\"" .
             "}");
         $result = $aop->execute($request);
-        //var_dump($result);
 
         $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
         $resultCode = $result->$responseNode->code;
         file_put_contents('./uploads/reponse.txt',$result);
-        
         if(!empty($resultCode)&&$resultCode == 10000){
             //提现成功以后 更新表状态
             //并且记录 流水等等
             file_put_contents("./uploads/txlog.txt",'支付宝账号：'.$payee_account.','.'真实姓名：'.$payee_real_name.','.'转账金额：'.$amount.PHP_EOL,FILE_APPEND);
             return  ['code'=>1,'message'=>'提现成功'];
         }
-        
         return ['code'=>0,'message'=>'提现失败'];
     }
 

@@ -1891,8 +1891,10 @@ class Api extends Controller
         $uid = $this->uid;
         $realName = input('realName');
         $card = input('card');
-        Share::checkEmptyParams(['realName'=>$realName,'card'=>$card]);
-        db('member')->where('id',$uid)->update(['real_name'=>$realName,'card'=>$card,'check'=>1]);
+        $phone = input('phone');
+        $ali = input('ali');
+        Share::checkEmptyParams(['realName'=>$realName,'card'=>$card,'phone'=>$phone,'ali'=>$ali]);
+        db('member')->where('id',$uid)->update(['real_name'=>$realName,'card'=>$card,'check'=>1,'phone'=>$phone,'ali'=>$ali]);
         Share::jsonData(1,'','提交成功');
     }
     /**
@@ -1926,14 +1928,16 @@ class Api extends Controller
 //        if($type ==2 && !$phone){
 //            Share::jsonData(0,'','请填写支付宝提现手机号');
 //        }
-        if($phone){
-            $isPhone = Share::isMobile($phone);
-            if(!$isPhone){
-                Share::jsonData(0,'','请填写正确的电话好啊');
-            }
-        }
-        if($money < 20){
-            Share::jsonData(0,'','提现金额不能小于20');
+        // if($phone){
+        //     $isPhone = Share::isMobile($phone);
+        //     if(!$isPhone){
+        //         Share::jsonData(0,'','请填写正确的电话好啊');
+        //     }
+        // }
+        $returnTime = db('system')->where('type',6)->find();
+        $returnTime = json_decode($returnTime['content'],true);
+        if($money < $returnTime['minCashMoney']){
+            Share::jsonData(0,'','提现金额不能小于'. $returnTime['minCashMoney']);
         }
         //判断今日提现次数 判断今日还可提现金额
         Share::checkReturnLimit($uid,$money);
@@ -1954,8 +1958,38 @@ class Api extends Controller
             'phone'=>$phone,
             'orderNo'=>$orderNo,
         ];
-        $res = db('user_return')->insert($params);
+        $res = db('user_return')->insertGetId($params);
+        
+        
+        
+        
         if($res){
+            
+            if($returnTime['autoCashMoneyStatus'] == 1){
+                if ($money <= $returnTime['autoCashMoney']) {//金额小于300自动提现
+                    if($type == 1){
+                        $user = db('member')->where("id",$uid)->find();
+                        $realName=  $user['real_name'];
+                        $res1 = Appalipay::alipayReturn($user['ali'],$money,$realName,$res);
+                        if(!isset($res1['code']) || $res1['code'] != 1){
+                            return json(['code' => -1, 'data' => '', 'message' => $res1['message']]);
+                        }
+                        $update = ['status'=>1,'returnTime'=>time()];
+                        $res = db('user_return')->where('id', $res)->update($update);
+                        $reduceMoney = $money + $procedures;//提现金额加手续费
+                        $hadMoney = $user['money'] - $reduceMoney;
+                        db('member')->where('id',$uid)->update(['money'=>$hadMoney]);
+                        //余额记录
+                        Share::userMoneyRecord($uid,$reduceMoney,'余额提现，提现金额-'.$money.'元，手续费-'.$procedures.'元',2,4);
+                        
+                        Share::jsonData(1,'','提现成功');
+                    }
+                    
+                } else {
+                    
+                }
+            }
+            
             Share::jsonData(1,'','申请成功,等待审核');
         }else{
             Share::jsonData(0,'','申请失败，请重试');
@@ -1981,7 +2015,7 @@ class Api extends Controller
         foreach($data as $k => $v){
             $data[$k]['createTime'] = date('Y-m-d H:i:s',$v['createTime']);
             $data[$k]['returnTime'] = date('Y-m-d H:i:s',$v['returnTime']);
-            $data[$k]['typeStr'] = $v['type'] == 1?'微信':'支付宝';
+            $data[$k]['typeStr'] = $v['type'] == 2?'微信':'支付宝';
         }
         $return = [
             'total'=>$total,
@@ -2496,7 +2530,7 @@ class Api extends Controller
             Share2::jsonData(0, '', '当前活动已停止，请重新报名参加');
         }
         //判断当前签到次数是否已达到
-        $hadSignNumber = db('three_pass_sign')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'joinId' => $join['id'], 'status' => 1])->group('number')->count();
+        $hadSignNumber = db('three_pass_sign')->where(['number' => $number, 'uid' => $uid, 'passId' => $passId, 'is_true'=>1,'joinId' => $join['id'], 'status' => 1])->count();
         if ($hadSignNumber >= $pass['challenge']) {
             db('three_pass_join')->where('id', $join['id'])->update(['status' => 1, 'signStatus' => 0]);
             Share2::jsonData(0, '', '您已完成挑战');

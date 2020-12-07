@@ -870,7 +870,7 @@ class Share2 extends \think\Model
     {
         $pass = db('three_pass')->where('id', $passId)->find();
         $join = db('three_pass_join')->where('id', $joinId)->find();
-        $total = db('three_pass_sign')->where(['uid' => $uid, 'joinId' => $joinId, 'passId' => $passId, 'status' => 1])->count();
+        $total = db('three_pass_sign')->where(['uid' => $uid, 'joinId' => $joinId, 'passId' => $passId, 'status' => 1,'is_true'=>1])->count();
         $number = self::getPassNumber($pass); //获取当前活动期数
         if ($pass['challenge'] == $total) { //挑战成功
             db('three_pass_join')->where('id', $joinId)->update(['status' => 1]);
@@ -1049,8 +1049,8 @@ class Share2 extends \think\Model
         //挑战时长
         $hour = $pass['hour'];
         //最小分钟数
-        $minMinute = $pass['min'] * 60/3;
-        $maxMinute = $pass['max'] * 60 /3 ;
+        $minMinute = $pass['min'];
+        $maxMinute = $pass['max']/3 - $signMinutes;
         //签到次数
         $number = $pass['challenge'];
         $signs = [];
@@ -1067,7 +1067,12 @@ class Share2 extends \think\Model
             foreach ([1, 2, 3] as $key => $v) {
                 $randMinute = rand(0, $maxMinute); //随机时间段
                 //开始时间
-                $signBegin = $beginTime + $minMinute * 60 + $randMinute * 60; //报名时间加随机时间段
+                if($v == 1){
+                     $signBegin = $beginTime + $minMinute * 60 + $randMinute * 60; //报名时间加随机时间段
+                }else{
+                     $signBegin = $beginTime + $randMinute * 60; //报名时间加随机时间段
+                }
+               
                 $signEnd = $signBegin + 60 * $signMinutes - 1;
                 $signBeginTime = date('Y-m-d H:i:s', $signBegin);
                 $signEndTime = date('Y-m-d H:i:s', $signEnd);
@@ -1081,17 +1086,15 @@ class Share2 extends \think\Model
                     'signTimeBegin' => $signBeginTime,
                     'signTimeEnd' => $signEndTime,
                 ];
+                $sign['is_true'] = 2; 
                 $rand = random_int(1,3);
-                if($rand == 3 && $is_true ==0 ){
+                if($rand == 3 && $is_true == 0 ){
                     $sign['is_true'] = 1; 
                     $is_true = 1;
                 }
-                if($key == 2 && $is_true ==0){
+                if($key == 2 && $is_true == 0){
                     $sign['is_true'] = 1; 
                     $is_true = 1;
-                }
-                if($is_true == 0){
-                    $sign['is_true'] = 2; 
                 }
                 $beginTime = strtotime($signEndTime);
                 $signs[] = $sign;
@@ -1123,7 +1126,11 @@ class Share2 extends \think\Model
                 //开始时间
                 //当前继续的时间为开始时间
                
-                $signBegin = $beginTime +  60 * $randMinute; //当前时间开始  根据时间间隔计算单轮的签到时间
+                 if($v == 1){
+                     $signBegin = $beginTime + $minMinute * 60 + $randMinute * 60; //报名时间加随机时间段
+                }else{
+                     $signBegin = $beginTime + $randMinute * 60; //报名时间加随机时间段
+                }
                 $signEnd = $signBegin + 60 * $signMinutes - 1;
                 $signBeginTime = date('Y-m-d H:i:s', $signBegin);
                 $signEndTime = date('Y-m-d H:i:s', $signEnd);   
@@ -1137,6 +1144,7 @@ class Share2 extends \think\Model
                     'signTimeBegin' => $signBeginTime,
                     'signTimeEnd' => $signEndTime,
                 ];
+                $sign['is_true'] = 2; 
                 $rand = random_int(1,3);
                 if($rand == 3 && $is_true ==0 ){
                     $sign['is_true'] = 1; 
@@ -1145,9 +1153,6 @@ class Share2 extends \think\Model
                 if($key == 2 && $is_true ==0){
                     $sign['is_true'] = 1; 
                     $is_true = 1;
-                }
-                if($is_true == 0){
-                    $sign['is_true'] = 2; 
                 }
                 $beginTime = strtotime($signEndTime);
               	db('three_pass_sign')->insert($sign);

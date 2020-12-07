@@ -266,6 +266,9 @@ class System extends Base
                 'percent'=>$param['percent'],
                 'returnNum'=>$param['number'],
                 'maxMoney'=>$param['maxMoney'],
+                'autoCashMoney'=>$param['autoCashMoney'],
+                'autoCashMoneyStatus' => $param['autoCashMoneyStatus'],
+                'minCashMoney' => isset($param['minCashMoney']) ? $param['minCashMoney'] : 0
             ];
             $params['content'] = json_encode($contentArr);
             try{

@@ -315,6 +315,7 @@ class Member extends Base
 //                $realName = db('member')->where('id',$return['uid'])->find()['real_name'];
                 //判断用户余额
                 $user= db('member')->where("id",$return['uid'])->find();
+                $realName = $user['real_name'];
                 if(!$user){
                     return json(['code' => 1, 'data' => '', 'msg' => '申请用户不存在']);
                 }
@@ -329,14 +330,18 @@ class Member extends Base
                 if($return['status'] != 0){
                     return json(['code' => -1, 'data' => '', 'msg' => '该申请状态不是提现中！']);
                 }
-//                if($return['type'] ==1){//微信提现
-//                    $res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
-//                }else{//支付宝提现
-//                    $res = Appalipay::alipayReturn($return['phone'],$return['money'],$realName);
-//                }
-//                if(!isset($res['code']) || $res['code'] != 1){
-//                    return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
-//                }
+                if($status == 1){
+                    if($return['type'] ==2){//微信提现
+                    //$res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
+                    }else{//支付宝提现
+                        $res = Appalipay::alipayReturn($user['ali'],$return['money'],$realName,$return['id']);
+                        if(!isset($res['code']) || $res['code'] != 1){
+                            return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
+                        }
+                    }
+                }
+                
+                
                 $update = ['status'=>$status,'remark'=>$remark,'returnTime'=>time()];
                 $res = db('user_return')->where('id', $id)->update($update);
                 //修改用户余额
