@@ -15,10 +15,12 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <!-- Panel Other -->
     <div class="ibox float-e-margins">
+        
         <div class="ibox-title">
             <h5>用户列表</h5>
         </div>
         <div class="ibox-content">
+            <div>{$str}</div>
             <!--搜索框开始-->
             <form id='commentForm' role="form" method="post" class="form-inline pull-right">
                 <div class="content clearfix m-b">
@@ -48,6 +50,9 @@
                         <th data-field="real_name">真实姓名</th>
                         <th data-field="card">身份证号</th>
                         <th data-field="createTime">注册时间</th>
+                        <th data-field="moneyGet">累计受益</th>
+                        <th data-field="moneyRecharge">累计充值</th>
+                        <th data-field="moneyLoss">累计损失</th>
                         <th data-field="operate">操作</th>
                         </thead>
                     </table>

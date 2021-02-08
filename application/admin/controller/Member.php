@@ -38,7 +38,12 @@ class Member extends Base
                 $result[$key]['operate'] = $this->makeBtn($vo['id'],$vo['status']);
                 $result[$key]['createTime'] = date('Y-m-d H:i:s',$vo['createTime']);
                 $result[$key]['statusStr'] = $vo['status']==1?'活跃':'冻结';
+                $result[$key]['moneyGet'] = Share::getUserMoneyGet($vo['id']);
+                $result[$key]['moneyRecharge'] = Share::getUserMoneyRecharge($vo['id']);
+                $result[$key]['moneyLoss'] = Share::getUserMoneyLoss($vo['id']);
             }
+            
+           
 
             $return['total'] = db('member')->count();  //总数据
             $return['rows'] = $result;
@@ -46,6 +51,14 @@ class Member extends Base
             return json($return);
 
         }
+        
+        
+         $todayMoneyGet = Share::getTodayMoneyGet();
+        $todayMoneyLoss = Share::getTodayMoneyLoss();
+        $AllMoneyGet = Share::getAllMoneyGet();
+        $AllMoneyLoss = Share::getAllMoneyLoss();
+        $str = '昨日奖励'.$todayMoneyGet.'元,昨日累计失败金'.$todayMoneyLoss.'元，总奖励'.$AllMoneyGet.'元，总失败金'.$AllMoneyLoss.'元';
+        $this->assign('str',$str);
 
         return $this->fetch();
     }
@@ -320,7 +333,7 @@ class Member extends Base
                     return json(['code' => 1, 'data' => '', 'msg' => '申请用户不存在']);
                 }
                 //计算提现金额
-                $reduceMoney = $return['money'] + $return['procedures'];//提现金额加手续费
+                $reduceMoney = $return['money'];//提现金额加手续费
                 if($reduceMoney > $user['money']){
                     return json(['code' => 1, 'data' => '', 'msg' => '用户余额不足，不可提现']);
                 }
@@ -332,9 +345,12 @@ class Member extends Base
                 }
                 if($status == 1){
                     if($return['type'] ==2){//微信提现
-                    //$res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']);
+                        $res = Appwxpay::WeixinReturn($return['uid'],$return['orderNo'],$return['money']-$return['procedures']);
+                       if(!isset($res['code']) || $res['code'] != 1){
+                            return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
+                        }
                     }else{//支付宝提现
-                        $res = Appalipay::alipayReturn($user['ali'],$return['money'],$realName,$return['id']);
+                        $res = Appalipay::alipayReturn($user['ali'],$return['money']-$return['procedures'],$realName,$return['id']);
                         if(!isset($res['code']) || $res['code'] != 1){
                             return json(['code' => -1, 'data' => '', 'msg' => $res['message']]);
                         }
@@ -350,7 +366,7 @@ class Member extends Base
                         $hadMoney = $user['money'] - $reduceMoney;
                         db('member')->where('id',$return['uid'])->update(['money'=>$hadMoney]);
                         //余额记录
-                        Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额-'.$return['money'].'元，手续费-'.$return['procedures'].'元',2,4);
+                        Share::userMoneyRecord($return['uid'],$reduceMoney,'余额提现，提现金额'.$return['money'].'元，手续费'.$return['procedures'].'元',2,4);
                     }
                 }else{
                     return json(['code' => -1, 'data' => '', 'msg' => '操作失败，请重试']);

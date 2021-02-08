@@ -268,7 +268,8 @@ class System extends Base
                 'maxMoney'=>$param['maxMoney'],
                 'autoCashMoney'=>$param['autoCashMoney'],
                 'autoCashMoneyStatus' => $param['autoCashMoneyStatus'],
-                'minCashMoney' => isset($param['minCashMoney']) ? $param['minCashMoney'] : 0
+                'minCashMoney' => isset($param['minCashMoney']) ? $param['minCashMoney'] : 0,
+                'freeMoney' => isset($param['freeMoney']) ? $param['freeMoney'] : 0,
             ];
             $params['content'] = json_encode($contentArr);
             try{

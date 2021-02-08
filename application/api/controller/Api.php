@@ -59,6 +59,10 @@ class Api extends Controller
 //            session(null);//销毁所有登录信息
 //            Share::jsonData(101,'','登录失效，请重新登录！');
 //        }
+        // $user = db('member')->where(['id'=>$uid])->find();
+        // if($user['status']==0){
+        //     Share::jsonData(0,'','您的账号已被平台冻结，请联系平台解冻再登录');
+        // }
         $this->uid = $uid;
     }
 
@@ -1477,6 +1481,9 @@ class Api extends Controller
                         $nextEnd = $noSign['signTimeEnd'];
                         $isJoin = 1;
                     }
+                }elseif($noSign['status'] == 2){
+                    db('pass_join')->where('id',$join['id'])->update(['status'=>2]);
+                    $isJoin = 0;
                 }else{//今日已签到
                     $isJoin = 1;
                 }
@@ -1768,7 +1775,7 @@ class Api extends Controller
                 $now = date('Y-m-d H:i:s');
                 if($v['signTimeEnd'] < $now){
                     $data[$k]['status'] = 2;//打卡失败
-                    db('pass_sign')->where('id',$v['id'])->update(['status'=>2]);
+                    //db('pass_sign')->where('id',$v['id'])->update(['status'=>2]);
                 }
             }
         }
@@ -1919,10 +1926,10 @@ class Api extends Controller
     public function returnApply(){
         $uid = $this->uid;
         $money = input('money',0);
-        $type = input('type',1);//1-微信 2-支付宝
+        $type = input('type',1);//2-微信 1-支付宝  
         $phone = input('phone','');//提现手机号  支付宝必填
         Share::checkEmptyParams(['money'=>$money]);
-        $type = 1;
+       // $type = 1;
         //判断是否在提现时间内
         Share::checkReturnTime();
 //        if($type ==2 && !$phone){
@@ -1934,6 +1941,14 @@ class Api extends Controller
         //         Share::jsonData(0,'','请填写正确的电话好啊');
         //     }
         // }
+        /*if($type == 2 && $uid != 1){
+            Share::jsonData(0,'','微信提现维护中，请用支付宝提现');
+        }*/
+         $lastApplyTime = cache('tixiantime' . $uid);
+        if ($lastApplyTime) {
+            Share::jsonData(0, '', '30秒之内已经提过现了');
+        }
+        cache('tixiantime' . $uid, 1, 31);
         $returnTime = db('system')->where('type',6)->find();
         $returnTime = json_decode($returnTime['content'],true);
         if($money < $returnTime['minCashMoney']){
@@ -1945,6 +1960,7 @@ class Api extends Controller
         Share::checkRealNameStatus($uid);
         //手续费
         $procedures = Share::getReturnPercent($money);
+       
         Share::checkReturnMoney($uid,$money,$procedures);//检查余额
         $orderNo = 'TX'.time().rand(11111,99999);
         //体现申请
@@ -1958,6 +1974,7 @@ class Api extends Controller
             'phone'=>$phone,
             'orderNo'=>$orderNo,
         ];
+        $money = $money - $procedures;
         $res = db('user_return')->insertGetId($params);
         
         
@@ -1966,8 +1983,8 @@ class Api extends Controller
         if($res){
             
             if($returnTime['autoCashMoneyStatus'] == 1){
-                if ($money <= $returnTime['autoCashMoney']) {//金额小于300自动提现
-                    if($type == 1){
+                if ($money+$procedures <= $returnTime['autoCashMoney']) {//金额小于300自动提现
+                    if($type == 1){ // 支付宝
                         $user = db('member')->where("id",$uid)->find();
                         $realName=  $user['real_name'];
                         $res1 = Appalipay::alipayReturn($user['ali'],$money,$realName,$res);
@@ -1980,7 +1997,23 @@ class Api extends Controller
                         $hadMoney = $user['money'] - $reduceMoney;
                         db('member')->where('id',$uid)->update(['money'=>$hadMoney]);
                         //余额记录
-                        Share::userMoneyRecord($uid,$reduceMoney,'余额提现，提现金额-'.$money.'元，手续费-'.$procedures.'元',2,4);
+                        Share::userMoneyRecord($uid,$reduceMoney,'余额提现，提现金额'.$money.'元，手续费'.$procedures.'元',2,4);
+                        
+                        Share::jsonData(1,'','提现成功');
+                    }else{ // 微信
+                        $user = db('member')->where("id",$uid)->find();
+
+                        $res1 = Appwxpay::WeixinReturn($params['uid'],$params['orderNo'],$money);
+                        if(!isset($res1['code']) || $res1['code'] != 1){
+                            return json(['code' => -1, 'data' => '', 'msg' => $res1['message']]);
+                        }
+                        $update = ['status'=>1,'returnTime'=>time()];
+                        $res = db('user_return')->where('id', $res)->update($update);
+                        $reduceMoney = $money + $procedures;//提现金额加手续费
+                        $hadMoney = $user['money'] - $reduceMoney;
+                        db('member')->where('id',$uid)->update(['money'=>$hadMoney]);
+                        //余额记录
+                        Share::userMoneyRecord($uid,$reduceMoney,'余额提现，提现金额'.$money.'元，手续费'.$procedures.'元',2,4);
                         
                         Share::jsonData(1,'','提现成功');
                     }
@@ -2560,7 +2593,7 @@ class Api extends Controller
         }
         
         //打卡
-           $res = db('three_pass_sign')->where('number', $sign['number'])->update(['status' => 1, 'signTime' => $nowTime]);
+           $res = db('three_pass_sign')->where('number', $sign['number'])->where('joinId',$pass['id'])->update(['status' => 1, 'signTime' => $nowTime]);
         if ($res) {
             //判断是否完成挑战
             if ($sign['number'] == $pass['challenge']) { //最后一轮打卡
@@ -2612,6 +2645,18 @@ class Api extends Controller
             'data'=>$data
         ];
         Share::jsonData(1,$return);
+    }
+    
+    /**
+     * 获取提现说明
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getOutMoneyRemark()
+    {
+        $res = db('system')->where('id', 24)->find();
+        Share::jsonData(1, $res);
     }
   
 }

@@ -1148,6 +1148,61 @@ class Share extends \think\Model
         $moneyGet = db('money_get')->where(['uid'=>$uid,'type'=>['in',[1,2,3]]])->sum('moneyGet');
         return $moneyGet?$moneyGet:0;
     }
+    
+    
+     public static function getUserMoneyRecharge($uid){
+        $moneyGet = db('user_money_record')->where(['uid'=>$uid,'moneyType'=>0,'remark' =>['<>','体验金']])->sum('money');
+        return $moneyGet?$moneyGet:0;
+    }
+    
+    public static function getUserMoneyLoss($uid){
+         $moneyGet = db('user_money_record')->where(['uid'=>$uid,'remark'=>['not like','%提现%'],'type'=>2,'moneyType'=>['<>',0],'createTime'=>['<',strtotime(date('Y-m-d 08:00:00'))]])->sum('money');
+         $returnMoney=0;
+         $returnMoney = db('user_money_record')->where(['uid'=>$uid,'type'=>1,'moneyType'=>['in',[1,2,3]],'remark'=>['like','%本金退还%']])->sum('money');
+         
+        //  if($uid == 190){
+            
+        //      $a= db('user_money_record')->where(['uid'=>$uid,'type'=>2,'moneyType'=>['<>',0],'createTime'=>['<',strtotime(date('Y-m-d'))]])->select();
+        //      $b = db('user_money_record')->where(['uid'=>$uid,'type'=>1,'moneyType'=>['in',[1,2,3]],'remark'=>['like','%本金退还%']])->select();
+        //      var_dump(json_encode($a));
+        //      var_dump(json_encode($b));
+        //      exit();
+        //  }
+         
+         return $moneyGet? bcsub($moneyGet,$returnMoney,2) :0;
+    }
+    
+    public static function getTodayMoneyGet(){
+        $today = strtotime(date('Y-m-d 00:00:00'));
+        $yestday = strtotime(date('Y-m-d', strtotime('-1 day')));
+         $moneyGet = db('money_get')->where(['createTime'=>['between',[$yestday,$today]],'type'=>['in',[1,2,3]]])->sum('moneyGet');
+        return $moneyGet?$moneyGet:0;
+    }
+    
+    public static function getTodayMoneyLoss(){
+        $today = strtotime(date('Y-m-d 08:00:00'));
+        $yestday = strtotime(date('Y-m-d 08:00:00', strtotime('-1 day')));
+        $moneyGet = db('user_money_record')->where(['createTime'=>['between',[$yestday,$today]],'type'=>2,'moneyType'=>['<>',0],'remark'=>['not like','%提现%']])->sum('money');
+       // $moneyGet = db('user_money_record')->where(['createTime'=>['between',[$yestday,$today]],'type'=>2,'moneyType'=>['<>',0]])->select();
+        //var_dump($moneyGet);exit();
+        $returnMoney=0;
+        $returnMoney = db('user_money_record')->where(['createTime'=>['>',strtotime(date('Y-m-d 00:00:00'))],'type'=>1,'moneyType'=>['in',[1,2,3]],'remark'=>['like','%本金退还%']])->sum('money');
+        return $moneyGet? bcsub($moneyGet,$returnMoney,2) :0;
+    }
+    
+    public static function getAllMoneyGet(){
+         $moneyGet = db('money_get')->where(['type'=>['in',[1,2,3]]])->sum('moneyGet');
+          return $moneyGet?$moneyGet:0;
+    }
+    
+     public static function getAllMoneyLoss(){
+         $moneyGet = db('user_money_record')->where(['type'=>2,'remark'=>['not like','%提现%'],'moneyType'=>['<>',0],'createTime'=>['<',strtotime(date('Y-m-d 08:00:00'))]])->sum('money');
+         $returnMoney=0;
+         $returnMoney = db('user_money_record')->where(['type'=>1,'moneyType'=>['in',[1,2,3]],'remark'=>['like','%本金退还%']])->sum('money');
+         return $moneyGet? bcsub($moneyGet,$returnMoney,2) :0;
+    }
+    
+    
     /**
      * 房间挑战
      * 今日打卡
@@ -1180,7 +1235,7 @@ class Share extends \think\Model
         // if(empty($user['qrcode'])){
         //     self::jsonData(0,'','你还没有上传提现二维码，请先上传提现二维码。');
         // }
-        $returnMoney = $money + $procedures;
+        $returnMoney = $money;
         if($user['money'] < $returnMoney){
             self::jsonData(0,'','你的余额（'.$user['money'].'）不足');
         }
@@ -1584,7 +1639,12 @@ class Share extends \think\Model
             return 0;
         }
         $content = json_decode($returnPercent['content'],true);
+        $freeMoney = isset($content['freeMoney']) ? $content['freeMoney'] : 0;
         $content = isset($content['percent'])?$content['percent']:0;
+       
+        if ($money <= $freeMoney) {
+            return 0;
+        }
         $content = $content?$content:0;
         $return = ($content/100)*$money;
         $returnMoney = self::getDecimalMoney($return);
